@@ -31,6 +31,7 @@ class MainApp:
         self.app = QApplication(sys.argv)
         self.window = TachieDisplay()
         self.chat_model = Model()  # 初始化模型实例
+        self.reply_parser = replyParser
         self.setup_ui()
         self.typing_animation_timer = QTimer()
         self.typing_dots = ""
@@ -106,7 +107,7 @@ class MainApp:
         else:
             final_message = "没有有效的回复"
 
-        parsed_reply = replyParser(final_message)
+        parsed_reply = self.reply_parser(final_message)
         parse_status = parsed_reply.get("status")
         parse_message = parsed_reply.get("message")
 

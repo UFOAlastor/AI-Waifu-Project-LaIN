@@ -1,15 +1,14 @@
+import re
 import sys
 import json
 from PyQt5.QtCore import QThread, pyqtSignal, QTimer
 from PyQt5.QtWidgets import QApplication
 from ui_module import TachieDisplay  # 假设TachieDisplay在tachie_display.py中
 from model_module import Model  # 导入模型类
-from replyParser_module import replyParser  # 导入回复内容解析器
 
 
 class ChatModelWorker(QThread):
     """用于后台运行模型的线程"""
-
     response_ready = pyqtSignal(dict)
 
     def __init__(self, model, input_text):
@@ -43,7 +42,6 @@ class MainApp:
         self.window.show()
 
     def on_text_received(self, input_text):
-        """等待接收模型回复"""
         if input_text:
             # 显示动态省略号动画
             self.start_typing_animation()
@@ -66,9 +64,7 @@ class MainApp:
             self.typing_dots += "。"
         else:
             self.typing_dots = ""
-        self.window.display_text(
-            f"绫正在思考中{self.typing_dots}", is_non_user_input=True
-        )
+        self.window.display_text(f"绫正在思考中{self.typing_dots}", is_non_user_input=True)
 
     def stop_typing_animation(self):
         """停止动态省略号动画"""
@@ -81,9 +77,7 @@ class MainApp:
         self.stop_typing_animation()
 
         if "error" in response:
-            self.window.display_text(
-                "对不起，发生了错误。请稍后再试。", is_non_user_input=True
-            )
+            self.window.display_text("对不起，发生了错误。请稍后再试。", is_non_user_input=True)
             return
 
         # 查找第一个包含 'tool_call_message' 类型的消息
@@ -100,27 +94,42 @@ class MainApp:
             reply_text = tool_call_message.get("tool_call", {}).get("arguments", "")
             try:
                 parsed_arguments = json.loads(reply_text)
-                final_message = str(parsed_arguments.get("message", "没有消息内容"))
+                final_message = parsed_arguments.get("message", "没有消息内容")
             except json.JSONDecodeError:
                 final_message = "无法解析消息"
         else:
             final_message = "没有有效的回复"
 
-        parsed_reply = replyParser(final_message)
-        parse_status = parsed_reply.get("status")
-        parse_message = parsed_reply.get("message")
+        # 显示最终的回复
+        self.window.display_text(final_message, is_non_user_input=True)
 
-        Chinese_message = parse_message
+    def parse_bot_reply(reply: str, delimiter: str = "|||"):
+        """
+        解析 {表情}|||{中文}|||{日语} 格式的字符串，确保对分隔符冲突的处理安全。
+        :param reply: 输入的字符串，格式如 {表情}|||{中文}|||{日语}
+        :param delimiter: 自定义分隔符，默认为 "|||"
+        :return: 一个包含 表情, 中文, 日语 的字典
+        """
+        # 将分隔符进行正则转义，确保匹配时安全
+        escaped_delimiter = re.escape(delimiter)
 
-        if not parse_status:
-            tachie_expression = parsed_reply.get("data").get("ep")
-            Chinese_message = parsed_reply.get("data").get("zh")
-            Japanese_message = parsed_reply.get("data").get("jp")
-            print("tachie_expression:", tachie_expression)
-            print("Chinese_message:", Chinese_message)
-            print("Japanese_message:", Japanese_message)
+        # 使用正则表达式确保划分三部分
+        pattern = rf"^(.*?)\s*{escaped_delimiter}\s*(.*?)\s*{escaped_delimiter}\s*(.*?)$"
+        match = re.match(pattern, reply)
 
-        self.window.display_text(Chinese_message, is_non_user_input=True)
+        if not match:
+            raise ValueError(
+                f"输入字符串格式不正确，应为 {{表情}}{delimiter}{{中文}}{delimiter}{{日语}}"
+            )
+
+        # 提取三部分内容
+        expression, chinese, japanese = match.groups()
+
+        return {
+            "表情": expression.strip(),
+            "中文": chinese.strip(),
+            "日语": japanese.strip(),
+        }
 
     def run(self):
         sys.exit(self.app.exec_())

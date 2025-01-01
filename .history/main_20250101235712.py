@@ -31,6 +31,7 @@ class MainApp:
         self.app = QApplication(sys.argv)
         self.window = TachieDisplay()
         self.chat_model = Model()  # 初始化模型实例
+        self.reply_parser = replyParser()
         self.setup_ui()
         self.typing_animation_timer = QTimer()
         self.typing_dots = ""
@@ -106,19 +107,17 @@ class MainApp:
         else:
             final_message = "没有有效的回复"
 
-        parsed_reply = replyParser(final_message)
-        parse_status = parsed_reply.get("status")
-        parse_message = parsed_reply.get("message")
+        print(f"reply 类型: {type(final_message)}, 值: {final_message}")
 
-        Chinese_message = parse_message
+        # 显示最终的回复中的中文
+        parseed_message = self.reply_parser.parse_reply(final_message)
+        tachie_expression = parseed_message.get("表情")
+        Chinese_message = parseed_message.get("中文")
+        Japanese_message = parseed_message.get("日语")
 
-        if not parse_status:
-            tachie_expression = parsed_reply.get("data").get("ep")
-            Chinese_message = parsed_reply.get("data").get("zh")
-            Japanese_message = parsed_reply.get("data").get("jp")
-            print("tachie_expression:", tachie_expression)
-            print("Chinese_message:", Chinese_message)
-            print("Japanese_message:", Japanese_message)
+        print("tachie_expression:", tachie_expression)
+        print("Chinese_message:", Chinese_message)
+        print("Japanese_message:", Japanese_message)
 
         self.window.display_text(Chinese_message, is_non_user_input=True)
 

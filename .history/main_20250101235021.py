@@ -4,12 +4,11 @@ from PyQt5.QtCore import QThread, pyqtSignal, QTimer
 from PyQt5.QtWidgets import QApplication
 from ui_module import TachieDisplay  # 假设TachieDisplay在tachie_display.py中
 from model_module import Model  # 导入模型类
-from replyParser_module import replyParser  # 导入回复内容解析器
+from response_depart import parse_reply # 导入回复内容解析器
 
 
 class ChatModelWorker(QThread):
     """用于后台运行模型的线程"""
-
     response_ready = pyqtSignal(dict)
 
     def __init__(self, model, input_text):
@@ -66,9 +65,7 @@ class MainApp:
             self.typing_dots += "。"
         else:
             self.typing_dots = ""
-        self.window.display_text(
-            f"绫正在思考中{self.typing_dots}", is_non_user_input=True
-        )
+        self.window.display_text(f"绫正在思考中{self.typing_dots}", is_non_user_input=True)
 
     def stop_typing_animation(self):
         """停止动态省略号动画"""
@@ -81,9 +78,7 @@ class MainApp:
         self.stop_typing_animation()
 
         if "error" in response:
-            self.window.display_text(
-                "对不起，发生了错误。请稍后再试。", is_non_user_input=True
-            )
+            self.window.display_text("对不起，发生了错误。请稍后再试。", is_non_user_input=True)
             return
 
         # 查找第一个包含 'tool_call_message' 类型的消息
@@ -100,27 +95,19 @@ class MainApp:
             reply_text = tool_call_message.get("tool_call", {}).get("arguments", "")
             try:
                 parsed_arguments = json.loads(reply_text)
-                final_message = str(parsed_arguments.get("message", "没有消息内容"))
+                final_message = parsed_arguments.get("message", "没有消息内容")
             except json.JSONDecodeError:
                 final_message = "无法解析消息"
         else:
             final_message = "没有有效的回复"
 
-        parsed_reply = replyParser(final_message)
-        parse_status = parsed_reply.get("status")
-        parse_message = parsed_reply.get("message")
+        # 显示最终的回复中的中文
+        parseed_message = parse_reply(final_message)
+        tachie_expression = parseed_message.get("表情")
+        Chinese_message = parseed_message.get("中文")
+        Japanese_message = parseed_message.get("表情")
 
-        Chinese_message = parse_message
-
-        if not parse_status:
-            tachie_expression = parsed_reply.get("data").get("ep")
-            Chinese_message = parsed_reply.get("data").get("zh")
-            Japanese_message = parsed_reply.get("data").get("jp")
-            print("tachie_expression:", tachie_expression)
-            print("Chinese_message:", Chinese_message)
-            print("Japanese_message:", Japanese_message)
-
-        self.window.display_text(Chinese_message, is_non_user_input=True)
+        self.window.display_text(chinese_message, is_non_user_input=True)
 
     def run(self):
         sys.exit(self.app.exec_())
