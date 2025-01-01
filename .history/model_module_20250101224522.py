@@ -28,17 +28,8 @@ class Model:
         try:
             response = requests.post(url, headers=headers, json=data)
             response.raise_for_status()  # 检查响应状态
-
-            # 打印状态码和响应内容
-            print(f"响应状态码: {response.status_code}")
-            print(f"响应内容: {response.text}")
-
-            # 确保响应是JSON格式
-            if response.headers.get("Content-Type") == "application/json":
-                return response.json()  # 返回响应内容
-            else:
-                print("响应不是JSON格式")
-                return {"messages": [{"text": "返回内容格式错误"}]}
+            print(response.json())
+            return response.json()  # 返回响应内容
         except requests.RequestException as e:
             print(f"请求失败: {e}")
             return {"messages": [{"text": "请求失败，请稍后重试"}]}  # 返回默认失败消息

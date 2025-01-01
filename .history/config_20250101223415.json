@@ -3,6 +3,5 @@
     "window_height": 800,
     "tachie_path": "./tachie/Murasame/",
     "dialog_opacity": 0.8,
-    "always_on_top": true,
-    "agent_id": "agent-33418f62-6ec6-4263-8e92-147b27acdb87"
+    "always_on_top": true
 }
