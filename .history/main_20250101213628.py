@@ -31,10 +31,10 @@ class MainApp:
             try:
                 response = self.chat_model.get_response(input_text)
                 # 显示模型的回复
-                self.window.display_text(response, is_non_user_input=True)
+                self.window.display_text(response)
             except Exception as e:
                 print(f"Error: {e}")
-                self.window.display_text("对不起，发生了错误。请稍后再试。", is_non_user_input=True)
+                self.window.display_text("对不起，发生了错误。请稍后再试。")
 
     def run(self):
         sys.exit(self.app.exec_())

@@ -118,6 +118,9 @@ class TachieDisplay(QMainWindow):
             Qt.ImhPreferLowercase | Qt.ImhNoAutoUppercase
         )
 
+        # 设置 focusPolicy
+        self.dialog_text.setFocusPolicy(Qt.StrongFocus)
+
         self.close_button = QPushButton("×", self)
         self.close_button.setStyleSheet(
             "background-color: red; color: white; font: bold 12pt Arial; border: none; border-radius: 15%;"
@@ -132,38 +135,18 @@ class TachieDisplay(QMainWindow):
 
         self.setStyleSheet("background-color: transparent;")
 
-        # 确保 QPlainTextEdit 区域可以捕获点击事件
-        self.dialog_text.setAttribute(Qt.WA_OpaquePaintEvent)
-        # 设置 focusPolicy
-        self.dialog_text.setFocusPolicy(Qt.StrongFocus)
         # 安装事件过滤器到 dialog_text
         self.dialog_text.installEventFilter(self)
-        self.dialog_text.mousePressEvent = self.on_mouse_press  # 手动重写鼠标点击事件
 
     def eventFilter(self, obj, event):
-        # 捕获鼠标点击事件
+        # 捕获回车键事件
         if obj == self.dialog_text and event.type() == QEvent.KeyPress:
-            # 捕获回车键事件
             key_event = event
             if key_event.key() == Qt.Key_Return:
                 self.send_text()
                 self.dialog_text.clear()  # 清空文本框
                 return True  # 表示事件已处理，不再传播
         return super().eventFilter(obj, event)
-
-    def on_mouse_press(self, event):
-        """
-        捕获 QPlainTextEdit 的鼠标点击事件
-        """
-        if self.is_non_user_input:
-            if self.timer:  # 停止打字机定时器，防止非用户文本继续显示
-                self.timer.stop()
-            self.dialog_text.clear()  # 清空文本框内容
-            self.is_non_user_input = False  # 重置标记
-        # 处理输入符号点击操作
-        print("点击了文本框的输入符号区域")
-        # 调用父类的事件处理方法，确保光标行为正常
-        super(QPlainTextEdit, self.dialog_text).mousePressEvent(event)
 
     def send_text(self):
         text = self.dialog_text.toPlainText().strip()
@@ -176,11 +159,11 @@ class TachieDisplay(QMainWindow):
         """
         显示文本内容，is_non_user_input 为 True 时表示启动提示或模型返回内容
         """
-        self.is_non_user_input = is_non_user_input  # 设置是否为非用户输入内容标记
         self.dialog_text.clear()  # 清空文本框内容
         self.dialog_text.setPlainText("")  # 清空文本框内容
         self.current_char_index = 0  # 当前字符索引
         self.content = content  # 存储要显示的完整文本
+        self.is_non_user_input = is_non_user_input  # 设置是否为非用户输入内容标记
 
         # 设置每个字符的延迟时间（可以根据需要调整）
         self.typing_speed = 100  # 每个字符之间的延迟 100 毫秒
@@ -189,6 +172,14 @@ class TachieDisplay(QMainWindow):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.on_typing)
         self.timer.start(self.typing_speed)
+
+    def mousePressEvent(self, event):
+        """
+        用户点击对话框时，如果是非用户输入内容，清空内容
+        """
+        if self.is_non_user_input:
+            self.dialog_text.clear()  # 清空文本框内容
+            self.is_non_user_input = False  # 重置标记
 
     def on_typing(self):
         # 每次定时器触发时，显示一个字符

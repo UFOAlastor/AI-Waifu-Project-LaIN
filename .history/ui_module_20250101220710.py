@@ -165,6 +165,10 @@ class TachieDisplay(QMainWindow):
         # 调用父类的事件处理方法，确保光标行为正常
         super(QPlainTextEdit, self.dialog_text).mousePressEvent(event)
 
+    def clear_dialog(self):
+        """清空文本框内容"""
+        self.dialog_text.clear()  # 清空文本框内容
+
     def send_text(self):
         text = self.dialog_text.toPlainText().strip()
         if text:

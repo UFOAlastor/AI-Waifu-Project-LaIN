@@ -118,6 +118,12 @@ class TachieDisplay(QMainWindow):
             Qt.ImhPreferLowercase | Qt.ImhNoAutoUppercase
         )
 
+        # 确保 QPlainTextEdit 区域可以捕获点击事件
+        self.dialog_layout.setAttribute(Qt.WA_OpaquePaintEvent)
+
+        # 设置 focusPolicy
+        self.dialog_text.setFocusPolicy(Qt.StrongFocus)
+
         self.close_button = QPushButton("×", self)
         self.close_button.setStyleSheet(
             "background-color: red; color: white; font: bold 12pt Arial; border: none; border-radius: 15%;"
@@ -132,16 +138,17 @@ class TachieDisplay(QMainWindow):
 
         self.setStyleSheet("background-color: transparent;")
 
-        # 确保 QPlainTextEdit 区域可以捕获点击事件
-        self.dialog_text.setAttribute(Qt.WA_OpaquePaintEvent)
-        # 设置 focusPolicy
-        self.dialog_text.setFocusPolicy(Qt.StrongFocus)
         # 安装事件过滤器到 dialog_text
         self.dialog_text.installEventFilter(self)
-        self.dialog_text.mousePressEvent = self.on_mouse_press  # 手动重写鼠标点击事件
 
     def eventFilter(self, obj, event):
         # 捕获鼠标点击事件
+        # if obj == self.dialog_text and event.type() == QEvent.MouseButtonPress:
+        #     # 判断是否为非用户输入的内容，若是则清空内容
+        #     if self.is_non_user_input:
+        #         self.dialog_text.clear()  # 清空文本框内容
+        #         self.is_non_user_input = False  # 重置标记
+        #         return True  # 表示事件已处理，不再传播
         if obj == self.dialog_text and event.type() == QEvent.KeyPress:
             # 捕获回车键事件
             key_event = event
@@ -151,19 +158,20 @@ class TachieDisplay(QMainWindow):
                 return True  # 表示事件已处理，不再传播
         return super().eventFilter(obj, event)
 
-    def on_mouse_press(self, event):
+    def clear_dialog(self):
+        """清空文本框内容"""
+        self.dialog_text.clear()  # 清空文本框内容
+
+    def mousePressEvent(self, event):
         """
-        捕获 QPlainTextEdit 的鼠标点击事件
+        用户点击对话框时，如果是非用户输入内容，延迟100ms清空内容并停止打字机效果
         """
         if self.is_non_user_input:
-            if self.timer:  # 停止打字机定时器，防止非用户文本继续显示
-                self.timer.stop()
-            self.dialog_text.clear()  # 清空文本框内容
+            # 停止打字机定时器，防止非用户文本继续显示
+            self.timer.stop()
+            # 设置定时器，在100ms后清空文本框
+            QTimer.singleShot(100, self.clear_dialog)
             self.is_non_user_input = False  # 重置标记
-        # 处理输入符号点击操作
-        print("点击了文本框的输入符号区域")
-        # 调用父类的事件处理方法，确保光标行为正常
-        super(QPlainTextEdit, self.dialog_text).mousePressEvent(event)
 
     def send_text(self):
         text = self.dialog_text.toPlainText().strip()
