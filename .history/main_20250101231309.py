@@ -55,7 +55,7 @@ class MainApp:
         self.typing_dots = ""
         self.window.display_text("绫正在思考中", is_non_user_input=True)
         self.typing_animation_timer.timeout.connect(self.update_typing_animation)
-        self.typing_animation_timer.start(4000)  # 每隔 4000ms 更新一次
+        self.typing_animation_timer.start(1000)  # 每隔 500ms 更新一次
 
     def update_typing_animation(self):
         """更新动态省略号"""

@@ -53,9 +53,9 @@ class MainApp:
     def start_typing_animation(self):
         """启动动态省略号动画"""
         self.typing_dots = ""
-        self.window.display_text("绫正在思考中", is_non_user_input=True)
+        self.window.display_text("远山绫正在思考中", is_non_user_input=True)
         self.typing_animation_timer.timeout.connect(self.update_typing_animation)
-        self.typing_animation_timer.start(4000)  # 每隔 4000ms 更新一次
+        self.typing_animation_timer.start(500)  # 每隔 500ms 更新一次
 
     def update_typing_animation(self):
         """更新动态省略号"""
@@ -63,7 +63,7 @@ class MainApp:
             self.typing_dots += "。"
         else:
             self.typing_dots = ""
-        self.window.display_text(f"绫正在思考中{self.typing_dots}", is_non_user_input=True)
+        self.window.display_text(f"远山绫正在思考中{self.typing_dots}", is_non_user_input=True)
 
     def stop_typing_animation(self):
         """停止动态省略号动画"""
