@@ -1,0 +1,7 @@
+{
+    "window_width": 500,
+    "window_height": 700,
+    "tachie_path": "./tachie/Murasame/",
+    "dialog_opacity": 0.8,
+    "always_on_top": true
+  }

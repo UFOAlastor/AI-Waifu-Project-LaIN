@@ -1,0 +1,12 @@
+{
+    "window_width": 600,
+    "window_height": 800,
+    "scale": 0.3,
+    "tachie_path": "./tachie/Murasame/正常.png",
+    "dialog_x": 100,
+    "dialog_y": 400,
+    "dialog_width": 400,
+    "dialog_height": 160,
+    "dialog_opacity": 0.8,
+    "always_on_top": true
+  }
