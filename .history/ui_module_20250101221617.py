@@ -172,7 +172,7 @@ class TachieDisplay(QMainWindow):
         super(QPlainTextEdit, self.dialog_text).mousePressEvent(event)
 
     def send_text(self):
-        text = self.dialog_text.toPlainText().replace("\n", "\\n ").strip()
+        text = self.dialog_text.toPlainText().strip()
         if text:
             print(f"发送的文本: {text}")
             self.text_sent.emit(text)  # 发射信号，将文本发送出去
