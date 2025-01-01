@@ -1,5 +1,3 @@
-# ui_module.py
-
 import sys
 import json
 from PyQt5.QtCore import Qt, QEvent
@@ -12,17 +10,12 @@ from PyQt5.QtWidgets import (
     QWidget,
     QPlainTextEdit,
     QPushButton,
-    # QGraphicsDropShadowEffect,
+    QGraphicsDropShadowEffect,
 )
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtCore import QTimer
 
 
 # 在 TachieDisplay 类中设置事件过滤器
 class TachieDisplay(QMainWindow):
-    # 定义一个信号，发送输入的文本
-    text_sent = pyqtSignal(str)
-
     def __init__(self):
         super().__init__()
 
@@ -87,21 +80,21 @@ class TachieDisplay(QMainWindow):
             int(self.dialog_height),
         )
         self.dialog_widget.setStyleSheet(
-            f"background-color: rgba(255, 255, 255, {255*self.dialog_opacity}); border: 1px solid gray; border-radius: 15px;"
+            "background-color: rgba(255, 255, 255, 180); border: 1px solid gray; border-radius: 10px;"
         )
 
         # Apply shadow effect to the dialog widget
-        # shadow_effect = QGraphicsDropShadowEffect(self.dialog_widget)
-        # shadow_effect.setOffset(0, 0)
-        # shadow_effect.setBlurRadius(15)
-        # shadow_effect.setColor(Qt.black)
-        # self.dialog_widget.setGraphicsEffect(shadow_effect)
+        shadow_effect = QGraphicsDropShadowEffect(self.dialog_widget)
+        shadow_effect.setOffset(0, 0)
+        shadow_effect.setBlurRadius(15)
+        shadow_effect.setColor(Qt.black)
+        self.dialog_widget.setGraphicsEffect(shadow_effect)
 
         self.dialog_layout = QVBoxLayout(self.dialog_widget)
 
-        # self.dialog_label = QLabel("绫", self.dialog_widget)
-        # self.dialog_label.setStyleSheet("font: bold 14pt Arial; color: #333333;")
-        # self.dialog_layout.addWidget(self.dialog_label)
+        self.dialog_label = QLabel("绫", self.dialog_widget)
+        self.dialog_label.setStyleSheet("font: bold 14pt Arial; color: #333333;")
+        self.dialog_layout.addWidget(self.dialog_label)
 
         # Change from QTextEdit to QPlainTextEdit
         self.dialog_text = QPlainTextEdit(self.dialog_widget)
@@ -122,7 +115,7 @@ class TachieDisplay(QMainWindow):
 
         self.close_button = QPushButton("×", self)
         self.close_button.setStyleSheet(
-            "background-color: red; color: white; font: bold 12pt Arial; border: none; border-radius: 15%;"
+            "background-color: red; color: white; font: bold 12pt Arial; border: none; border-radius: 50%;"
         )
         self.close_button.setGeometry(
             int(self.window_width - (self.window_width - self.dialog_width) // 2 - 30),
@@ -147,23 +140,16 @@ class TachieDisplay(QMainWindow):
                 return True  # 表示事件已处理，不再传播
         return super().eventFilter(obj, event)
 
+    # 处理输入文本的方法
     def send_text(self):
         text = self.dialog_text.toPlainText().strip()
         if text:
             print(f"发送的文本: {text}")
-            self.text_sent.emit(text)  # 发射信号，将文本发送出去
             self.dialog_text.clear()  # 清空文本框内容
 
     def display_text(self, content):
-        print(f"显示文本: {content}")  # 确保文本内容正常传递
-        self.dialog_text.clear()  # 清空文本框
-
-        # 使用 QTimer 来延迟显示文本
-        QTimer.singleShot(
-            100, lambda: self.dialog_text.setPlainText(content)
-        )  # 延迟 100 毫秒
-        self.dialog_text.update()  # 强制更新控件
-        self.dialog_text.setFocus()  # 让文本框重新获得焦点
+        self.dialog_text.clear()
+        self.dialog_text.setPlainText(content)
 
     def start_drag(self, event):
         self.offset_x = event.x()

@@ -6,4 +6,4 @@ class Model:
         """
         假设这是模型生成文本的函数。
         """
-        return f"测试: {user_input}"
+        return f"{user_input}"

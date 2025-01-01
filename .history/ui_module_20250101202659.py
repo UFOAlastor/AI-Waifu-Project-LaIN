@@ -1,58 +1,52 @@
-# ui_module.py
-
 import sys
 import json
-from PyQt5.QtCore import Qt, QEvent
-from PyQt5.QtGui import QImage, QPixmap, QKeyEvent
+from PyQt5.QtCore import Qt, QRect, QTimer
+from PyQt5.QtGui import QImage, QPixmap, QPainter, QColor
 from PyQt5.QtWidgets import (
     QApplication,
     QMainWindow,
     QLabel,
+    QGraphicsScene,
+    QGraphicsView,
+    QGraphicsPixmapItem,
     QVBoxLayout,
     QWidget,
-    QPlainTextEdit,
+    QTextEdit,
     QPushButton,
-    # QGraphicsDropShadowEffect,
 )
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtCore import QTimer
+from PyQt5.QtGui import QKeyEvent
 
 
-# 在 TachieDisplay 类中设置事件过滤器
 class TachieDisplay(QMainWindow):
-    # 定义一个信号，发送输入的文本
-    text_sent = pyqtSignal(str)
-
     def __init__(self):
         super().__init__()
 
         self.settings = self.load_settings("./config.json")
         self.window_width = self.settings.get("window_width", 500)
         self.window_height = self.settings.get("window_height", 700)
-        self.dialog_x = self.settings.get("dialog_x", self.window_width)
+        self.dialog_x = self.settings.get("dialog_x", self.window_width * 0.1)
         self.dialog_y = self.settings.get("dialog_y", self.window_height * 0.5)
-        self.dialog_width = self.settings.get("dialog_width", self.window_width)
+        self.dialog_width = self.settings.get("dialog_width", self.window_width * 0.8)
         self.dialog_height = self.settings.get(
-            "dialog_height", self.window_height * 0.3
+            "dialog_height", self.window_height * 0.2
         )
         self.dialog_opacity = self.settings.get("dialog_opacity", 0.8)
 
-        # Set up the window with transparent background
         self.setWindowFlags(Qt.FramelessWindowHint)  # Remove the window frame
-        self.setAttribute(Qt.WA_TranslucentBackground)  # Transparent window background
+        self.setWindowOpacity(self.dialog_opacity)  # Set window transparency
         self.setFixedSize(self.window_width, self.window_height)
-        self.setStyleSheet(
-            "background-color: transparent;"
-        )  # Make the whole window transparent
+        self.setStyleSheet("background-color: black;")
 
         if self.settings.get("always_on_top", False):
             self.setWindowFlag(Qt.WindowStaysOnTopHint)
 
-        # Load character image (no transparency for character image)
+        # Load character image
         self.image_path = (
             self.settings.get("tachie_path", "./tachie/Murasame/") + "正常.png"
         )
-        self.character_image = QImage(self.image_path)
+        self.character_image = QImage(self.image_path).convertToFormat(
+            QImage.Format_RGBA8888
+        )
 
         image_width, image_height = (
             self.character_image.width(),
@@ -66,7 +60,7 @@ class TachieDisplay(QMainWindow):
             int(image_width * self.scale), int(image_height * self.scale)
         )
 
-        # Set up QLabel to display the image (without transparency)
+        # Set up QLabel to display the image
         self.character_label = QLabel(self)
         self.character_label.setPixmap(QPixmap.fromImage(self.character_image))
         self.character_label.setAlignment(Qt.AlignCenter)
@@ -78,7 +72,7 @@ class TachieDisplay(QMainWindow):
         self.character_label.mousePressEvent = self.start_drag
         self.character_label.mouseMoveEvent = self.drag_window
 
-        # Dialog box setup (with transparency)
+        # Dialog box setup
         self.dialog_widget = QWidget(self)
         self.dialog_widget.setGeometry(
             int(self.dialog_x),
@@ -87,42 +81,27 @@ class TachieDisplay(QMainWindow):
             int(self.dialog_height),
         )
         self.dialog_widget.setStyleSheet(
-            f"background-color: rgba(255, 255, 255, {255*self.dialog_opacity}); border: 1px solid gray; border-radius: 15px;"
+            "background-color: white; border: 1px solid gray;"
         )
-
-        # Apply shadow effect to the dialog widget
-        # shadow_effect = QGraphicsDropShadowEffect(self.dialog_widget)
-        # shadow_effect.setOffset(0, 0)
-        # shadow_effect.setBlurRadius(15)
-        # shadow_effect.setColor(Qt.black)
-        # self.dialog_widget.setGraphicsEffect(shadow_effect)
 
         self.dialog_layout = QVBoxLayout(self.dialog_widget)
 
-        # self.dialog_label = QLabel("绫", self.dialog_widget)
-        # self.dialog_label.setStyleSheet("font: bold 14pt Arial; color: #333333;")
-        # self.dialog_layout.addWidget(self.dialog_label)
+        self.dialog_label = QLabel("绫", self.dialog_widget)
+        self.dialog_label.setStyleSheet("font: 14pt Arial;")
+        self.dialog_layout.addWidget(self.dialog_label)
 
-        # Change from QTextEdit to QPlainTextEdit
-        self.dialog_text = QPlainTextEdit(self.dialog_widget)
-        self.dialog_text.setStyleSheet(
-            "font: 14pt Arial; background-color: transparent; border: none; color: #333333;"
-        )
-        self.dialog_text.setFixedHeight(int(self.dialog_height))
+        self.dialog_text = QTextEdit(self.dialog_widget)
+        self.dialog_text.setStyleSheet("font: 14pt Arial; background-color: white;")
+        self.dialog_text.setFixedHeight(80)
         self.dialog_text.setFixedWidth(int(self.dialog_width - 20))
         self.dialog_layout.addWidget(self.dialog_text)
 
-        # 设置输入法策略
-        self.dialog_text.setInputMethodHints(
-            Qt.ImhPreferLowercase | Qt.ImhNoAutoUppercase
-        )
-
-        # 设置 focusPolicy
-        self.dialog_text.setFocusPolicy(Qt.StrongFocus)
+        # 设置 keyPressEvent 来捕获回车键
+        self.dialog_text.keyPressEvent = self.keyPressEvent
 
         self.close_button = QPushButton("×", self)
         self.close_button.setStyleSheet(
-            "background-color: red; color: white; font: bold 12pt Arial; border: none; border-radius: 15%;"
+            "background-color: red; color: white; font: bold 12pt Arial; border: none;"
         )
         self.close_button.setGeometry(
             int(self.window_width - (self.window_width - self.dialog_width) // 2 - 30),
@@ -132,38 +111,23 @@ class TachieDisplay(QMainWindow):
         )
         self.close_button.clicked.connect(self.close)
 
-        self.setStyleSheet("background-color: transparent;")
+        self.setStyleSheet("background-color: black;")
 
-        # 安装事件过滤器到 dialog_text
-        self.dialog_text.installEventFilter(self)
-
-    def eventFilter(self, obj, event):
-        # 捕获回车键事件
-        if obj == self.dialog_text and event.type() == QEvent.KeyPress:
-            key_event = event
-            if key_event.key() == Qt.Key_Return:
-                self.send_text()
-                self.dialog_text.clear()  # 清空文本框
-                return True  # 表示事件已处理，不再传播
-        return super().eventFilter(obj, event)
+    def keyPressEvent(self, event: QKeyEvent):
+        if event.key() == Qt.Key_Return:
+            self.send_text()  # 按下回车键时发送文本
+        else:
+            super().keyPressEvent(event)  # 处理其他按键事件
 
     def send_text(self):
         text = self.dialog_text.toPlainText().strip()
-        if text:
-            print(f"发送的文本: {text}")
-            self.text_sent.emit(text)  # 发射信号，将文本发送出去
-            self.dialog_text.clear()  # 清空文本框内容
+        print(f"发送的文本: {text}")
+        self.dialog_text.clear()
+        self.dialog_text.setPlainText(text)
 
     def display_text(self, content):
-        print(f"显示文本: {content}")  # 确保文本内容正常传递
-        self.dialog_text.clear()  # 清空文本框
-
-        # 使用 QTimer 来延迟显示文本
-        QTimer.singleShot(
-            100, lambda: self.dialog_text.setPlainText(content)
-        )  # 延迟 100 毫秒
-        self.dialog_text.update()  # 强制更新控件
-        self.dialog_text.setFocus()  # 让文本框重新获得焦点
+        self.dialog_text.clear()
+        self.dialog_text.setPlainText(content)
 
     def start_drag(self, event):
         self.offset_x = event.x()
@@ -190,9 +154,9 @@ class TachieDisplay(QMainWindow):
         height = self.height()
 
         self.character_label.setGeometry(0, 0, width, height)
-        self.dialog_widget.move(int((width - self.dialog_width) // 2), int(height // 2))
+        self.dialog_widget.move((width - self.dialog_width) // 2, height // 2)
 
-        self.close_button.move(int(width - (width - self.dialog_width) // 2 - 30), 0)
+        self.close_button.move(width - (width - self.dialog_width) // 2 - 30, 0)
 
 
 if __name__ == "__main__":

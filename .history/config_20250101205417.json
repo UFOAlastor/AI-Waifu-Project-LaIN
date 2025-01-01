@@ -2,6 +2,6 @@
     "window_width": 600,
     "window_height": 800,
     "tachie_path": "./tachie/Murasame/",
-    "dialog_opacity": 0.8,
+    "dialog_opacity": 0.2,
     "always_on_top": true
   }

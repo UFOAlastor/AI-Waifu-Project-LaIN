@@ -17,7 +17,6 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import QTimer
 
-
 # 在 TachieDisplay 类中设置事件过滤器
 class TachieDisplay(QMainWindow):
     # 定义一个信号，发送输入的文本
@@ -159,9 +158,7 @@ class TachieDisplay(QMainWindow):
         self.dialog_text.clear()  # 清空文本框
 
         # 使用 QTimer 来延迟显示文本
-        QTimer.singleShot(
-            100, lambda: self.dialog_text.setPlainText(content)
-        )  # 延迟 100 毫秒
+        QTimer.singleShot(100, lambda: self.dialog_text.setPlainText(content))  # 延迟 100 毫秒
         self.dialog_text.update()  # 强制更新控件
         self.dialog_text.setFocus()  # 让文本框重新获得焦点
 
