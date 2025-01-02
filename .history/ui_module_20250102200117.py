@@ -214,7 +214,7 @@ class TachieDisplay(QMainWindow):
         self.content = content  # 存储要显示的完整文本
 
         # 设置每个字符的延迟时间（可以根据需要调整）
-        self.typing_speed = 25  # 每个字符之间的延迟 25 毫秒
+        self.typing_speed = 10  # 每个字符之间的延迟 10 毫秒
 
         # 设置定时器，模拟逐个字符的显示
         self.timer = QTimer(self)

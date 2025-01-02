@@ -86,9 +86,7 @@ class vitsSpeaker:
             print("音频生成成功，正在播放...")
 
             # 创建一个新的线程来播放音频，这样主程序就不会被阻塞
-            audio_thread = threading.Thread(
-                target=vitsSpeaker.play_audio, args=(audio_data,)
-            )
+            audio_thread = threading.Thread(target=vitsSpeaker.play_audio, args=(audio_data,))
             audio_thread.start()
 
             # 继续执行其他任务
