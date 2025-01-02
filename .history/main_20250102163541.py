@@ -98,8 +98,7 @@ class MainApp:
 
         if (
             tool_call_message
-            and tool_call_message.get("tool_call", {}).get("name", "")
-            == "send_message"  # 必须是send_message工具发出的才是模型回复
+            and tool_call_message.get("tool_call", {}).get("name", "") == "send_message"
         ):
             reply_text = tool_call_message.get("tool_call", {}).get("arguments", "")
             try:

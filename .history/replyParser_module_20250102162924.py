@@ -10,14 +10,14 @@ def replyParser(reply: str, delimiter: str = "|||"):
     """
     # 1. 检查 reply 是否为字符串类型
     if not isinstance(reply, str):
-        return {"status": 400, "message": "回复内容非字符串类型"}
+        return {"status": 400, "message": "输入值必须是字符串类型"}
 
     # 2. 去掉首尾空格、换行符等无效字符
     reply = reply.strip()
 
     # 3. 检查是否为空字符串
     if not reply:
-        return {"status": 400, "message": "回复内容为空"}
+        return {"status": 400, "message": "输入字符串为空，无法解析。"}
 
     # 4. 替换掉可能冲突的分隔符（如多余的空格）
     reply = re.sub(r"\s+", " ", reply)
@@ -38,7 +38,7 @@ def replyParser(reply: str, delimiter: str = "|||"):
     if not match:
         return {
             "status": 400,
-            "message": "回复内容格式不正确，应为 {表情}|||{中文}|||{日语}",
+            "message": "输入字符串格式不正确，应为 {表情}|||{中文}|||{日语}",
         }
 
     # 9. 提取结果

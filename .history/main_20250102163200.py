@@ -96,17 +96,11 @@ class MainApp:
             None,
         )
 
-        if (
-            tool_call_message
-            and tool_call_message.get("tool_call", {}).get("name", "")
-            == "send_message"  # 必须是send_message工具发出的才是模型回复
-        ):
+        if tool_call_message:
             reply_text = tool_call_message.get("tool_call", {}).get("arguments", "")
             try:
                 parsed_arguments = json.loads(reply_text)
-                final_message = self.process_response(
-                    str(parsed_arguments.get("message", "没有消息内容"))
-                )
+                final_message = self.process_response(str(parsed_arguments.get("message", "没有消息内容")))
             except json.JSONDecodeError:
                 final_message = "无法解析消息"
         else:
