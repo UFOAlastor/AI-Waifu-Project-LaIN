@@ -8,6 +8,5 @@
     "always_on_top": true,
     "agent_id": "agent-33418f62-6ec6-4263-8e92-147b27acdb87",
     "dialog_label": "LaIN 绫",
-    "vits_api_url": "http://127.0.0.1:23456/voice/vits",
-    "vits_speaker_id": "4"
+    "vits_api_url": "http://127.0.0.1:23456/voice/vits"
 }
