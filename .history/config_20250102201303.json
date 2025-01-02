@@ -3,7 +3,7 @@
     "window_height": 800,
     "tachie_path": "./tachie/Murasame/",
     "default_tachie": "正常",
-    "opening_tachie": "高兴",
+    "opening_tachie": "微笑",
     "tachie_suffix": "png",
     "dialog_opacity": 0.8,
     "always_on_top": true,

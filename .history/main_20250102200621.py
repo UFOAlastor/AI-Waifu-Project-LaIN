@@ -39,11 +39,11 @@ class MainApp:
 
     def setup_ui(self):
         self.window.display_text(
-            "Ciallo～(∠・ω< )⌒☆ 我是绫！有什么能帮忙的吗?", is_non_user_input=True
+            "Ciallo～(∠・ω< )⌒☆ 我是绫！", is_non_user_input=True
         )
         self.window.text_sent.connect(self.on_text_received)
         self.window.show()
-        vitsSpeaker.vits_play("チャロ！わが輩はレイだよ！何かお手伝いできること、あるかな～？")
+        vitsSpeaker.vits_play("シアロ, あやです！")
 
     def on_text_received(self, input_text):
         """等待接收模型回复"""

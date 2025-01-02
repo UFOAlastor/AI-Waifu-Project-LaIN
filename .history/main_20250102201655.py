@@ -39,7 +39,7 @@ class MainApp:
 
     def setup_ui(self):
         self.window.display_text(
-            "Ciallo～(∠・ω< )⌒☆ 我是绫！有什么能帮忙的吗?", is_non_user_input=True
+            "Ciallo～(∠・ω< )⌒☆ 我是绫！", is_non_user_input=True
         )
         self.window.text_sent.connect(self.on_text_received)
         self.window.show()

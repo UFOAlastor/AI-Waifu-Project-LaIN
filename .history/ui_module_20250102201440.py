@@ -65,9 +65,9 @@ class TachieDisplay(QMainWindow):
         # 开场立绘显示
         self.tachie_display(self.opening_tachie)
 
-        # 设置2.5秒后执行回调函数，切换回默认立绘
+        # 设置4秒后执行回调函数，切换回默认立绘
         QTimer.singleShot(
-            2500, lambda: self.tachie_display(self.default_tachie)
+            4000, lambda: self.tachie_display(self.default_tachie)
         )
 
         # 对话框设置（带透明度）
