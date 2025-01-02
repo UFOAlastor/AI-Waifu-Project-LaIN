@@ -42,7 +42,9 @@ class TachieDisplay(QMainWindow):
         self.setWindowFlags(Qt.FramelessWindowHint)  # 去除 window frame
         self.setAttribute(Qt.WA_TranslucentBackground)  # 透明窗口背景
         self.setFixedSize(self.window_width, self.window_height)
-        self.setStyleSheet("background-color: transparent;")  # 使整个窗口透明
+        self.setStyleSheet(
+            "background-color: transparent;"
+        )  # 使整个窗口透明
 
         # 窗口始终置顶
         if self.settings.get("always_on_top", False):
@@ -92,7 +94,7 @@ class TachieDisplay(QMainWindow):
 
         self.dialog_layout = QVBoxLayout(self.dialog_widget)
 
-        if not self.label_text == "":
+        if(not self.label_text  == ""):
             self.dialog_label = QLabel(self.label_text, self.dialog_widget)
             self.dialog_label.setStyleSheet(
                 """
@@ -105,7 +107,7 @@ class TachieDisplay(QMainWindow):
             )
             self.dialog_layout.addWidget(self.dialog_label)
 
-        # 从 QTextEdit 更改为 QPlainTextEdit
+        # Change from QTextEdit to QPlainTextEdit
         self.dialog_text = QPlainTextEdit(self.dialog_widget)
         self.dialog_text.setStyleSheet(
             "font: 14pt Arial; background-color: transparent; border: none; color: #2f2f2f;"
@@ -140,6 +142,9 @@ class TachieDisplay(QMainWindow):
         # 安装事件过滤器到 dialog_text
         self.dialog_text.installEventFilter(self)
         self.dialog_text.mousePressEvent = self.on_mouse_press  # 手动重写鼠标点击事件
+
+    def tachie_display(self, tachie_path):
+
 
     def eventFilter(self, obj, event):
         # 捕获回车键事件

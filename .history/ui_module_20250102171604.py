@@ -42,9 +42,10 @@ class TachieDisplay(QMainWindow):
         self.setWindowFlags(Qt.FramelessWindowHint)  # 去除 window frame
         self.setAttribute(Qt.WA_TranslucentBackground)  # 透明窗口背景
         self.setFixedSize(self.window_width, self.window_height)
-        self.setStyleSheet("background-color: transparent;")  # 使整个窗口透明
+        self.setStyleSheet(
+            "background-color: transparent;"
+        )  # 使整个窗口透明
 
-        # 窗口始终置顶
         if self.settings.get("always_on_top", False):
             self.setWindowFlag(Qt.WindowStaysOnTopHint)
 
@@ -66,19 +67,19 @@ class TachieDisplay(QMainWindow):
             int(image_width * self.scale), int(image_height * self.scale)
         )
 
-        # 设置QLabel显示图像（不透明）
+        # Set up QLabel to display the image (without transparency)
         self.character_label = QLabel(self)
         self.character_label.setPixmap(QPixmap.fromImage(self.character_image))
         self.character_label.setAlignment(Qt.AlignCenter)
         self.character_label.setGeometry(0, 0, self.window_width, self.window_height)
 
-        # 设置可拖动区域
+        # Set up draggable area
         self.offset_x = 0
         self.offset_y = 0
         self.character_label.mousePressEvent = self.start_drag
         self.character_label.mouseMoveEvent = self.drag_window
 
-        # 对话框设置（带透明度）
+        # Dialog box setup (with transparency)
         self.dialog_widget = QWidget(self)
         self.dialog_widget.setGeometry(
             int(self.dialog_x),
@@ -92,7 +93,7 @@ class TachieDisplay(QMainWindow):
 
         self.dialog_layout = QVBoxLayout(self.dialog_widget)
 
-        if not self.label_text == "":
+        if(not self.label_text  == ""):
             self.dialog_label = QLabel(self.label_text, self.dialog_widget)
             self.dialog_label.setStyleSheet(
                 """
@@ -105,7 +106,7 @@ class TachieDisplay(QMainWindow):
             )
             self.dialog_layout.addWidget(self.dialog_label)
 
-        # 从 QTextEdit 更改为 QPlainTextEdit
+        # Change from QTextEdit to QPlainTextEdit
         self.dialog_text = QPlainTextEdit(self.dialog_widget)
         self.dialog_text.setStyleSheet(
             "font: 14pt Arial; background-color: transparent; border: none; color: #2f2f2f;"
@@ -140,6 +141,9 @@ class TachieDisplay(QMainWindow):
         # 安装事件过滤器到 dialog_text
         self.dialog_text.installEventFilter(self)
         self.dialog_text.mousePressEvent = self.on_mouse_press  # 手动重写鼠标点击事件
+
+    def tachie_display(self, tachie_path):
+
 
     def eventFilter(self, obj, event):
         # 捕获回车键事件
