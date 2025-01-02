@@ -7,10 +7,11 @@ from model_module import Model  # 导入模型类
 from replyParser_module import replyParser  # 导入回复内容解析器
 from vits_module import vitsSpeaker
 
-import logging, logging_config
+import logging
+import logging_config  # 这里导入 logging_config.py 文件
 
 # 初始化日志配置
-logging_config.setup_logging()
+logging_config.setup_logging()  # 这里调用初始化日志的函数
 # 获取根记录器
 logger = logging.getLogger()
 
@@ -41,9 +42,9 @@ def load_settings(file_path="./config.json"):
             settings = json.load(f)
             return settings
     except FileNotFoundError:
-        logger.error(f"未找到设置文件: {file_path}")
+        print(f"未找到设置文件: {file_path}")
     except json.JSONDecodeError:
-        logger.error(f"设置文件格式错误: {file_path}")
+        print(f"设置文件格式错误: {file_path}")
     return {}
 
 
@@ -150,9 +151,9 @@ class MainApp:
             tachie_expression = parsed_reply.get("data").get("ep")
             Chinese_message = parsed_reply.get("data").get("zh")
             Japanese_message = parsed_reply.get("data").get("jp")
-            logger.debug("tachie_expression:", tachie_expression)
-            logger.debug("Chinese_message:", Chinese_message)
-            logger.debug("Japanese_message:", Japanese_message)
+            print("tachie_expression:", tachie_expression)
+            print("Chinese_message:", Chinese_message)
+            print("Japanese_message:", Japanese_message)
 
         # 处理立绘切换
         self.change_tachie(tachie_expression)
@@ -166,7 +167,7 @@ class MainApp:
         """立绘切换"""
         # 展示指定的立绘
         self.window.tachie_display(tachie_name)
-        logger.debug("切换立绘:", tachie_name)
+        print("切换立绘:", tachie_name)
 
         # 设置4秒后执行回调函数，切换回默认立绘
         QTimer.singleShot(

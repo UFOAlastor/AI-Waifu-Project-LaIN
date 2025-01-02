@@ -7,10 +7,11 @@ from model_module import Model  # 导入模型类
 from replyParser_module import replyParser  # 导入回复内容解析器
 from vits_module import vitsSpeaker
 
-import logging, logging_config
+import logging
+import logging_config  # 这里导入 logging_config.py 文件
 
 # 初始化日志配置
-logging_config.setup_logging()
+logging_config.setup_logging()  # 这里调用初始化日志的函数
 # 获取根记录器
 logger = logging.getLogger()
 

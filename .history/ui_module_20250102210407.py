@@ -260,12 +260,17 @@ class TachieDisplay(QMainWindow):
 
 if __name__ == "__main__":
     import json
-
     """加载配置文件"""
-    with open("./config.json", "r", encoding="utf-8") as f:
-        settings = json.load(f)
+    try:
+        with open("./config.json", "r", encoding="utf-8") as f:
+            settings = json.load(f)
+            return settings
+    except FileNotFoundError:
+        logger.error(f"未找到设置文件: {"./config.json"}")
+    except json.JSONDecodeError:
+        logger.error(f"设置文件格式错误: {"./config.json"}")
 
     app = QApplication(sys.argv)
-    window = TachieDisplay(settings)
+    window = TachieDisplay()
     window.show()
     sys.exit(app.exec_())

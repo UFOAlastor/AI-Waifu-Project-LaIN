@@ -8,7 +8,7 @@ import threading  # 导入线程模块
 import logging
 
 # 获取根记录器
-logger = logging.getLogger("vits_module")
+logger = logging.getLogger("ui_module")
 
 
 class vitsSpeaker:
@@ -44,11 +44,11 @@ class vitsSpeaker:
             if response.status_code == 200:
                 return response.content
             else:
-                logger.error(f"音频请求失败，状态码: {response.status_code}")
+                print(f"音频请求失败，状态码: {response.status_code}")
                 return None
 
         except requests.RequestException as e:
-            logger.error(f"请求发生错误: {e}")
+            print(f"请求发生错误: {e}")
             return None
 
     @staticmethod
@@ -64,7 +64,7 @@ class vitsSpeaker:
             while pygame.mixer.music.get_busy():
                 time.sleep(0.1)
         except Exception as e:
-            logger.error(f"播放音频发生错误: {e}")
+            print(f"播放音频发生错误: {e}")
 
     @staticmethod
     def vits_play(text, speaker_id=None, lang="zh", format="wav", length=1.0):
@@ -75,10 +75,10 @@ class vitsSpeaker:
             )
 
             if audio_data is None:
-                logger.error("生成音频失败，无法播放。")
+                print("生成音频失败，无法播放。")
                 return
 
-            logger.info("音频生成成功，正在播放...")
+            print("音频生成成功，正在播放...")
 
             # 创建一个新的线程来播放音频，这样主程序就不会被阻塞
             audio_thread = threading.Thread(
@@ -87,18 +87,29 @@ class vitsSpeaker:
             audio_thread.start()
 
             # 继续执行其他任务
-            logger.debug("主程序继续执行，音频正在播放...")
+            print("主程序继续执行，音频正在播放...")
 
         except Exception as e:
-            logger.error(f"发生错误: {e}")
+            print(f"发生错误: {e}")
+
+
+def load_settings(file_path="./config.json"):
+    """加载配置文件"""
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            settings = json.load(f)
+            return settings
+    except FileNotFoundError:
+        print(f"未找到设置文件: {file_path}")
+    except json.JSONDecodeError:
+        print(f"设置文件格式错误: {file_path}")
+    return {}
 
 
 # 测试生成和播放音频
 if __name__ == "__main__":
     # 加载配置文件
-    with open("./config.json", "r", encoding="utf-8") as f:
-        settings = json.load(f)
-        vitsSpeaker.set_settings(settings)
+    vitsSpeaker.set_settings(load_settings())
 
     # 要合成的日语文本
     text = "今日はとても楽しい一日だったよ～！シアロ～(∠・ω< )⌒☆ 何か面白いことがあったら教えてね！"

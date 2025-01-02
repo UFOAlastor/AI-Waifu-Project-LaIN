@@ -93,12 +93,23 @@ class vitsSpeaker:
             logger.error(f"发生错误: {e}")
 
 
+def load_settings(file_path="./config.json"):
+    """加载配置文件"""
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            settings = json.load(f)
+            return settings
+    except FileNotFoundError:
+        logger.error(f"未找到设置文件: {file_path}")
+    except json.JSONDecodeError:
+        logger.error(f"设置文件格式错误: {file_path}")
+    return {}
+
+
 # 测试生成和播放音频
 if __name__ == "__main__":
     # 加载配置文件
-    with open("./config.json", "r", encoding="utf-8") as f:
-        settings = json.load(f)
-        vitsSpeaker.set_settings(settings)
+    vitsSpeaker.set_settings(load_settings())
 
     # 要合成的日语文本
     text = "今日はとても楽しい一日だったよ～！シアロ～(∠・ω< )⌒☆ 何か面白いことがあったら教えてね！"

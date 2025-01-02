@@ -200,14 +200,14 @@ class TachieDisplay(QMainWindow):
             self.dialog_text.clear()  # 清空文本框内容
             self.is_non_user_input = False  # 重置标记
         # 处理输入符号点击操作
-        logger.debug("点击了文本框的输入符号区域")
+        print("点击了文本框的输入符号区域")
         # 调用父类的事件处理方法，确保光标行为正常
         super(QPlainTextEdit, self.dialog_text).mousePressEvent(event)
 
     def send_text(self):
         text = self.dialog_text.toPlainText().replace("\n", "\\n ").strip()
         if text:
-            logger.debug(f"发送的文本: {text}")
+            print(f"发送的文本: {text}")
             self.text_sent.emit(text)  # 发射信号，将文本发送出去
             self.dialog_text.clear()  # 清空文本框内容
 
@@ -259,13 +259,7 @@ class TachieDisplay(QMainWindow):
 
 
 if __name__ == "__main__":
-    import json
-
-    """加载配置文件"""
-    with open("./config.json", "r", encoding="utf-8") as f:
-        settings = json.load(f)
-
     app = QApplication(sys.argv)
-    window = TachieDisplay(settings)
+    window = TachieDisplay()
     window.show()
     sys.exit(app.exec_())

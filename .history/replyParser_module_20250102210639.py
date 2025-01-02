@@ -67,7 +67,7 @@ if __name__ == "__main__":
     # test_reply = "正常 ||| 现在是凌晨12点13分，主人，祝您新年快乐！已经进入新的一天了！||| 現在は午前0時13分です、ご主人。新年おめでとうございます！新しい日が始まりました！"
     test_reply = "没有有效的回复"
 
-    logger.debug("测试内容:", test_reply, "\n")
+    print("测试内容:", test_reply, "\n")
 
     parsed_reply = replyParser(test_reply)
     parse_status = parsed_reply.get("status")
@@ -77,8 +77,8 @@ if __name__ == "__main__":
         tachie_expression = parsed_reply.get("data").get("ep")
         Chinese_message = parsed_reply.get("data").get("zh")
         Japanese_message = parsed_reply.get("data").get("jp")
-        logger.debug("tachie_expression:", tachie_expression)
-        logger.debug("Chinese_message:", Chinese_message)
-        logger.debug("Japanese_message:", Japanese_message)
+        print("tachie_expression:", tachie_expression)
+        print("Chinese_message:", Chinese_message)
+        print("Japanese_message:", Japanese_message)
     else:
-        logger.debug("最终结果:", parse_message)
+        print("最终结果:", parse_message)

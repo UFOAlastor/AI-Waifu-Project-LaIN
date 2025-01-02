@@ -1,0 +1,29 @@
+2025-01-02 20:43:42 - root - INFO - Logging setup complete.
+2025-01-02 20:48:30 - root - INFO - Logging setup complete.
+2025-01-02 20:49:24 - root - INFO - Logging setup complete.
+2025-01-02 20:49:25 - urllib3.connectionpool - DEBUG - Starting new HTTP connection (1): 127.0.0.1:23456
+2025-01-02 20:49:25 - urllib3.connectionpool - DEBUG - http://127.0.0.1:23456 "GET /voice/vits?text=%E3%83%81%E3%83%A3%E3%83%AD%EF%BC%81%E3%82%8F%E3%81%8C%E8%BC%A9%E3%81%AF%E3%83%AC%E3%82%A4%E3%81%A0%E3%82%88%EF%BC%81%E4%BD%95%E3%81%8B%E3%81%8A%E6%89%8B%E4%BC%9D%E3%81%84%E3%81%A7%E3%81%8D%E3%82%8B%E3%81%93%E3%81%A8%E3%80%81%E3%81%82%E3%82%8B%E3%81%8B%E3%81%AA%EF%BD%9E%EF%BC%9F&id=4&lang=zh&format=wav&length=1.0 HTTP/1.1" 200 200236
+2025-01-02 20:50:03 - root - INFO - Logging setup complete.
+2025-01-02 20:50:04 - urllib3.connectionpool - DEBUG - Starting new HTTP connection (1): 127.0.0.1:23456
+2025-01-02 20:50:04 - urllib3.connectionpool - DEBUG - http://127.0.0.1:23456 "GET /voice/vits?text=%E3%83%81%E3%83%A3%E3%83%AD%EF%BC%81%E3%82%8F%E3%81%8C%E8%BC%A9%E3%81%AF%E3%83%AC%E3%82%A4%E3%81%A0%E3%82%88%EF%BC%81%E4%BD%95%E3%81%8B%E3%81%8A%E6%89%8B%E4%BC%9D%E3%81%84%E3%81%A7%E3%81%8D%E3%82%8B%E3%81%93%E3%81%A8%E3%80%81%E3%81%82%E3%82%8B%E3%81%8B%E3%81%AA%EF%BD%9E%EF%BC%9F&id=4&lang=zh&format=wav&length=1.0 HTTP/1.1" 200 192556
+2025-01-02 20:51:03 - root - INFO - Logging setup complete.
+2025-01-02 20:51:04 - urllib3.connectionpool - DEBUG - Starting new HTTP connection (1): 127.0.0.1:23456
+2025-01-02 20:51:04 - urllib3.connectionpool - DEBUG - http://127.0.0.1:23456 "GET /voice/vits?text=%E3%83%81%E3%83%A3%E3%83%AD%EF%BC%81%E3%82%8F%E3%81%8C%E8%BC%A9%E3%81%AF%E3%83%AC%E3%82%A4%E3%81%A0%E3%82%88%EF%BC%81%E4%BD%95%E3%81%8B%E3%81%8A%E6%89%8B%E4%BC%9D%E3%81%84%E3%81%A7%E3%81%8D%E3%82%8B%E3%81%93%E3%81%A8%E3%80%81%E3%81%82%E3%82%8B%E3%81%8B%E3%81%AA%EF%BD%9E%EF%BC%9F&id=4&lang=zh&format=wav&length=1.0 HTTP/1.1" 200 197164
+2025-01-02 20:53:33 - logging_config - INFO - Logging setup complete.
+2025-01-02 20:53:33 - connectionpool - DEBUG - Starting new HTTP connection (1): 127.0.0.1:23456
+2025-01-02 20:53:34 - connectionpool - DEBUG - http://127.0.0.1:23456 "GET /voice/vits?text=%E3%83%81%E3%83%A3%E3%83%AD%EF%BC%81%E3%82%8F%E3%81%8C%E8%BC%A9%E3%81%AF%E3%83%AC%E3%82%A4%E3%81%A0%E3%82%88%EF%BC%81%E4%BD%95%E3%81%8B%E3%81%8A%E6%89%8B%E4%BC%9D%E3%81%84%E3%81%A7%E3%81%8D%E3%82%8B%E3%81%93%E3%81%A8%E3%80%81%E3%81%82%E3%82%8B%E3%81%8B%E3%81%AA%EF%BD%9E%EF%BC%9F&id=4&lang=zh&format=wav&length=1.0 HTTP/1.1" 200 200236
+2025-01-02 20:55:50 - logging_config - INFO - Logging setup complete.
+2025-01-02 20:55:50 - connectionpool - DEBUG - Starting new HTTP connection (1): 127.0.0.1:23456
+2025-01-02 20:55:50 - connectionpool - DEBUG - http://127.0.0.1:23456 "GET /voice/vits?text=%E3%83%81%E3%83%A3%E3%83%AD%EF%BC%81%E3%82%8F%E3%81%8C%E8%BC%A9%E3%81%AF%E3%83%AC%E3%82%A4%E3%81%A0%E3%82%88%EF%BC%81%E4%BD%95%E3%81%8B%E3%81%8A%E6%89%8B%E4%BC%9D%E3%81%84%E3%81%A7%E3%81%8D%E3%82%8B%E3%81%93%E3%81%A8%E3%80%81%E3%81%82%E3%82%8B%E3%81%8B%E3%81%AA%EF%BD%9E%EF%BC%9F&id=4&lang=zh&format=wav&length=1.0 HTTP/1.1" 200 189484
+2025-01-02 20:56:19 - logging_config - INFO - Logging setup complete.
+2025-01-02 20:56:19 - main - INFO - This is an info message from mytest.
+2025-01-02 20:56:19 - connectionpool - DEBUG - Starting new HTTP connection (1): 127.0.0.1:23456
+2025-01-02 20:56:20 - connectionpool - DEBUG - http://127.0.0.1:23456 "GET /voice/vits?text=%E3%83%81%E3%83%A3%E3%83%AD%EF%BC%81%E3%82%8F%E3%81%8C%E8%BC%A9%E3%81%AF%E3%83%AC%E3%82%A4%E3%81%A0%E3%82%88%EF%BC%81%E4%BD%95%E3%81%8B%E3%81%8A%E6%89%8B%E4%BC%9D%E3%81%84%E3%81%A7%E3%81%8D%E3%82%8B%E3%81%93%E3%81%A8%E3%80%81%E3%81%82%E3%82%8B%E3%81%8B%E3%81%AA%EF%BD%9E%EF%BC%9F&id=4&lang=zh&format=wav&length=1.0 HTTP/1.1" 200 200748
+2025-01-02 20:56:58 - logging_config - INFO - Logging setup complete.
+2025-01-02 20:56:58 - main - INFO - This is an info message from mytest.
+2025-01-02 20:56:59 - connectionpool - DEBUG - Starting new HTTP connection (1): 127.0.0.1:23456
+2025-01-02 20:56:59 - connectionpool - DEBUG - http://127.0.0.1:23456 "GET /voice/vits?text=%E3%83%81%E3%83%A3%E3%83%AD%EF%BC%81%E3%82%8F%E3%81%8C%E8%BC%A9%E3%81%AF%E3%83%AC%E3%82%A4%E3%81%A0%E3%82%88%EF%BC%81%E4%BD%95%E3%81%8B%E3%81%8A%E6%89%8B%E4%BC%9D%E3%81%84%E3%81%A7%E3%81%8D%E3%82%8B%E3%81%93%E3%81%A8%E3%80%81%E3%81%82%E3%82%8B%E3%81%8B%E3%81%AA%EF%BD%9E%EF%BC%9F&id=4&lang=zh&format=wav&length=1.0 HTTP/1.1" 200 199212
+2025-01-02 20:59:18 - logging_config - INFO - Logging setup complete.
+2025-01-02 20:59:18 - main - INFO - This is an info message from mytest.
+2025-01-02 20:59:19 - connectionpool - DEBUG - Starting new HTTP connection (1): 127.0.0.1:23456
+2025-01-02 20:59:19 - connectionpool - DEBUG - http://127.0.0.1:23456 "GET /voice/vits?text=%E3%83%81%E3%83%A3%E3%83%AD%EF%BC%81%E3%82%8F%E3%81%8C%E8%BC%A9%E3%81%AF%E3%83%AC%E3%82%A4%E3%81%A0%E3%82%88%EF%BC%81%E4%BD%95%E3%81%8B%E3%81%8A%E6%89%8B%E4%BC%9D%E3%81%84%E3%81%A7%E3%81%8D%E3%82%8B%E3%81%93%E3%81%A8%E3%80%81%E3%81%82%E3%82%8B%E3%81%8B%E3%81%AA%EF%BD%9E%EF%BC%9F&id=4&lang=zh&format=wav&length=1.0 HTTP/1.1" 200 202796

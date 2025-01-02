@@ -2,7 +2,7 @@ import requests
 import logging
 
 # 获取根记录器
-logger = logging.getLogger("modle_module")
+logger = logging.getLogger("ui_module")
 
 
 class Model:
@@ -21,15 +21,15 @@ class Model:
             response.raise_for_status()  # 检查响应状态
 
             # 打印状态码和响应内容
-            logger.debug(f"响应状态码: {response.status_code}")
-            logger.debug(f"响应内容: {response.text}")
+            print(f"响应状态码: {response.status_code}")
+            print(f"响应内容: {response.text}")
 
             # 确保响应是JSON格式
             if response.headers.get("Content-Type") == "application/json":
                 return response.json()  # 返回响应内容
             else:
-                logger.debug("响应不是JSON格式")
+                print("响应不是JSON格式")
                 return {"messages": [{"text": "返回内容格式错误"}]}
         except requests.RequestException as e:
-            logger.debug(f"请求失败: {e}")
+            print(f"请求失败: {e}")
             return {"messages": [{"text": "请求失败，请稍后重试"}]}  # 返回默认失败消息

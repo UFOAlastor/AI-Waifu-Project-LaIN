@@ -9,6 +9,7 @@ from vits_module import vitsSpeaker
 
 import logging, logging_config
 
+logging.shutdown()
 # 初始化日志配置
 logging_config.setup_logging()
 # 获取根记录器

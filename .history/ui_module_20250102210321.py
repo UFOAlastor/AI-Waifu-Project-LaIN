@@ -259,13 +259,7 @@ class TachieDisplay(QMainWindow):
 
 
 if __name__ == "__main__":
-    import json
-
-    """加载配置文件"""
-    with open("./config.json", "r", encoding="utf-8") as f:
-        settings = json.load(f)
-
     app = QApplication(sys.argv)
-    window = TachieDisplay(settings)
+    window = TachieDisplay()
     window.show()
     sys.exit(app.exec_())

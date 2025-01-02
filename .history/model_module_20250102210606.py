@@ -2,7 +2,7 @@ import requests
 import logging
 
 # 获取根记录器
-logger = logging.getLogger("modle_module")
+logger = logging.getLogger("ui_module")
 
 
 class Model:

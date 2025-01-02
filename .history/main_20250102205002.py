@@ -9,10 +9,8 @@ from vits_module import vitsSpeaker
 
 import logging, logging_config
 
-# 初始化日志配置
-logging_config.setup_logging()
 # 获取根记录器
-logger = logging.getLogger()
+logger = logging.getLogger("main")
 
 
 class ChatModelWorker(QThread):
