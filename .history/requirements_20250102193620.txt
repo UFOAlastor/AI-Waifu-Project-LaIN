@@ -1,3 +1,0 @@
-pydub
-PyQt5
-requests

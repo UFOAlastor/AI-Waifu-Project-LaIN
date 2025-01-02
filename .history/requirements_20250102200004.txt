@@ -1,5 +1,0 @@
-PyQt5
-requests
-pydub
-pygame
-threads

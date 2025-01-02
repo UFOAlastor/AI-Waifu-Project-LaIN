@@ -1,4 +1,0 @@
-PyQt5
-requests
-pydub
-ffmpeg
