@@ -7,6 +7,17 @@ class Model:
         self.settings = main_settings
         self.agent_id = self.settings.get("agent_id", "agent-xxx")
 
+    def load_settings(self, file_path):
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except FileNotFoundError:
+            print(f"未找到设置文件: {file_path}")
+            return {}
+        except json.JSONDecodeError:
+            print(f"设置文件格式错误: {file_path}")
+            return {}
+
     def get_response(self, user_input):
         """发送请求到 Letta API，并获取响应"""
         url = f"http://localhost:8283/v1/agents/{self.agent_id}/messages"

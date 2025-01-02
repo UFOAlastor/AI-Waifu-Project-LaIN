@@ -42,7 +42,9 @@ def load_settings(file_path="./config.json"):
 
 class MainApp:
     def __init__(self):
-        self.settings = load_settings()  # 默认加载路径为 "./config.json"
+        self.settings = load_settings(
+            "./config.json"
+        )  # 默认加载路径为 "./config.json"
         self.app = QApplication(sys.argv)
         self.window = TachieDisplay(self.settings)  # 初始化图形界面实例
         self.chat_model = Model(self.settings)  # 初始化语言模型实例
@@ -161,9 +163,9 @@ class MainApp:
         self.window.tachie_display(tachie_name)
         print("切换立绘:", tachie_name)
 
-        # 设置4秒后执行回调函数，切换回默认立绘
+        # 设置6秒后执行回调函数，切换回默认立绘
         QTimer.singleShot(
-            4000, lambda: self.window.tachie_display(self.window.default_tachie)
+            6000, lambda: self.window.tachie_display(self.window.default_tachie)
         )
 
     def run(self):

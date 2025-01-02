@@ -3,7 +3,6 @@ import pydub
 from io import BytesIO
 import time
 import pygame  # 用于播放音频
-import json
 import threading  # 导入线程模块
 
 
@@ -11,13 +10,6 @@ class vitsSpeaker:
     # 静态变量，用于保存配置
     API_URL = "http://127.0.0.1:23456/voice/vits"
     SPEAKER_ID = 4
-
-    @staticmethod
-    def set_settings(settings):
-        """加载配置文件"""
-        # 更新配置文件中的 API_URL 和 SPEAKER_ID
-        vitsSpeaker.API_URL = settings.get("vits_api_url", vitsSpeaker.API_URL)
-        vitsSpeaker.SPEAKER_ID = settings.get("SPEAKER_ID", vitsSpeaker.SPEAKER_ID)
 
     @staticmethod
     def get_audio_stream(text, speaker_id=None, lang="zh", format="wav", length=1.0):
@@ -89,23 +81,10 @@ class vitsSpeaker:
             print(f"发生错误: {e}")
 
 
-def load_settings(file_path="./config.json"):
-    """加载配置文件"""
-    try:
-        with open(file_path, "r", encoding="utf-8") as f:
-            settings = json.load(f)
-            return settings
-    except FileNotFoundError:
-        print(f"未找到设置文件: {file_path}")
-    except json.JSONDecodeError:
-        print(f"设置文件格式错误: {file_path}")
-    return {}
-
-
 # 测试生成和播放音频
 if __name__ == "__main__":
     # 加载配置文件
-    vitsSpeaker.set_settings(load_settings())
+    vitsSpeaker.load_settings("./config.json")
 
     # 要合成的日语文本
     text = "今日はとても楽しい一日だったよ～！シアロ～(∠・ω< )⌒☆ 何か面白いことがあったら教えてね！"

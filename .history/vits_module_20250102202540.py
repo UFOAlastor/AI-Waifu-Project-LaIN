@@ -105,7 +105,7 @@ def load_settings(file_path="./config.json"):
 # 测试生成和播放音频
 if __name__ == "__main__":
     # 加载配置文件
-    vitsSpeaker.set_settings(load_settings())
+    vitsSpeaker.set_settings(load_settings)
 
     # 要合成的日语文本
     text = "今日はとても楽しい一日だったよ～！シアロ～(∠・ω< )⌒☆ 何か面白いことがあったら教えてね！"

@@ -66,7 +66,9 @@ class TachieDisplay(QMainWindow):
         self.tachie_display(self.opening_tachie)
 
         # 设置2.5秒后执行回调函数，切换回默认立绘
-        QTimer.singleShot(2500, lambda: self.tachie_display(self.default_tachie))
+        QTimer.singleShot(
+            2500, lambda: self.tachie_display(self.default_tachie)
+        )
 
         # 对话框设置（带透明度）
         self.dialog_widget = QWidget(self)
@@ -243,6 +245,17 @@ class TachieDisplay(QMainWindow):
         x = event.globalX() - self.offset_x
         y = event.globalY() - self.offset_y
         self.move(x, y)
+
+    def load_settings(self, file_path):
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except FileNotFoundError:
+            print(f"未找到设置文件: {file_path}")
+            return {}
+        except json.JSONDecodeError:
+            print(f"设置文件格式错误: {file_path}")
+            return {}
 
     def resizeEvent(self, event):
         width = self.width()

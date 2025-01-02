@@ -27,29 +27,28 @@ class ChatModelWorker(QThread):
             self.response_ready.emit({"error": str(e)})
 
 
-def load_settings(file_path="./config.json"):
-    """加载配置文件"""
-    try:
-        with open(file_path, "r", encoding="utf-8") as f:
-            settings = json.load(f)
-            return settings
-    except FileNotFoundError:
-        print(f"未找到设置文件: {file_path}")
-    except json.JSONDecodeError:
-        print(f"设置文件格式错误: {file_path}")
-    return {}
-
-
 class MainApp:
     def __init__(self):
-        self.settings = load_settings()  # 默认加载路径为 "./config.json"
+        self.settings = self.load_settings() # 默认加载路径为 "./config.json"
         self.app = QApplication(sys.argv)
-        self.window = TachieDisplay(self.settings)  # 初始化图形界面实例
-        self.chat_model = Model(self.settings)  # 初始化语言模型实例
+        self.window = TachieDisplay()
+        self.chat_model = Model()  # 初始化模型实例
         self.setup_ui()
         self.typing_animation_timer = QTimer()
         self.typing_dots = ""
-        vitsSpeaker.set_settings(self.settings)  # vits语音模块加载配置文件
+        vitsSpeaker.set_settings(self.settings) # vits语音模块加载配置文件
+
+    def load_settings(file_path="./config.json"):
+        """加载配置文件"""
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                settings = json.load(f)
+                return settings
+        except FileNotFoundError:
+            print(f"未找到设置文件: {file_path}")
+        except json.JSONDecodeError:
+            print(f"设置文件格式错误: {file_path}")
+        return {}
 
     def setup_ui(self):
         self.window.display_text(
@@ -57,9 +56,7 @@ class MainApp:
         )
         self.window.text_sent.connect(self.on_text_received)
         self.window.show()
-        vitsSpeaker.vits_play(
-            "チャロ！わが輩はレイだよ！何かお手伝いできること、あるかな～？"
-        )
+        vitsSpeaker.vits_play("チャロ！わが輩はレイだよ！何かお手伝いできること、あるかな～？")
 
     def on_text_received(self, input_text):
         """等待接收模型回复"""
@@ -161,9 +158,9 @@ class MainApp:
         self.window.tachie_display(tachie_name)
         print("切换立绘:", tachie_name)
 
-        # 设置4秒后执行回调函数，切换回默认立绘
+        # 设置6秒后执行回调函数，切换回默认立绘
         QTimer.singleShot(
-            4000, lambda: self.window.tachie_display(self.window.default_tachie)
+            6000, lambda: self.window.tachie_display(self.window.default_tachie)
         )
 
     def run(self):
