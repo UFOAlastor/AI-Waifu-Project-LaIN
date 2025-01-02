@@ -1,3 +1,5 @@
+# main.py
+
 import sys
 import json
 from PyQt5.QtCore import QThread, pyqtSignal, QTimer
@@ -101,7 +103,7 @@ class MainApp:
         self.typing_animation_timer.stop()
         self.typing_animation_timer.timeout.disconnect(self.update_typing_animation)
 
-    def on_model_response(self, response):  # ATTENTION 关键的模型回复处理部分
+    def on_model_response(self, response):  # ATTENTION 模型回复处理部分
         """处理模型的回复"""
         # 停止动态省略号动画
         self.stop_typing_animation()

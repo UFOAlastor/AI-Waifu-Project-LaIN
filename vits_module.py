@@ -1,10 +1,12 @@
+# vits_module.py
+
 import requests
 import pydub
 from io import BytesIO
 import time
 import pygame  # 用于播放音频
 import json
-import threading  # 导入线程模块
+import threading
 import re
 import logging
 
