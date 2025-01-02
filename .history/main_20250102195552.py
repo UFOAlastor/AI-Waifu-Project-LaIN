@@ -134,7 +134,7 @@ class MainApp:
         self.change_tachie(tachie_expression)
 
         # 播放语音, 默认日语
-        vitsSpeaker.vits_play(Japanese_message)
+        vitsSpeaker.synthesize_and_play(Japanese_message)
 
         return Chinese_message
 

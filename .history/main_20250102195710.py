@@ -43,6 +43,7 @@ class MainApp:
         )
         self.window.text_sent.connect(self.on_text_received)
         self.window.show()
+        vitsSpeaker.vits_play("シロ～(∠・ω<)⌒☆あやです！")
 
     def on_text_received(self, input_text):
         """等待接收模型回复"""

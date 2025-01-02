@@ -43,6 +43,7 @@ class MainApp:
         )
         self.window.text_sent.connect(self.on_text_received)
         self.window.show()
+        vitsSpeaker.synthesize_and_play("シアロ～(∠・ω<)⌒☆あやです！")
 
     def on_text_received(self, input_text):
         """等待接收模型回复"""
@@ -134,7 +135,7 @@ class MainApp:
         self.change_tachie(tachie_expression)
 
         # 播放语音, 默认日语
-        vitsSpeaker.vits_play(Japanese_message)
+        vitsSpeaker.synthesize_and_play(Japanese_message)
 
         return Chinese_message
 

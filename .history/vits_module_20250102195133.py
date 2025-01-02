@@ -71,7 +71,7 @@ class vitsSpeaker:
             print(f"播放音频发生错误: {e}")
 
     @staticmethod
-    def vits_play(text, speaker_id=None, lang="zh", format="wav", length=1.0):
+    def synthesize_and_play(text, speaker_id=None, lang="zh", format="wav", length=1.0):
         """输入文本，生成并播放音频"""
         try:
             audio_data = vitsSpeaker.get_audio_stream(
@@ -99,4 +99,4 @@ if __name__ == "__main__":
     text = "今日はとても楽しい一日だったよ～！シアロ～(∠・ω< )⌒☆ 何か面白いことがあったら教えてね！"
 
     # 调用合成并播放的功能
-    vitsSpeaker.vits_play(text)
+    vitsSpeaker.synthesize_and_play(text)

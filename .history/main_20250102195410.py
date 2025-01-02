@@ -39,7 +39,7 @@ class MainApp:
 
     def setup_ui(self):
         self.window.display_text(
-            "Ciallo～(∠・ω< )⌒☆ 我是绫！", is_non_user_input=True
+            "你好，我是远山绫！有什么可以帮忙的吗？", is_non_user_input=True
         )
         self.window.text_sent.connect(self.on_text_received)
         self.window.show()
@@ -134,7 +134,7 @@ class MainApp:
         self.change_tachie(tachie_expression)
 
         # 播放语音, 默认日语
-        vitsSpeaker.vits_play(Japanese_message)
+        vitsSpeaker.synthesize_and_play(Japanese_message)
 
         return Chinese_message
 
