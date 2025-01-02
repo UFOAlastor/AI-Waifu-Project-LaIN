@@ -98,7 +98,7 @@ class TachieDisplay(QMainWindow):
             self.dialog_label.setStyleSheet(
                 """
                 font: bold 12pt Arial;
-                color: #818181;
+                color: #747474;
                 background: transparent;
                 border: none;
                 padding: 5px;

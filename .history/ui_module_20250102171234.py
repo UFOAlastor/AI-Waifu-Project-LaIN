@@ -94,11 +94,11 @@ class TachieDisplay(QMainWindow):
         self.dialog_layout = QVBoxLayout(self.dialog_widget)
 
         if(not self.label_text  == ""):
-            self.dialog_label = QLabel(self.label_text, self.dialog_widget)
+            self.dialog_label = QLabel(label_text, self.dialog_widget)
             self.dialog_label.setStyleSheet(
                 """
                 font: bold 12pt Arial;
-                color: #818181;
+                color: #969696;
                 background: transparent;
                 border: none;
                 padding: 5px;

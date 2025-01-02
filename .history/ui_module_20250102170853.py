@@ -36,7 +36,6 @@ class TachieDisplay(QMainWindow):
             "dialog_height", self.window_height * 0.3
         )
         self.dialog_opacity = self.settings.get("dialog_opacity", 0.8)
-        self.label_text = self.settings.get("dialog_label", "")
 
         # Set up the window with transparent background
         self.setWindowFlags(Qt.FramelessWindowHint)  # Remove the window frame
@@ -93,23 +92,22 @@ class TachieDisplay(QMainWindow):
 
         self.dialog_layout = QVBoxLayout(self.dialog_widget)
 
-        if(not self.label_text  == ""):
-            self.dialog_label = QLabel(self.label_text, self.dialog_widget)
-            self.dialog_label.setStyleSheet(
-                """
-                font: bold 12pt Arial;
-                color: #818181;
-                background: transparent;
-                border: none;
-                padding: 5px;
+        self.dialog_label = QLabel("LaIN 绫", self.dialog_widget)
+        self.dialog_label.setStyleSheet(
             """
-            )
-            self.dialog_layout.addWidget(self.dialog_label)
+            font: bold 12pt Arial;
+            color: #233728;
+            background: transparent;
+            border: none;
+            padding: 5px;
+        """
+        )
+        self.dialog_layout.addWidget(self.dialog_label)
 
         # Change from QTextEdit to QPlainTextEdit
         self.dialog_text = QPlainTextEdit(self.dialog_widget)
         self.dialog_text.setStyleSheet(
-            "font: 14pt Arial; background-color: transparent; border: none; color: #2f2f2f;"
+            "font: 14pt Arial; background-color: transparent; border: none; color: #3c3d3d;"
         )
         self.dialog_text.setFixedHeight(int(self.dialog_height))
         self.dialog_text.setFixedWidth(int(self.dialog_width - 20))
