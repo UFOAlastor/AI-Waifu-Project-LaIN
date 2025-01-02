@@ -260,6 +260,10 @@ class TachieDisplay(QMainWindow):
 
 if __name__ == "__main__":
     import json
+    import logging_config
+
+    # 初始化日志配置
+    logging_config.setup_logging()
 
     """加载配置文件"""
     with open("./config.json", "r", encoding="utf-8") as f:

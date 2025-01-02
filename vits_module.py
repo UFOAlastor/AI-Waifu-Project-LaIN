@@ -5,6 +5,7 @@ import time
 import pygame  # 用于播放音频
 import json
 import threading  # 导入线程模块
+import re
 import logging
 
 # 获取根记录器
@@ -15,6 +16,7 @@ class vitsSpeaker:
     # 静态变量，用于保存配置
     API_URL = "http://127.0.0.1:23456/voice/vits"
     SPEAKER_ID = 4
+    CLEAN_TEXT = True
 
     @staticmethod
     def set_settings(settings):
@@ -22,6 +24,7 @@ class vitsSpeaker:
         # 更新配置文件中的 API_URL 和 SPEAKER_ID
         vitsSpeaker.API_URL = settings.get("vits_api_url", vitsSpeaker.API_URL)
         vitsSpeaker.SPEAKER_ID = settings.get("SPEAKER_ID", vitsSpeaker.SPEAKER_ID)
+        vitsSpeaker.CLEAN_TEXT = settings.get("vits_clean_text", vitsSpeaker.CLEAN_TEXT)
 
     @staticmethod
     def get_audio_stream(text, speaker_id=None, lang="zh", format="wav", length=1.0):
@@ -69,6 +72,11 @@ class vitsSpeaker:
     @staticmethod
     def vits_play(text, speaker_id=None, lang="zh", format="wav", length=1.0):
         """输入文本，生成并播放音频"""
+
+        if vitsSpeaker.CLEAN_TEXT:  # 文本清洗，移除不适合朗读的内容
+            text = vitsSpeaker.clean_text_for_vits(text)
+            logger.debug(f"文本清洗结果: {text}")
+
         try:
             audio_data = vitsSpeaker.get_audio_stream(
                 text, speaker_id, lang, format, length
@@ -92,16 +100,50 @@ class vitsSpeaker:
         except Exception as e:
             logger.error(f"发生错误: {e}")
 
+    @staticmethod
+    def clean_text_for_vits(text):
+        """
+        精确清洗文本，移除不适合朗读的内容。
+        """
+        # 定义精确匹配的正则模式
+        patterns = [
+            r"https?://[a-zA-Z0-9./?=&_%+-]+",  # 精确匹配URL链接
+            # r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}",  # 精确匹配电子邮件地址
+            # r'([a-zA-Z]:)?(\\[^\s\\/:*?"<>|]+)+\\?',  # 精确匹配Windows文件路径
+            # r"<[^>]+>",  # HTML标签（只移除尖括号包裹的内容）
+            # r"\*\*[^*]+\*\*|__[^_]+__",  # Markdown加粗语法（**加粗**或__加粗__）
+            # r"\d{10,}",  # 长数字串（10位或以上）
+            # r"[a-f0-9-]{32,}",  # UUID（32位或以上的十六进制串，带或不带连字符）
+            # r"[{}]{1,2}.*?[{}]{1,2}",  # 花括号包裹的内容，如`{占位符}`或`{{占位符}}`
+            # r"`[^`]+`",  # Markdown行内代码语法（`代码`）
+            # r"--[a-zA-Z0-9_]+(=[^ ]+)?",  # 命令行参数，如 --arg=value
+        ]
+
+        # 依次应用所有正则表达式清理文本
+        for pattern in patterns:
+            text = re.sub(pattern, "", text)
+
+        # 清理多余的空格
+        text = re.sub(r"\s+", " ", text).strip()
+
+        return text
+
 
 # 测试生成和播放音频
 if __name__ == "__main__":
+    import logging_config
+
+    # 初始化日志配置
+    logging_config.setup_logging()
     # 加载配置文件
     with open("./config.json", "r", encoding="utf-8") as f:
         settings = json.load(f)
         vitsSpeaker.set_settings(settings)
 
     # 要合成的日语文本
-    text = "今日はとても楽しい一日だったよ～！シアロ～(∠・ω< )⌒☆ 何か面白いことがあったら教えてね！"
+    # text = "今日はとても楽しい一日だったよ～！シアロ～(∠・ω< )⌒☆ 何か面白いことがあったら教えてね！"
+    text = """
+    今年の世界経済の期待に関する最新の分析は次のとおりです：\\n1. **政治的不安が世界経済に影響を与える可能性** - 特に米国前大統領トランプの可能な復帰のため、各国での政治的不安の影響は世界の繁栄に重大な影響を与えるかもしれません。[こちらから詳細情報をチェック](https://www.msn.com/en-us/money/economy/political-upheaval-around-the-world-could-spell-trouble-for-the-global-economy-in-2025/ar-AA1wyhp4)\\n2. **経済と医療における悲観的な予測** - 一部のアナリストは、医療分野の積極的な変化は難しいと考えており、業界は継続的に利益を上げ続けるが、必ずしも公共の健康を改善するわけではないとしています。[こちらから詳細情報をチェック](https://www.forbes.com/sites/joshuacohen/2025/01/01/2025-not-so-rosy-predictions-on-economy-and-healthcare/)\\n3. **ウォールストリートの2025年の期待** - 影響を及ぼす多くの要因があるとされています。人工知能革命や中国経済の減速、お金を持つべきであることに気をつけるべきです。[こちらから詳細情報をチェック](https://www.bloomberg.com/graphics/2025-investment-outlooks/)\\n4. **ビットコインの価格予測** - 2025年には、機関採用や規制の変化、マクロ経済のトレンドによってビットコインの成長が促進されるでしょう。[こちらから詳細情報をチェック](https://www.forbes.com/sites/digital-assets/2025/01/01/what-is-bitcoins-price-prediction-for-2025/)\\nこれらの情報が世界経済の最新の動向を理解するのに役立つことを願っています！"""
 
     # 调用合成并播放的功能
     vitsSpeaker.vits_play(text)

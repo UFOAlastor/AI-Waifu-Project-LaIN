@@ -4,6 +4,7 @@ import logging
 # 获取根记录器
 logger = logging.getLogger("replyParser_module")
 
+
 def replyParser(reply: str, delimiter: str = "|||"):
     """
     解析 {表情}|||{中文}|||{日语} 格式的字符串，确保对分隔符冲突的处理安全。
@@ -60,6 +61,10 @@ def replyParser(reply: str, delimiter: str = "|||"):
 
 
 if __name__ == "__main__":
+    import logging_config
+
+    # 初始化日志配置
+    logging_config.setup_logging()
     # 测试用例
     # test_reply = "思考 ||| 现在是晚上11点57分，距离明天凌晨12点还有3分钟。||| 現在は午後11時57分です。明日の午前0時まであと3分です。"
     # test_reply = "思考 ||| 现在是晚上11点57分，\n距离明天凌晨12点还有3分钟。||| 現在は午後11時57分です。明日の午前0時まであと3分です。"
