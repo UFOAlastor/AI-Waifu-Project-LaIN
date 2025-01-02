@@ -2,7 +2,7 @@
     "window_width": 600,
     "window_height": 800,
     "tachie_path": "./tachie/Murasame/",
-    "default_tachie": "微笑",
+    "default_tachie": "微笑.png",
     "tachie_suffix": "png",
     "dialog_opacity": 0.8,
     "always_on_top": true,

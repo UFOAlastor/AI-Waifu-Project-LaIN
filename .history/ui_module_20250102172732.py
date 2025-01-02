@@ -118,10 +118,8 @@ class TachieDisplay(QMainWindow):
         self.dialog_text.mousePressEvent = self.on_mouse_press  # 手动重写鼠标点击事件
 
     def tachie_display(self, tachie_name):
-        # 加载角色图像（角色图像无透明度） 拼接: 路径 + 立绘名 + 立绘文件后缀
-        self.character_image = QImage(
-            self.tachie_path + tachie_name + "." + self.tachie_suffix
-        )
+        # 加载角色图像（角色图像无透明度） 拼接路径与立绘名
+        self.character_image = QImage(self.tachie_path + tachie_name)
 
         image_width, image_height = (
             self.character_image.width(),

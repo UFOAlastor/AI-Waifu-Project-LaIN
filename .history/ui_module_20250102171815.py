@@ -37,9 +37,6 @@ class TachieDisplay(QMainWindow):
         )
         self.dialog_opacity = self.settings.get("dialog_opacity", 0.8)
         self.label_text = self.settings.get("dialog_label", "")
-        self.tachie_path = self.settings.get("tachie_path", "./tachie/Murasame/")
-        self.default_tachie = self.settings.get("default_tachie", "正常")
-        self.tachie_suffix = self.settings.get("tachie_suffix", "png")
 
         # 设置窗口背景透明
         self.setWindowFlags(Qt.FramelessWindowHint)  # 去除 window frame
@@ -51,8 +48,35 @@ class TachieDisplay(QMainWindow):
         if self.settings.get("always_on_top", False):
             self.setWindowFlag(Qt.WindowStaysOnTopHint)
 
-        # 初始立绘显示
-        self.tachie_display(self.default_tachie)
+        # 加载角色图像（角色图像无透明度）
+        self.image_path = (
+            self.settings.get("tachie_path", "./tachie/Murasame/") + "正常.png"
+        )
+        self.character_image = QImage(self.image_path)
+
+        image_width, image_height = (
+            self.character_image.width(),
+            self.character_image.height(),
+        )
+        scale_width = self.window_width / image_width
+        scale_height = self.window_height / image_height
+        self.scale = min(scale_width, scale_height)
+
+        self.character_image = self.character_image.scaled(
+            int(image_width * self.scale), int(image_height * self.scale)
+        )
+
+        # 设置QLabel显示图像（不透明）
+        self.character_label = QLabel(self)
+        self.character_label.setPixmap(QPixmap.fromImage(self.character_image))
+        self.character_label.setAlignment(Qt.AlignCenter)
+        self.character_label.setGeometry(0, 0, self.window_width, self.window_height)
+
+        # 设置可拖动区域
+        self.offset_x = 0
+        self.offset_y = 0
+        self.character_label.mousePressEvent = self.start_drag
+        self.character_label.mouseMoveEvent = self.drag_window
 
         # 对话框设置（带透明度）
         self.dialog_widget = QWidget(self)
@@ -68,7 +92,7 @@ class TachieDisplay(QMainWindow):
 
         self.dialog_layout = QVBoxLayout(self.dialog_widget)
 
-        if not self.label_text == "":  # label 标签显示 修改此处以自定义标签外观
+        if not self.label_text == "": # label 标签显示 修改此处自定义标签外观
             self.dialog_label = QLabel(self.label_text, self.dialog_widget)
             self.dialog_label.setStyleSheet(
                 """
@@ -116,36 +140,6 @@ class TachieDisplay(QMainWindow):
         # 安装事件过滤器到 dialog_text
         self.dialog_text.installEventFilter(self)
         self.dialog_text.mousePressEvent = self.on_mouse_press  # 手动重写鼠标点击事件
-
-    def tachie_display(self, tachie_name):
-        # 加载角色图像（角色图像无透明度） 拼接: 路径 + 立绘名 + 立绘文件后缀
-        self.character_image = QImage(
-            self.tachie_path + tachie_name + "." + self.tachie_suffix
-        )
-
-        image_width, image_height = (
-            self.character_image.width(),
-            self.character_image.height(),
-        )
-        scale_width = self.window_width / image_width
-        scale_height = self.window_height / image_height
-        self.scale = min(scale_width, scale_height)
-
-        self.character_image = self.character_image.scaled(
-            int(image_width * self.scale), int(image_height * self.scale)
-        )
-
-        # 设置QLabel显示图像（不透明）
-        self.character_label = QLabel(self)
-        self.character_label.setPixmap(QPixmap.fromImage(self.character_image))
-        self.character_label.setAlignment(Qt.AlignCenter)
-        self.character_label.setGeometry(0, 0, self.window_width, self.window_height)
-
-        # 设置可拖动区域
-        self.offset_x = 0
-        self.offset_y = 0
-        self.character_label.mousePressEvent = self.start_drag
-        self.character_label.mouseMoveEvent = self.drag_window
 
     def eventFilter(self, obj, event):
         # 捕获回车键事件
