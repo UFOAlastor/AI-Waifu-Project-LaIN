@@ -132,6 +132,8 @@ class MainApp:
         sys.exit(self.app.exec_())
 
 
-if __name__ == "__main__":
-    main_app = MainApp()
-    main_app.run()
+# if __name__ == "__main__":
+#     main_app = MainApp()
+#     main_app.run()
+
+if __name__ == "__debug__":

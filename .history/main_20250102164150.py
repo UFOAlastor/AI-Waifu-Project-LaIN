@@ -86,18 +86,21 @@ class MainApp:
             )
             return
 
-        # 查找第一个包含 'tool_call_message' 且 name = 'send_message' 类型的消息
+        # 查找第一个包含 'tool_call_message' 类型的消息
         tool_call_message = next(
             (
                 msg
                 for msg in response.get("messages", [])
                 if msg.get("message_type") == "tool_call_message"
-                and msg.get("tool_call", {}).get("name") == "send_message"
             ),
             None,
         )
 
-        if tool_call_message:
+        if (
+            tool_call_message
+            and tool_call_message.get("tool_call", {}).get("name", "")
+            == "send_message"  # 必须是send_message工具发出的才是模型回复
+        ):
             reply_text = tool_call_message.get("tool_call", {}).get("arguments", "")
             try:
                 parsed_arguments = json.loads(reply_text)
