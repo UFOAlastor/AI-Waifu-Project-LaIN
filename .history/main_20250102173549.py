@@ -137,11 +137,10 @@ class MainApp:
         """立绘切换"""
         # 展示指定的立绘
         self.window.tachie_display(tachie_name)
-        print("切换立绘:", tachie_name)
 
-        # 设置6秒后执行回调函数，切换回默认立绘
+        # 设置5秒后执行回调函数，切换回默认立绘
         QTimer.singleShot(
-            6000, lambda: self.window.tachie_display(self.window.default_tachie)
+            5000, lambda: self.window.tachie_display(self.window.default_tachie)
         )
 
     def run(self):

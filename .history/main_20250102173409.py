@@ -129,20 +129,12 @@ class MainApp:
             print("Japanese_message:", Japanese_message)
 
         # 处理立绘切换
-        self.change_tachie(tachie_expression)
+        self.window.tachie_display(tachie_expression)
 
         return Chinese_message
 
-    def change_tachie(self, tachie_name):
-        """立绘切换"""
-        # 展示指定的立绘
-        self.window.tachie_display(tachie_name)
-        print("切换立绘:", tachie_name)
+    def display_tachie(self):
 
-        # 设置6秒后执行回调函数，切换回默认立绘
-        QTimer.singleShot(
-            6000, lambda: self.window.tachie_display(self.window.default_tachie)
-        )
 
     def run(self):
         sys.exit(self.app.exec_())

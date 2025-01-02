@@ -101,7 +101,7 @@ class MainApp:
             reply_text = tool_call_message.get("tool_call", {}).get("arguments", "")
             try:
                 parsed_arguments = json.loads(reply_text)
-                final_message = self.parse_response(
+                final_message = self.process_response(
                     str(parsed_arguments.get("message", "没有消息内容"))
                 )
             except json.JSONDecodeError:
@@ -111,7 +111,7 @@ class MainApp:
 
         self.window.display_text(final_message, is_non_user_input=True)
 
-    def parse_response(self, msg):
+    def process_response(self, msg):
         """对模型回复{表情}|||{中文}|||{日语}进行解析"""
         parsed_reply = replyParser(msg)
         parse_status = parsed_reply.get("status")
@@ -129,20 +129,9 @@ class MainApp:
             print("Japanese_message:", Japanese_message)
 
         # 处理立绘切换
-        self.change_tachie(tachie_expression)
+        self.window.tachie_display(tachie_expression)
 
         return Chinese_message
-
-    def change_tachie(self, tachie_name):
-        """立绘切换"""
-        # 展示指定的立绘
-        self.window.tachie_display(tachie_name)
-        print("切换立绘:", tachie_name)
-
-        # 设置6秒后执行回调函数，切换回默认立绘
-        QTimer.singleShot(
-            6000, lambda: self.window.tachie_display(self.window.default_tachie)
-        )
 
     def run(self):
         sys.exit(self.app.exec_())

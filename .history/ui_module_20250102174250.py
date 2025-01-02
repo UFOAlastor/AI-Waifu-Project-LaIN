@@ -51,13 +51,13 @@ class TachieDisplay(QMainWindow):
         self.character_label.mouseMoveEvent = self.drag_window
         self.cached_images = {}  # 用于缓存加载过的图像
 
-        # 设置主窗口背景透明
+        # 设置窗口背景透明
         self.setWindowFlags(Qt.FramelessWindowHint)  # 去除 window frame
         self.setAttribute(Qt.WA_TranslucentBackground)  # 透明窗口背景
         self.setFixedSize(self.window_width, self.window_height)
         self.setStyleSheet("background-color: transparent;")  # 使整个窗口透明
 
-        # 整个窗口始终置顶
+        # 窗口始终置顶
         if self.settings.get("always_on_top", False):
             self.setWindowFlag(Qt.WindowStaysOnTopHint)
 

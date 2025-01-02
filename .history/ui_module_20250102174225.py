@@ -41,23 +41,13 @@ class TachieDisplay(QMainWindow):
         self.default_tachie = self.settings.get("default_tachie", "正常")
         self.tachie_suffix = self.settings.get("tachie_suffix", "png")
 
-        # 初始化时创建立绘的 QLabel 和设置拖动功能
-        self.character_label = QLabel(self)
-        self.character_label.setAlignment(Qt.AlignCenter)
-        self.character_label.setGeometry(0, 0, self.window_width, self.window_height)
-        self.offset_x = 0
-        self.offset_y = 0
-        self.character_label.mousePressEvent = self.start_drag
-        self.character_label.mouseMoveEvent = self.drag_window
-        self.cached_images = {}  # 用于缓存加载过的图像
-
-        # 设置主窗口背景透明
+        # 设置窗口背景透明
         self.setWindowFlags(Qt.FramelessWindowHint)  # 去除 window frame
         self.setAttribute(Qt.WA_TranslucentBackground)  # 透明窗口背景
         self.setFixedSize(self.window_width, self.window_height)
         self.setStyleSheet("background-color: transparent;")  # 使整个窗口透明
 
-        # 整个窗口始终置顶
+        # 窗口始终置顶
         if self.settings.get("always_on_top", False):
             self.setWindowFlag(Qt.WindowStaysOnTopHint)
 

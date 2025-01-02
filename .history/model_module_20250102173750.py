@@ -7,15 +7,16 @@ class Model:
         self.settings = self.load_settings(config_path)
         self.agent_id = self.settings.get("agent_id", "agent-xxx")
 
-    def load_settings(self, file_path):
+    def load_settings(self, config_path):
+        """从配置文件加载设置"""
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
-                return json.load(f)
+            with open(config_path, "r") as file:
+                return json.load(file)
         except FileNotFoundError:
-            print(f"未找到设置文件: {file_path}")
+            print("配置文件未找到！")
             return {}
         except json.JSONDecodeError:
-            print(f"设置文件格式错误: {file_path}")
+            print("配置文件格式错误！")
             return {}
 
     def get_response(self, user_input):
