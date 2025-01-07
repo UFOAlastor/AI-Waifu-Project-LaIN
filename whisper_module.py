@@ -268,12 +268,10 @@ if __name__ == "__main__":
     with open("./config.json", "r", encoding="utf-8") as f:
         settings = json.load(f)
 
-    # # 创建 SpeechRecognition 实例并初始化
-    # speech_recognizer = SpeechRecognition(settings)
+    # 创建 SpeechRecognition 实例并初始化
+    speech_recognizer = SpeechRecognition(settings)
 
-    # # 启动语音输入并获取文本结果
-    # transcribed_text = speech_recognizer.start_speech_input()
-    # logger.debug(f"识别结果: {transcribed_text}")
+    # 启动语音输入并获取文本结果
+    transcribed_text = speech_recognizer.start_speech_input()
+    logger.debug(f"识别结果: {transcribed_text}")
 
-    speech_recognizer = StreamSpeechRecognition(settings)
-    speech_recognizer.start_streaming()
