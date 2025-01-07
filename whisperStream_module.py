@@ -9,15 +9,20 @@ import whisper
 import wave
 import logging
 import tempfile
+from PyQt5.QtCore import pyqtSignal, QObject
 
 # 配置日志
 logger = logging.getLogger("whisperStream_module")
 logging.basicConfig(level=logging.DEBUG)
 
 
-class SpeechStreamRecognition:
+class SpeechStreamRecognition(QObject):
+    # 定义信号
+    update_text_signal = pyqtSignal(str)  # 用于实时更新识别文本
+    recording_ended_signal = pyqtSignal()  # 用于通知录音结束
+
     def __init__(self, main_settings):
-        # 参数初始化
+        super().__init__()
         self.settings = main_settings
         self._is_running = False
         self.vad_mode = self.settings.get("vad_mode", 2)
@@ -85,7 +90,7 @@ class SpeechStreamRecognition:
     # 音频处理线程
     def audio_consumer(self):
         temp_frames = []
-        while self._is_running or not self.audio_queue.empty():
+        while True:
             try:
                 data = self.audio_queue.get(timeout=0.1)
                 # 在 audio_consumer 方法中：
@@ -104,11 +109,15 @@ class SpeechStreamRecognition:
                     temp_frames.append(data)  # 仅仅在非静音时才输入
 
                 # 静音超时，停止录音
-                if self.silent_chunks > (
+                if not self._is_running or self.silent_chunks > (
                     self.RATE / self.CHUNK * self.max_silence_duration
                 ):
-                    logger.info("检测到持续静音，结束录音")
+                    if self._is_running:
+                        logger.info("检测到持续静音，结束录音")
+                    else:
+                        logger.info("手动触发，结束录音")
                     self._is_running = False
+                    self.recording_ended_signal.emit()  # 通知录音结束
                     break
 
             except queue.Empty:
@@ -131,6 +140,7 @@ class SpeechStreamRecognition:
             )
             if result["text"]:
                 logger.debug(f"实时转录结果: {result['text']}")
+                self.update_text_signal.emit(result["text"])  # 发出实时更新信号
 
     # 启动流式语音识别
     def start_streaming(self):
