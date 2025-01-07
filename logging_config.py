@@ -65,6 +65,11 @@ def setup_logging():
                 "level": "DEBUG",
                 "propagate": False,
             },
+            "whisper_module": {
+                "handlers": ["console", "file"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
         },
     }
 
