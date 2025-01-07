@@ -50,8 +50,8 @@ class SpeechRecognition:
             try:
                 if self.vad.is_speech(frame_bytes, sample_rate):
                     return True
-            except Exception as e:
-                logger.debug(f"Error processing frame: {e}")
+            except:
+                pass
         return False
 
     # 将音频数据切分成固定时长的帧
@@ -94,7 +94,6 @@ class SpeechRecognition:
 
             # 检测是否为语音
             is_speech = self.detect_speech(np.frombuffer(data, dtype=np.int16))
-            logger.debug(f"语音检测: {is_speech}")
 
             # 如果检测到语音，保存数据
             frames.append(data)
