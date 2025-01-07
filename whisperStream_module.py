@@ -76,16 +76,17 @@ class SpeechStreamRecognition(QObject):
                 input=True,
                 frames_per_buffer=self.CHUNK,
             )
-            logger.debug("录音线程启动")
+            logger.debug("audio_producer录音线程启动")
             while self._is_running:
                 data = stream.read(self.CHUNK, exception_on_overflow=False)
                 self.audio_queue.put(data)
             stream.stop_stream()
             stream.close()
             audio.terminate()
-            logger.debug("录音线程停止")
+            logger.debug("audio_producer录音线程停止")
         except Exception as e:
-            logger.error(f"录音线程异常: {e}")
+            logger.error(f"audio_producer录音线程异常: {e}")
+        logger.debug("audio_producer正常退出")
 
     # 音频处理线程
     def audio_consumer(self):
@@ -95,7 +96,7 @@ class SpeechStreamRecognition(QObject):
                 data = self.audio_queue.get(timeout=0.1)
                 # 在 audio_consumer 方法中：
                 if len(data) == 0:
-                    logger.warning("收到空帧，跳过处理")
+                    logger.warning("audio_producer收到空帧，跳过处理")
                     continue
 
                 # 检测静音
@@ -113,9 +114,9 @@ class SpeechStreamRecognition(QObject):
                     self.RATE / self.CHUNK * self.max_silence_duration
                 ):
                     if self._is_running:
-                        logger.info("检测到持续静音，结束录音")
+                        logger.info("audio_producer结束: 持续静音")
                     else:
-                        logger.info("手动触发，结束录音")
+                        logger.info("audio_producer结束: 手动触发")
                     self._is_running = False
                     self.recording_ended_signal.emit()  # 通知录音结束
                     break
@@ -123,8 +124,9 @@ class SpeechStreamRecognition(QObject):
             except queue.Empty:
                 continue
             except Exception as e:
-                logger.error(f"音频处理异常: {e}")
+                logger.error(f"audio_producer音频处理异常: {e}")
                 break
+        logger.debug("audio_consumer正常退出")
 
     # 转录并记录
     def transcribe_and_log(self, frames):

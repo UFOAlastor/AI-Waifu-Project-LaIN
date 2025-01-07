@@ -48,7 +48,7 @@ class MicButton(QWidget):
         self.recognizer.recording_ended_signal.connect(self.on_recognition_complete)
 
     def toggle_recording(self):
-        if self.recognizer and self.recognizer._is_running:
+        if self.recognizer._is_running:
             # 如果语音识别正在进行，停止线程
             self.recognition_thread.stop()
         else:
