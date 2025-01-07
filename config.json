@@ -14,6 +14,6 @@
     "vits_clean_text": true,
     "vad_mode": 2,
     "model_name": "small",
-    "initial_prompt": "以下是普通话为主的句子，这是提交给智能助手Lin的语音输入。请确保识别Lin！",
-    "max_silence_duration": 1
+    "initial_prompt": "以下是提交给智能助手Lin的普通话为主的语音输入。",
+    "max_silence_duration": 1.5
 }

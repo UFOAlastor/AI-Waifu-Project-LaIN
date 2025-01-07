@@ -70,6 +70,11 @@ def setup_logging():
                 "level": "DEBUG",
                 "propagate": False,
             },
+            "whisperStream_module": {
+                "handlers": ["console", "file"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
             "micButton_module": {
                 "handlers": ["console", "file"],
                 "level": "DEBUG",

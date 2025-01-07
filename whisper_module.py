@@ -159,6 +159,104 @@ class SpeechRecognition:
         logger.debug("打断录音")
 
 
+import queue
+import threading
+
+
+class StreamSpeechRecognition(SpeechRecognition):
+    def __init__(self, main_settings):
+        super().__init__(main_settings)
+        self.audio_queue = queue.Queue()  # 用于存储实时音频数据
+        self._recognition_thread = None
+        self._producer_thread = None  # 录音线程
+        self.silent_chunks = 0  # 静音帧计数
+        self.total_chunks = 0  # 总帧数计数
+
+    # 实时音频读取线程
+    def audio_producer(self):
+        while self._is_running:
+            try:
+                # 从麦克风读取音频数据
+                data = self.stream.read(self.CHUNK, exception_on_overflow=False)
+                self.audio_queue.put(data)  # 放入队列
+            except Exception as e:
+                logger.error(f"录音失败: {e}")
+                break
+
+    # 在 audio_consumer 中添加日志
+    def audio_consumer(self):
+        temp_frames = []
+
+        while self._is_running or not self.audio_queue.empty():
+            try:
+                data = self.audio_queue.get(timeout=0.1)
+                temp_frames.append(data)
+
+                # 检测语音
+                is_speech = self.detect_speech(np.frombuffer(data, dtype=np.int16))
+                logger.debug(f"帧语音检测结果: {is_speech}")
+
+                # 静音逻辑
+                if not is_speech:
+                    self.silent_chunks += 1
+                    logger.debug(f"静音帧累加: {self.silent_chunks}")
+                else:
+                    self.silent_chunks = 0
+
+                # 静音超时自动停止
+                if self.silent_chunks > (
+                    self.RATE / self.CHUNK * self.MAX_SILENCE_DURATION
+                ):
+                    logger.info("检测到持续静音，结束录音与识别")
+                    self._is_running = False
+                    break
+
+                if len(temp_frames) >= int(self.RATE / self.CHUNK):
+                    self.transcribe_and_log(temp_frames)
+                    temp_frames.clear()
+
+            except queue.Empty:
+                continue
+
+    # 实时转录并记录日志
+    def transcribe_and_log(self, frames):
+        audio_data = b"".join(frames)
+        transcribed_text = self.transcribe_audio(audio_data)
+        logger.info(f"实时识别结果: {transcribed_text}")
+
+    # 启动流式语音识别
+    def start_streaming(self):
+        self._is_running = True
+
+        # 启动录音
+        self.start_recording()
+
+        # 启动录音线程（生产者）
+        self._producer_thread = threading.Thread(
+            target=self.audio_producer, daemon=True
+        )
+        self._producer_thread.start()
+
+        # 启动识别线程（消费者）
+        self._recognition_thread = threading.Thread(
+            target=self.audio_consumer, daemon=True
+        )
+        self._recognition_thread.start()
+
+    # 停止流式语音识别
+    def stop_streaming(self):
+        self._is_running = False
+
+        # 停止录音
+        self.stop_recording()
+
+        # 等待线程结束
+        if self._producer_thread:
+            self._producer_thread.join()
+        if self._recognition_thread:
+            self._recognition_thread.join()
+
+
 if __name__ == "__main__":
     import json
     import logging_config
@@ -170,9 +268,12 @@ if __name__ == "__main__":
     with open("./config.json", "r", encoding="utf-8") as f:
         settings = json.load(f)
 
-    # 创建 SpeechRecognition 实例并初始化
-    speech_recognizer = SpeechRecognition(settings)
+    # # 创建 SpeechRecognition 实例并初始化
+    # speech_recognizer = SpeechRecognition(settings)
 
-    # 启动语音输入并获取文本结果
-    transcribed_text = speech_recognizer.start_speech_input()
-    logger.debug(f"识别结果: {transcribed_text}")
+    # # 启动语音输入并获取文本结果
+    # transcribed_text = speech_recognizer.start_speech_input()
+    # logger.debug(f"识别结果: {transcribed_text}")
+
+    speech_recognizer = StreamSpeechRecognition(settings)
+    speech_recognizer.start_streaming()
