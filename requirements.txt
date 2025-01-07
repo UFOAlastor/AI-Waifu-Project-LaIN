@@ -3,3 +3,7 @@ requests
 pydub
 pygame
 threads
+pyaudio
+whisper
+webrtcvad
+deepfilternet
