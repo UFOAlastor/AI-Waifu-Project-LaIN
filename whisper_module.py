@@ -14,7 +14,7 @@ logger = logging.getLogger("whisper_module")
 class SpeechRecognition:
     def __init__(self, main_settings):
         # 通过配置文件传入的参数
-        self.is_non_user_input = False  # 是否为非用户输入内容标记
+        self._is_running = False  # 非阻塞打断
 
         self.settings = main_settings
         self.vad_mode = self.settings.get("vad_mode", 2)  # 默认使用模式2
@@ -24,13 +24,16 @@ class SpeechRecognition:
         self.initial_prompt = self.settings.get(
             "initial_prompt", "以下是普通话为主的句子，这是提交给智能助手的语音输入。"
         )  # 默认使用whisper的small模型
+        self.max_silence_duration = self.settings.get(
+            "max_silence_duration", 2
+        )  # 触发录音终止的持续静音时长
 
         # 配置录音参数
         self.FORMAT = pyaudio.paInt16
         self.CHANNELS = 1
         self.RATE = 16000
         self.CHUNK = 1024
-        self.MAX_SILENCE_DURATION = 2
+        self.MAX_SILENCE_DURATION = self.max_silence_duration
 
         # 创建 VAD 对象
         self.vad = webrtcvad.Vad(self.vad_mode)
@@ -82,6 +85,7 @@ class SpeechRecognition:
             self.stream.close()
         if self.audio:
             self.audio.terminate()
+        logger.debug("停止录音")
 
     # 录音并检测静音
     def record_audio_with_vad_and_energy(self):
@@ -89,7 +93,7 @@ class SpeechRecognition:
         silent_chunks = 0
         total_chunks = 0
 
-        while True:
+        while self._is_running:
             data = self.stream.read(self.CHUNK)
 
             # 检测是否为语音
@@ -107,7 +111,8 @@ class SpeechRecognition:
 
             # 如果达到静音时间阈值，提前结束录音
             if silent_chunks > (self.RATE / self.CHUNK * self.MAX_SILENCE_DURATION):
-                logger.info("检测到静音，录音结束")
+                logger.info("检测到持续静音，录音结束")
+                self._is_running = False
                 break
 
         # 返回录音的音频数据
@@ -124,7 +129,9 @@ class SpeechRecognition:
                 wf.writeframes(audio_data)
 
             # 使用 whisper 进行语音识别
-            result = self.model.transcribe(temp_wav.name, initial_prompt=self.initial_prompt)
+            result = self.model.transcribe(
+                temp_wav.name, initial_prompt=self.initial_prompt
+            )
 
             # 获取转录文本
             return result["text"]
@@ -135,6 +142,7 @@ class SpeechRecognition:
         self.start_recording()
 
         # 录制音频并转录
+        self._is_running = True
         audio_data = self.record_audio_with_vad_and_energy()
 
         # 停止录音
@@ -143,6 +151,12 @@ class SpeechRecognition:
         # 转录并返回结果
         transcribed_text = self.transcribe_audio(audio_data)
         return transcribed_text
+
+    # 打断语音输入
+    def stop_speech_input(self):
+        # 停止录音
+        self._is_running = False
+        logger.debug("打断录音")
 
 
 if __name__ == "__main__":

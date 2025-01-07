@@ -1,65 +1,40 @@
+# micButton_module.py
+
 import sys, json
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer
+from PyQt5.QtCore import QThread, pyqtSignal, QTimer
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton
-from PyQt5.QtGui import QIcon
 from whisper_module import SpeechRecognition
-import logging, logging_config
+import logging
 
-# 初始化日志配置
-logging_config.setup_logging()
 # 获取根记录器
-logger = logging.getLogger()
-
-
-def load_settings(file_path="./config.json"):
-    """加载配置文件"""
-    try:
-        with open(file_path, "r", encoding="utf-8") as f:
-            settings = json.load(f)
-            return settings
-    except FileNotFoundError:
-        logger.error(f"未找到设置文件: {file_path}")
-    except json.JSONDecodeError:
-        logger.error(f"设置文件格式错误: {file_path}")
-    return {}
+logger = logging.getLogger("micButton_module")
 
 
 # 语音识别线程
 class SpeechRecognitionThread(QThread):
     recognition_complete = pyqtSignal(str)  # 语音识别完成的信号
-    interrupted = pyqtSignal()  # 打断信号
 
     def __init__(self, recognizer, parent=None):
         super().__init__(parent)
         self.recognizer = recognizer
-        self._is_running = True  # 控制线程是否继续运行
+        self.result = ""
 
     def run(self):
-        try:
-            # 直接启动识别，识别结束后发出信号
-            result = self.recognizer.start_speech_input()
-            if self._is_running:  # 如果没有被打断才发射识别完成信号
-                self.recognition_complete.emit(result)
-        except Exception as e:
-            logger.error(f"语音识别错误: {e}")
+        # 直接启动识别，识别结束后发出信号
+        self.result = self.recognizer.start_speech_input()
+        self.recognition_complete.emit(self.result)
 
     def stop(self):
-        """停止线程"""
-        self._is_running = False
-        self.interrupted.emit()
+        """打断线程, 直接发送结果"""
+        self.recognizer.stop_speech_input()
 
 
-# 主窗口类
-class MainWindow(QWidget):
-    def __init__(self):
+class MicButton(QWidget):
+    def __init__(self, main_settings):
         super().__init__()
-        settings = load_settings()
-
-        self.setWindowTitle("AI 助手")
-        self.setGeometry(100, 100, 200, 200)
 
         # 初始化语音识别器
-        self.recognizer = SpeechRecognition(settings)
+        self.recognizer = SpeechRecognition(main_settings)
 
         # 创建按钮
         self.button = QPushButton("🎤", self)  # 使用麦克风图标作为按钮文字
@@ -75,26 +50,20 @@ class MainWindow(QWidget):
         layout.addWidget(self.button)
         self.setLayout(layout)
 
-        self.recognition_thread = None
+        self.recognition_thread = SpeechRecognitionThread(self.recognizer)
+        self.recognition_thread.recognition_complete.connect(
+            self.on_recognition_complete
+        )
 
     def toggle_recording(self):
         if self.recognition_thread and self.recognition_thread.isRunning():
             # 如果语音识别正在进行，停止线程
             self.recognition_thread.stop()
-            self.button.setStyleSheet(
-                "background-color: white; border-radius: 5px;"
-            )  # 录音中途停止，恢复白色
-            self.button.setText("🎤")  # 恢复麦克风图标
         else:
             self.button.setText("🎤")  # 保证按钮显示麦克风图标
             self.button.setStyleSheet(
                 "background-color: orange; border-radius: 5px;"
             )  # 录音中状态，按钮变橙色
-            self.recognition_thread = SpeechRecognitionThread(self.recognizer)
-            self.recognition_thread.recognition_complete.connect(
-                self.on_recognition_complete
-            )
-            self.recognition_thread.interrupted.connect(self.on_interrupted)
             self.recognition_thread.start()
 
     def on_recognition_complete(self, result):
@@ -122,7 +91,14 @@ class MainWindow(QWidget):
 
 # 启动应用
 if __name__ == "__main__":
+    import logging_config, json
+
+    # 初始化日志配置
+    logging_config.setup_logging()
+    with open("./config.json", "r", encoding="utf-8") as f:
+        settings = json.load(f)
+
     app = QApplication(sys.argv)
-    window = MainWindow()
+    window = MicButton(settings)
     window.show()
     sys.exit(app.exec_())
