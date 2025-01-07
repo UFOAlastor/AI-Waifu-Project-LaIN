@@ -6,4 +6,3 @@ threads
 pyaudio
 whisper
 webrtcvad
-deepfilternet
