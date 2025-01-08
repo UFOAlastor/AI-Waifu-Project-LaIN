@@ -13,7 +13,7 @@
     "vits_speaker_id": "4",
     "vits_clean_text": true,
     "vad_mode": 2,
-    "model_name": "large-v3-turbo",
+    "model_name": "small",
     "initial_prompt": "以下是提交给智能助手Lin的普通话为主的语音输入。",
     "max_silence_duration": 1.8
 }
