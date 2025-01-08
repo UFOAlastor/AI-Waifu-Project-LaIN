@@ -15,5 +15,5 @@
     "vad_mode": 2,
     "model_name": "small",
     "initial_prompt": "以下是提交给智能助手Lin的普通话为主的语音输入。",
-    "max_silence_duration": 1.5
+    "max_silence_duration": 1.8
 }

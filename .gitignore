@@ -1,3 +1,5 @@
 /logs
 /__pycache__
 /.history
+/vosk-model-small-cn-0.22
+/vosk-model-cn-0.22
