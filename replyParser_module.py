@@ -72,9 +72,9 @@ if __name__ == "__main__":
     # test_reply = "思考 ||| 现在是晚上11点57分，\n距离明天凌晨12点还有3分钟。||| 現在は午後11時57分です。明日の午前0時まであと3分です。"
     # test_reply = ""
     # test_reply = "正常 ||| 现在是凌晨12点13分，主人，祝您新年快乐！已经进入新的一天了！||| 現在は午前0時13分です、ご主人。新年おめでとうございます！新しい日が始まりました！"
-    test_reply = "没有有效的回复"
+    test_reply = "抱歉，主人！进行查询时出现了一些技术问题，导致我无法从记忆中找到关于您昨天活动的信息。我会继续尝试帮助您。如果您能回忆起什么，或者让我知道您昨天做了什么，我会随时准备提供支持！||| 申し訳ありません、ご主人！検索しようとした際に技術的な問題が発生し、昨日の活動に関する情報を見つけることができませんでした。引き続きお手伝いしますので、何か思い出すことがあればお知らせください、あなたをサポートする準備が整っています！"
 
-    logger.debug("测试内容:", test_reply, "\n")
+    logger.debug(f"测试内容: {test_reply}")
 
     parsed_reply = replyParser(test_reply)
     parse_status = parsed_reply.get("status")
@@ -84,8 +84,8 @@ if __name__ == "__main__":
         tachie_expression = parsed_reply.get("data").get("ep")
         Chinese_message = parsed_reply.get("data").get("zh")
         Japanese_message = parsed_reply.get("data").get("jp")
-        logger.debug("tachie_expression:", tachie_expression)
-        logger.debug("Chinese_message:", Chinese_message)
-        logger.debug("Japanese_message:", Japanese_message)
+        logger.debug(f"tachie_expression: {tachie_expression}")
+        logger.debug(f"Chinese_message: {Chinese_message}")
+        logger.debug(f"Japanese_message: {Japanese_message}")
     else:
-        logger.debug("最终结果:", parse_message)
+        logger.debug(f"最终结果: {parse_message}")
