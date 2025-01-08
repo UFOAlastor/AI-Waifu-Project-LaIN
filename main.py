@@ -156,11 +156,11 @@ class MainApp:
             logger.debug("Chinese_message:", Chinese_message)
             logger.debug("Japanese_message:", Japanese_message)
 
-        # 处理立绘切换
-        self.change_tachie(tachie_expression)
+            # 处理立绘切换
+            self.change_tachie(tachie_expression)
 
-        # 播放语音, 默认日语
-        vitsSpeaker.vits_play(Japanese_message)
+            # 播放语音, 默认日语
+            vitsSpeaker.vits_play(Japanese_message)
 
         return Chinese_message
 
