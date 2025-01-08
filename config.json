@@ -12,8 +12,8 @@
     "vits_api_url": "http://127.0.0.1:23456/voice/vits",
     "vits_speaker_id": "4",
     "vits_clean_text": true,
-    "vad_mode": 2,
-    "model_name": "small",
+    "vad_mode": 3,
+    "model_name": "large-v3-turbo",
     "initial_prompt": "以下是提交给智能助手Lin的普通话为主的语音输入。",
-    "max_silence_duration": 1.8
+    "max_silence_duration": 10
 }

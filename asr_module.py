@@ -1,22 +1,24 @@
-# whisperStream_module.py
+# asr_module.py
 
 import queue
 import threading
 import pyaudio
 import webrtcvad
 import numpy as np
-import whisper
 import wave
 import logging
 import tempfile
 from PyQt5.QtCore import pyqtSignal, QObject
+from faster_whisper import WhisperModel
 
 # 配置日志
-logger = logging.getLogger("whisperStream_module")
+logger = logging.getLogger("asr_module")
 logging.basicConfig(level=logging.DEBUG)
 
 import torch
+
 device = "cuda" if torch.cuda.is_available() else "cpu"
+
 
 class SpeechRecognition(QObject):
     # 定义信号
@@ -28,7 +30,9 @@ class SpeechRecognition(QObject):
         self.settings = main_settings
         self._is_running = False
         self.vad_mode = self.settings.get("vad_mode", 2)
-        self.model_name = self.settings.get("model_name", "small")
+        self.model_name = self.settings.get(
+            "model_name", "large-v3-turbo"
+        )  # 使用 faster_whisper 的模型大小
         self.initial_prompt = self.settings.get(
             "initial_prompt", "以下是普通话为主的句子，这是提交给智能助手的语音输入。"
         )
@@ -42,29 +46,52 @@ class SpeechRecognition(QObject):
 
         # 创建 VAD 和 Whisper 模型
         self.vad = webrtcvad.Vad(self.vad_mode)
-        self.model = whisper.load_model(self.model_name, device=device)
+        self.model = WhisperModel(
+            self.model_name,
+            device=device,
+            compute_type="float16",
+        )
 
         # 初始化音频队列
         self.audio_queue = queue.Queue()
         self.audio_lock = threading.Lock()
 
-    # 语音检测函数
-    def detect_speech(self, audio_data, sample_rate=16000, frame_duration_ms=20):
-        frames = self.chunk_audio_data(audio_data, frame_duration_ms, sample_rate)
-        for frame in frames:
-            frame_bytes = np.array(frame, dtype=np.int16).tobytes()
-            if self.vad.is_speech(frame_bytes, sample_rate):
-                return True
-        return False
+    def detect_speech(
+        self,
+        audio_data,
+        sample_rate=16000,
+        frame_duration_ms=20,
+        consecutive_threshold=3,
+    ):
+        """
+        检测音频数据中是否存在语音。
+        :param audio_data: 音频数据（numpy 数组，类型 int16）。
+        :param sample_rate: 采样率（默认 16000Hz）。
+        :param frame_duration_ms: 帧时长，单位毫秒。
+        :return: 如果检测到有人说话，返回 True，否则返回 False。
+        """
+        # 校验音频数据格式
+        if not isinstance(audio_data, np.ndarray) or audio_data.dtype != np.int16:
+            raise ValueError("audio_data 必须是 numpy 的 int16 数组")
+        if sample_rate not in [8000, 16000, 32000, 48000]:
+            raise ValueError("sample_rate 必须是 8000、16000、32000 或 48000 Hz")
 
-    # 修正 chunk_audio_data 方法
-    def chunk_audio_data(self, audio_data, frame_duration_ms=20, sample_rate=16000):
-        frame_size = int(sample_rate * (frame_duration_ms / 1000.0))  # 单帧长度
-        frames = [
-            audio_data[i : i + frame_size]
-            for i in range(0, len(audio_data) - frame_size + 1, frame_size)
-        ]
-        return frames
+        # 每帧的字节大小
+        frame_size = int(sample_rate * (frame_duration_ms / 1000.0))
+        if len(audio_data) < frame_size:
+            # 对短音频直接判非
+            return False
+
+        speech_frames = 0
+        for i in range(0, len(audio_data) - frame_size + 1, frame_size):
+            frame = audio_data[i : i + frame_size]
+            if self.vad.is_speech(frame.tobytes(), sample_rate):
+                speech_frames += 1
+                if speech_frames >= consecutive_threshold:
+                    return True
+            else:
+                speech_frames = 0  # 重置计数器
+        return False
 
     # 录音线程
     def audio_producer(self):
@@ -95,7 +122,6 @@ class SpeechRecognition(QObject):
         while True:
             try:
                 data = self.audio_queue.get(timeout=0.1)
-                # 在 audio_consumer 方法中：
                 if len(data) == 0:
                     logger.warning("audio_producer收到空帧，跳过处理")
                     continue
@@ -104,9 +130,11 @@ class SpeechRecognition(QObject):
                 is_speech = self.detect_speech(np.frombuffer(data, dtype=np.int16))
                 if not is_speech:
                     self.silent_chunks += 1
-                    self.transcribe_and_log(temp_frames)
+                    if temp_frames != []:  # 判断非空才进行识别, 避免幻觉产生
+                        self.transcribe_and_log(temp_frames)
                     temp_frames.clear()
                 else:
+                    logger.debug(f"is_speech: {is_speech}")
                     self.silent_chunks = 0
                     temp_frames.append(data)  # 仅仅在非静音时才输入
 
@@ -138,12 +166,26 @@ class SpeechRecognition(QObject):
                 wf.setsampwidth(2)
                 wf.setframerate(self.RATE)
                 wf.writeframes(audio_data)
-            result = self.model.transcribe(
-                temp_wav.name, initial_prompt=self.initial_prompt
+
+            # 使用 faster_whisper 进行转录
+            segments, info = self.model.transcribe(
+                temp_wav.name,
+                beam_size=5,
+                vad_filter=True,
+                language="zh",
             )
-            if result["text"]:
-                logger.debug(f"实时转录结果: {result['text']}")
-                self.update_text_signal.emit(result["text"])  # 发出实时更新信号
+            if info.language and info.language_probability:
+                logger.debug(
+                    f"Detected language: {info.language} with probability: {info.language_probability}"
+                )
+
+            # 输出每个语音片段的识别结果
+            for segment in segments:
+                logger.debug(
+                    f"[{segment.start:.2f}s -> {segment.end:.2f}s] {segment.text}"
+                )
+                if segment.text:
+                    self.update_text_signal.emit(segment.text)  # 发出实时更新信号
 
     # 启动流式语音识别
     def start_streaming(self):
@@ -173,6 +215,4 @@ if __name__ == "__main__":
         settings = json.load(f)
 
     recognizer = SpeechRecognition(settings)
-    recognizer.start_streaming()
-    recognizer.start_streaming()
     recognizer.start_streaming()
