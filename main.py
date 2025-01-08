@@ -170,9 +170,9 @@ class MainApp:
         self.window.tachie_display(tachie_name)
         logger.debug("切换立绘:", tachie_name)
 
-        # 设置4秒后执行回调函数，切换回默认立绘
+        # 设置4.5秒后执行回调函数，切换回默认立绘
         QTimer.singleShot(
-            4000, lambda: self.window.tachie_display(self.window.default_tachie)
+            4500, lambda: self.window.tachie_display(self.window.default_tachie)
         )
 
     def run(self):

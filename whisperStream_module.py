@@ -30,7 +30,7 @@ class SpeechStreamRecognition(QObject):
         self.initial_prompt = self.settings.get(
             "initial_prompt", "以下是普通话为主的句子，这是提交给智能助手的语音输入。"
         )
-        self.max_silence_duration = self.settings.get("max_silence_duration", 2)
+        self.max_silence_duration = self.settings.get("max_silence_duration", 3)
 
         # 配置录音参数
         self.FORMAT = pyaudio.paInt16
@@ -44,7 +44,6 @@ class SpeechStreamRecognition(QObject):
 
         # 初始化音频队列
         self.audio_queue = queue.Queue()
-        self.silent_chunks = 0
         self.audio_lock = threading.Lock()
 
     # 语音检测函数
@@ -109,15 +108,15 @@ class SpeechStreamRecognition(QObject):
                     self.silent_chunks = 0
                     temp_frames.append(data)  # 仅仅在非静音时才输入
 
-                # 静音超时，停止录音
+                # 手动停止 or 静音超时 --> 停止录音
                 if not self._is_running or self.silent_chunks > (
                     self.RATE / self.CHUNK * self.max_silence_duration
                 ):
                     if self._is_running:
                         logger.info("audio_producer结束: 持续静音")
+                        self._is_running = False
                     else:
                         logger.info("audio_producer结束: 手动触发")
-                    self._is_running = False
                     self.recording_ended_signal.emit()  # 通知录音结束
                     break
 
@@ -147,17 +146,22 @@ class SpeechStreamRecognition(QObject):
     # 启动流式语音识别
     def start_streaming(self):
         self._is_running = True
+        # 初始化静音块以及队列
+        self.silent_chunks = 0
+        self.audio_queue.queue.clear()
+        # 启动线程
         producer_thread = threading.Thread(target=self.audio_producer)
         consumer_thread = threading.Thread(target=self.audio_consumer)
         producer_thread.start()
         consumer_thread.start()
         producer_thread.join()
         consumer_thread.join()
+        logger.info("启动流式语音识别")
 
     # 停止流式语音识别
     def stop_streaming(self):
         self._is_running = False
-        logger.debug("停止流式语音识别")
+        logger.info("停止流式语音识别")
 
 
 if __name__ == "__main__":
@@ -167,4 +171,6 @@ if __name__ == "__main__":
         settings = json.load(f)
 
     recognizer = SpeechStreamRecognition(settings)
+    recognizer.start_streaming()
+    recognizer.start_streaming()
     recognizer.start_streaming()

@@ -20,14 +20,17 @@ import logging
 # 获取根记录器
 logger = logging.getLogger("ui_module")
 
+# 被继承的模块
+from micButton_module import MicButton
+
 
 # 在 TachieDisplay 类中设置事件过滤器
-class TachieDisplay(QMainWindow):
+class TachieDisplay(QMainWindow, MicButton):
     # 定义一个信号，发送输入的文本
     text_sent = pyqtSignal(str)
 
     def __init__(self, main_settings):
-        super().__init__()
+        super().__init__(main_settings)  # python的继承按 MRO 顺序传递参数
         self.is_non_user_input = False  # 是否为非用户输入内容标记
 
         self.settings = main_settings
@@ -135,6 +138,42 @@ class TachieDisplay(QMainWindow):
         self.dialog_text.installEventFilter(self)
         self.dialog_text.mousePressEvent = self.on_mouse_press  # 手动重写鼠标点击事件
 
+        # 录音按钮位置调整
+        self.mic_button.setGeometry(
+            10,
+            int(self.dialog_y) - 30,
+            30,
+            30,
+        )
+
+        # 提升录音按钮层次, 避免遮挡
+        self.mic_button.raise_()
+
+        # 绑定语音识别信号量给对话框更新
+        self.recognizer.update_text_signal.connect(self.whisper_stream_update)
+        self.recognizer.recording_ended_signal.connect(self.send_text)
+
+    def whisper_stream_update(self, text):
+        """
+        追加显示文本内容，is_non_user_input 为 True 时表示启动提示或模型返回内容
+        """
+        if not self.recognizer_is_updating:
+            self.recognizer_is_updating = True
+            self.is_non_user_input = False  # 语音识别为用户输入
+            self.dialog_text.clear()  # 清空文本框内容
+            self.current_char_index = 0  # 当前字符索引
+            self.content = text  # 初始化文本
+
+            # 设置每个字符的延迟时间（可以根据需要调整）
+            self.typing_speed = 25  # 每个字符之间的延迟 25 毫秒
+
+            # 设置定时器，模拟逐个字符的显示
+            self.timer = QTimer(self)
+            self.timer.timeout.connect(self.on_typing)
+            self.timer.start(self.typing_speed)
+        else:
+            self.content += text  # 拼接文本
+
     def tachie_display(self, tachie_name):
         # 如果缓存中已有该图像，直接使用缓存
         if tachie_name in self.cached_images:
@@ -217,7 +256,7 @@ class TachieDisplay(QMainWindow):
         """
         self.is_non_user_input = is_non_user_input  # 设置是否为非用户输入内容标记
         self.dialog_text.clear()  # 清空文本框内容
-        self.dialog_text.setPlainText("")  # 清空文本框内容
+        # self.dialog_text.setPlainText("")  # 清空文本框内容
         self.current_char_index = 0  # 当前字符索引
         self.content = content  # 存储要显示的完整文本
 
@@ -236,6 +275,10 @@ class TachieDisplay(QMainWindow):
             current_text += self.content[self.current_char_index]
             self.dialog_text.setPlainText(current_text)
             self.current_char_index += 1
+        elif self.recognizer_is_updating and self.current_char_index == len(
+            self.content
+        ):  # 添加对语音识别流式更新过程的挂起
+            pass
         else:
             self.timer.stop()  # 停止定时器，表示文本已全部显示完
 
@@ -271,5 +314,6 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
     window = TachieDisplay(settings)
+    window.display_text("Ciallo～(∠・ω< )⌒☆ UI模块测试提示文本", is_non_user_input=True)
     window.show()
     sys.exit(app.exec_())
