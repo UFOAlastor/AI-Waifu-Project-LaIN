@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtCore import QThread, QTimer
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton
-from whisperStream_module import SpeechStreamRecognition
+from asr_module import SpeechRecognition
 import logging
 
 # 获取根记录器
@@ -26,7 +26,7 @@ class MicButton(QWidget):
         super().__init__()
 
         # 初始化语音识别器
-        self.recognizer = SpeechStreamRecognition(main_settings)
+        self.recognizer = SpeechRecognition(main_settings)
 
         # 创建按钮
         self.mic_button = QPushButton("🎤", self)  # 使用麦克风图标作为按钮文字

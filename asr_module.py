@@ -15,8 +15,10 @@ from PyQt5.QtCore import pyqtSignal, QObject
 logger = logging.getLogger("whisperStream_module")
 logging.basicConfig(level=logging.DEBUG)
 
+import torch
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
-class SpeechStreamRecognition(QObject):
+class SpeechRecognition(QObject):
     # 定义信号
     update_text_signal = pyqtSignal(str)  # 用于实时更新识别文本
     recording_ended_signal = pyqtSignal()  # 用于通知录音结束
@@ -40,7 +42,7 @@ class SpeechStreamRecognition(QObject):
 
         # 创建 VAD 和 Whisper 模型
         self.vad = webrtcvad.Vad(self.vad_mode)
-        self.model = whisper.load_model(self.model_name)
+        self.model = whisper.load_model(self.model_name, device=device)
 
         # 初始化音频队列
         self.audio_queue = queue.Queue()
@@ -170,7 +172,7 @@ if __name__ == "__main__":
     with open("./config.json", "r", encoding="utf-8") as f:
         settings = json.load(f)
 
-    recognizer = SpeechStreamRecognition(settings)
+    recognizer = SpeechRecognition(settings)
     recognizer.start_streaming()
     recognizer.start_streaming()
     recognizer.start_streaming()
