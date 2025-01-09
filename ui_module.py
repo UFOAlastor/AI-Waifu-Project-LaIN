@@ -2,7 +2,7 @@
 
 import sys
 from PyQt5.QtCore import Qt, QEvent
-from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtGui import QImage, QPixmap, QIcon
 from PyQt5.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -32,6 +32,9 @@ class TachieDisplay(QMainWindow, MicButton):
     def __init__(self, main_settings):
         super().__init__(main_settings)  # python的继承按 MRO 顺序传递参数
         self.is_non_user_input = False  # 是否为非用户输入内容标记
+
+        self.setWindowTitle("Project LaIN")
+        self.setWindowIcon(QIcon("./ico/lin.ico"))  # 设置图标
 
         self.settings = main_settings
         self.window_width = self.settings.get("window_width", 500)

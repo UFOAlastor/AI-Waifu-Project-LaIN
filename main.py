@@ -58,7 +58,8 @@ class MainApp:
         self.setup_ui()
         self.typing_animation_timer = QTimer()
         self.typing_dots = ""
-        vitsSpeaker.set_settings(self.settings)  # vits语音模块加载配置文件
+        # vits语音模块加载配置文件
+        vitsSpeaker.set_settings(self.settings)
 
     def setup_ui(self):
         self.window.display_text(
