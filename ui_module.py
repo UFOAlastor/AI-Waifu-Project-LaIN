@@ -189,8 +189,8 @@ class TachieDisplay(QMainWindow, MicButton):
             self.cached_images[tachie_name] = self.character_image
 
         image_width, image_height = (
-            self.character_image.width(),
-            self.character_image.height(),
+            max(self.character_image.width(), 100),
+            max(self.character_image.height(), 100),
         )
         scale_width = self.window_width / image_width
         scale_height = self.window_height / image_height

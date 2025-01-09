@@ -117,7 +117,7 @@ class SpeechRecognition(QObject):
 
                 # 手动停止 or 静音超时 --> 停止录音
                 if not self._is_running or self.silent_chunks > (
-                    self.RATE / self.CHUNK * self.max_silence_duration
+                    self.RATE / self.CHUNK * max(self.max_silence_duration, 0.1)
                 ):
                     if self._is_running:
                         logger.info("audio_producer结束: 持续静音")
