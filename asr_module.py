@@ -107,7 +107,7 @@ class SpeechRecognition(QObject):
                 if not is_speech:
                     self.silent_chunks += 1
                     if (
-                        len(temp_frames) > 6
+                        len(temp_frames) >= 6
                     ):  # 添加一个长度限制, 持续6块非静音才认为存在输入, 能够一定程度减少幻觉
                         self.transcribe_and_log(temp_frames)
                     temp_frames.clear()
