@@ -32,7 +32,7 @@ class MicButton(QWidget):
         self.mic_button = QPushButton("🎤", self)  # 使用麦克风图标作为按钮文字
         self.mic_button.setFixedSize(30, 30)  # 设置按钮大小
         self.mic_button.setStyleSheet(
-            "background-color: white; border-radius: 5px;"
+            "background-color: white; border: 1px solid black; border-radius: 5px;"
         )  # 初始状态白色背景
         self.mic_button.setText("🎤")  # 设置初始图标
         self.mic_button.clicked.connect(self.toggle_recording)
@@ -53,7 +53,7 @@ class MicButton(QWidget):
             self.recognition_thread.start()  # 启动识别线程
             self.mic_button.setText("🎤")  # 保证按钮显示麦克风图标
             self.mic_button.setStyleSheet(
-                "background-color: orange; border-radius: 5px;"
+                "background-color: orange; border: 1px solid black; border-radius: 5px;"
             )  # 录音中状态，按钮变橙色
 
     def on_recognition_update(self, text):
@@ -67,7 +67,7 @@ class MicButton(QWidget):
         # 保持麦克风图标
         self.mic_button.setText("🎤")
         self.mic_button.setStyleSheet(
-            "background-color: green; border-radius: 5px;"
+            "background-color: green; border: 1px solid black; border-radius: 5px;"
         )  # 识别完成状态，按钮变绿色
         # 在1秒后将按钮恢复为白色
         QTimer.singleShot(1000, self.reset_button)
@@ -76,7 +76,7 @@ class MicButton(QWidget):
 
     def reset_button(self):
         self.mic_button.setStyleSheet(
-            "background-color: white; border-radius: 5px;"
+            "background-color: white; border: 1px solid black; border-radius: 5px;"
         )  # 恢复按钮为白色
 
 
