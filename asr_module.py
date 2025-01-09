@@ -51,7 +51,7 @@ class SpeechRecognition(QObject):
         self.audio_lock = threading.Lock()
 
     # 语音检测函数
-    def detect_speech(self, audio_data, sample_rate=16000, frame_duration_ms=20):
+    def detect_speech(self, audio_data, sample_rate=16000, frame_duration_ms=30):
         frames = self.chunk_audio_data(audio_data, frame_duration_ms, sample_rate)
         for frame in frames:
             frame_bytes = np.array(frame, dtype=np.int16).tobytes()
@@ -60,7 +60,7 @@ class SpeechRecognition(QObject):
         return False
 
     # 修正 chunk_audio_data 方法
-    def chunk_audio_data(self, audio_data, frame_duration_ms=20, sample_rate=16000):
+    def chunk_audio_data(self, audio_data, frame_duration_ms=30, sample_rate=16000):
         frame_size = int(sample_rate * (frame_duration_ms / 1000.0))  # 单帧长度
         frames = [
             audio_data[i : i + frame_size]
@@ -110,7 +110,7 @@ class SpeechRecognition(QObject):
                         len(temp_frames) >= 6
                     ):  # 添加一个长度限制, 持续6块非静音才认为存在输入, 能够一定程度减少幻觉
                         self.transcribe_and_log(temp_frames)
-                    temp_frames.clear()
+                        temp_frames.clear()
                 else:
                     self.silent_chunks = 0
                     temp_frames.append(data)  # 仅仅在非静音时才输入
