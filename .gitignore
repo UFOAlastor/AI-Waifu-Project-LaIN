@@ -6,3 +6,5 @@
 /build/main
 /main.spec
 /dist
+/upx-4.2.4-win64
+/main.exe

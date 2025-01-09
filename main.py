@@ -153,9 +153,9 @@ class MainApp:
             tachie_expression = parsed_reply.get("data").get("ep")
             Chinese_message = parsed_reply.get("data").get("zh")
             Japanese_message = parsed_reply.get("data").get("jp")
-            logger.debug("tachie_expression:", tachie_expression)
-            logger.debug("Chinese_message:", Chinese_message)
-            logger.debug("Japanese_message:", Japanese_message)
+            logger.debug(f"tachie_expression: {tachie_expression}")
+            logger.debug(f"Chinese_message: {Chinese_message}")
+            logger.debug(f"Japanese_message: {Japanese_message}")
 
             # 处理立绘切换
             self.change_tachie(tachie_expression)
@@ -169,7 +169,7 @@ class MainApp:
         """立绘切换"""
         # 展示指定的立绘
         self.window.tachie_display(tachie_name)
-        logger.debug("切换立绘:", tachie_name)
+        logger.debug(f"切换立绘: {tachie_name}")
 
         # 设置4.5秒后执行回调函数，切换回默认立绘
         QTimer.singleShot(
