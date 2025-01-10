@@ -1,7 +1,7 @@
 # main.py
 
 import sys
-import json
+import yaml
 from PyQt5.QtCore import QThread, pyqtSignal, QTimer
 from PyQt5.QtWidgets import QApplication
 from ui_module import TachieDisplay  # 假设TachieDisplay在tachie_display.py中
@@ -36,22 +36,22 @@ class ChatModelWorker(QThread):
             self.response_ready.emit({"error": str(e)})
 
 
-def load_settings(file_path="./config.json"):
+def load_settings(file_path="./config.yaml"):
     """加载配置文件"""
     try:
         with open(file_path, "r", encoding="utf-8") as f:
-            settings = json.load(f)
+            settings = yaml.safe_load(f)
             return settings
     except FileNotFoundError:
         logger.error(f"未找到设置文件: {file_path}")
-    except json.JSONDecodeError:
-        logger.error(f"设置文件格式错误: {file_path}")
+    except yaml.YAMLError as e:
+        logger.error(f"设置文件格式错误: {file_path}. 错误详情: {e}")
     return {}
 
 
 class MainApp:
     def __init__(self):
-        self.settings = load_settings()  # 默认加载路径为 "./config.json"
+        self.settings = load_settings()  # 默认加载路径为 "./config.yaml"
         self.app = QApplication(sys.argv)
         self.window = TachieDisplay(self.settings)  # 初始化图形界面实例
         self.chat_model = Model(self.settings)  # 初始化语言模型实例
@@ -129,12 +129,12 @@ class MainApp:
         if tool_call_message:
             reply_text = tool_call_message.get("tool_call", {}).get("arguments", "")
             try:
-                parsed_arguments = json.loads(reply_text)
+                parsed_arguments = yaml.safe_load(reply_text)
                 final_message = self.parse_response(
                     str(parsed_arguments.get("message", "没有消息内容"))
                 )
-            except json.JSONDecodeError:
-                final_message = "无法解析消息"
+            except yaml.YAMLError as e:
+                final_message = f"无法解析消息. 错误详情: {e}"
         else:
             final_message = "没有有效的回复"
 

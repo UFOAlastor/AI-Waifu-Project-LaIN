@@ -5,7 +5,7 @@ import pydub
 from io import BytesIO
 import time
 import pygame  # 用于播放音频
-import json
+import yaml
 import threading
 import re
 import logging
@@ -138,8 +138,8 @@ if __name__ == "__main__":
     # 初始化日志配置
     logging_config.setup_logging()
     # 加载配置文件
-    with open("./config.json", "r", encoding="utf-8") as f:
-        settings = json.load(f)
+    with open("./config.yaml", "r", encoding="utf-8") as f:
+        settings = yaml.safe_load(f)
         vitsSpeaker.set_settings(settings)
 
     # 要合成的日语文本

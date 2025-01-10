@@ -305,15 +305,15 @@ class TachieDisplay(QMainWindow, MicButton):
 
 
 if __name__ == "__main__":
-    import json
+    import yaml
     import logging_config
 
     # 初始化日志配置
     logging_config.setup_logging()
 
     """加载配置文件"""
-    with open("./config.json", "r", encoding="utf-8") as f:
-        settings = json.load(f)
+    with open("./config.yaml", "r", encoding="utf-8") as f:
+        settings = yaml.safe_load(f)
 
     app = QApplication(sys.argv)
     window = TachieDisplay(settings)

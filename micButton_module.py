@@ -82,12 +82,12 @@ class MicButton(QWidget):
 
 # 启动应用
 if __name__ == "__main__":
-    import logging_config, json
+    import logging_config, yaml
 
     # 初始化日志配置
     logging_config.setup_logging()
-    with open("./config.json", "r", encoding="utf-8") as f:
-        settings = json.load(f)
+    with open("./config.yaml", "r", encoding="utf-8") as f:
+        settings = yaml.safe_load(f)
 
     app = QApplication(sys.argv)
     window = MicButton(settings)

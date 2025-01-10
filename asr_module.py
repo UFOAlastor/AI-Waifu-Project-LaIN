@@ -172,10 +172,10 @@ class SpeechRecognition(QObject):
 
 
 if __name__ == "__main__":
-    import json
+    import yaml
 
-    with open("./config.json", "r", encoding="utf-8") as f:
-        settings = json.load(f)
+    with open("./config.yaml", "r", encoding="utf-8") as f:
+        settings = yaml.safe_load(f)
 
     recognizer = SpeechRecognition(settings)
     recognizer.start_streaming()
