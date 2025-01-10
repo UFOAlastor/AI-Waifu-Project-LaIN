@@ -14,7 +14,7 @@ dialog_label: "LaIN 绫" # 对话框标签名称(可作为人物名称)
 dialog_opacity: 0.8 # 对话框透明度设置 (0.0-1.0]
 
 # letta框架的agent_id设置
-agent_id: "agent-33418f62-6ec6-4263-8e92-147b27acdb87"
+agent_id: "agent-c9afbab5-daa0-4813-96f3-ffd7eea2b570"
 
 # vits语音生成设置
 vits_api_url: "http://127.0.0.1:23456/voice/vits" # vits模型API路径 (默认接口一般不用修改)
