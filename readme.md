@@ -4,6 +4,8 @@
 
 项目基于[Zao-chen/ZcChat](https://github.com/Zao-chen/ZcChat)重构而来.
 
+![image.png|900](https://s2.loli.net/2025/01/10/bTomcAwVfGUj9se.png)
+
 
 ## 功能
 
