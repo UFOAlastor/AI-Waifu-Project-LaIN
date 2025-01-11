@@ -9,11 +9,12 @@ from PyQt5.QtWidgets import (
     QLabel,
     QVBoxLayout,
     QWidget,
-    QPlainTextEdit,
+    QTextEdit,
     QPushButton,
 )
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import QTimer
+import re, markdown
 
 import logging
 
@@ -105,8 +106,7 @@ class TachieDisplay(QMainWindow, MicButton):
             )
             self.dialog_layout.addWidget(self.dialog_label)
 
-        # 从 QTextEdit 更改为 QPlainTextEdit
-        self.dialog_text = QPlainTextEdit(self.dialog_widget)
+        self.dialog_text = QTextEdit(self.dialog_widget)
         self.dialog_text.setStyleSheet(
             "font: 14pt Arial; background-color: transparent; border: none; color: #2f2f2f;"
         )
@@ -166,11 +166,11 @@ class TachieDisplay(QMainWindow, MicButton):
             self.dialog_text.clear()  # 清空文本框内容
             self.current_char_index = 0  # 当前字符索引
             self.content = text  # 初始化文本
-
             # 设置每个字符的延迟时间（可以根据需要调整）
             self.typing_speed = 25  # 每个字符之间的延迟 25 毫秒
-
             # 设置定时器，模拟逐个字符的显示
+            self.current_text = ""
+            self.html_closed = 0
             self.timer = QTimer(self)
             self.timer.timeout.connect(self.on_typing)
             self.timer.start(self.typing_speed)
@@ -237,14 +237,17 @@ class TachieDisplay(QMainWindow, MicButton):
         捕获 QPlainTextEdit 的鼠标点击事件
         """
         if self.is_non_user_input:
-            if self.timer:  # 停止打字机定时器，防止非用户文本继续显示
-                self.timer.stop()
+            try:
+                if self.timer:  # 停止打字机定时器，防止非用户文本继续显示
+                    self.timer.stop()
+            except Exception as e:
+                logger.warning(f"self.timer停止错误: {e}")
             self.dialog_text.clear()  # 清空文本框内容
             self.is_non_user_input = False  # 重置标记
         # 处理输入符号点击操作
         logger.debug("点击了文本框的输入符号区域")
         # 调用父类的事件处理方法，确保光标行为正常
-        super(QPlainTextEdit, self.dialog_text).mousePressEvent(event)
+        super(QTextEdit, self.dialog_text).mousePressEvent(event)
 
     def send_text(self):
         text = self.dialog_text.toPlainText().replace("\n", "\\n ").strip()
@@ -259,28 +262,81 @@ class TachieDisplay(QMainWindow, MicButton):
         """
         self.is_non_user_input = is_non_user_input  # 设置是否为非用户输入内容标记
         self.dialog_text.clear()  # 清空文本框内容
-        # self.dialog_text.setPlainText("")  # 清空文本框内容
         self.current_char_index = 0  # 当前字符索引
-        self.content = content  # 存储要显示的完整文本
-
-        # 设置每个字符的延迟时间（可以根据需要调整）
+        self.content = content  # 存储要显示的完整文本, 不进行html转义
+        # 将Markdown内容转为HTML
+        self.content = markdown.markdown(content)
+        # # 设置定时器，模拟逐个字符的显示
+        self.current_text = ""
+        self.html_closed = 0
         self.typing_speed = 25  # 每个字符之间的延迟 25 毫秒
-
-        # 设置定时器，模拟逐个字符的显示
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.on_typing)
         self.timer.start(self.typing_speed)
 
+    def auto_complete_html_end(self, html_text):
+        # 正则表达式，用于匹配HTML标签（包括带属性的标签）
+        tag_pattern = r"</?([a-zA-Z0-9]+)([^>]*)>"
+        # 用栈来保存当前的未闭合标签
+        open_tags = []
+        # 通过正则匹配标签
+        matches = re.finditer(tag_pattern, html_text)
+        for match in matches:
+            tag = match.group(1)
+            # 判断是否是自闭合标签
+            if (
+                html_text[match.start()] == "<" and html_text[match.start() + 1] != "/"
+            ):  # 如果是开标签
+                # 需要检查是否为自闭合标签
+                if tag not in [
+                    "area",
+                    "base",
+                    "br",
+                    "col",
+                    "embed",
+                    "hr",
+                    "img",
+                    "input",
+                    "link",
+                    "meta",
+                    "source",
+                    "track",
+                    "wbr",
+                ]:
+                    open_tags.append(tag)
+            elif (
+                html_text[match.start()] == "<" and html_text[match.start() + 1] == "/"
+            ):  # 如果是闭标签
+                if open_tags and open_tags[-1] == tag:
+                    open_tags.pop()
+        # 根据栈中的开标签，逐一补全闭合标签
+        closing_tags = []
+        while open_tags:
+            tag = open_tags.pop()
+            closing_tags.append(f"</{tag}>")
+        return "".join(closing_tags)
+
     def on_typing(self):
-        # 每次定时器触发时，显示一个字符
+        """每次定时器触发时，显示一个字符"""
+        # 判断html格式是否闭合 (例如: <p未闭合, <p>闭合)
         if self.current_char_index < len(self.content):
-            current_text = self.dialog_text.toPlainText()
-            current_text += self.content[self.current_char_index]
-            self.dialog_text.setPlainText(current_text)
+            if self.content[self.current_char_index] == ">":
+                self.html_closed -= 1
+            if self.content[self.current_char_index] == "<":
+                self.html_closed += 1
+            # 累加当前字符到 current_text
+            self.current_text += self.content[self.current_char_index]
+            if self.html_closed == 0:
+                # 生成完整的 HTML 内容
+                auto_completed_current_text = (  # 自动补全缺失的末尾
+                    self.current_text + self.auto_complete_html_end(self.current_text)
+                )
+                self.dialog_text.setHtml(auto_completed_current_text)
             self.current_char_index += 1
         elif self.recognizer_is_updating and self.current_char_index == len(
             self.content
-        ):  # 添加对语音识别流式更新过程的挂起
+        ):
+            # 添加对语音识别流式更新过程的挂起
             pass
         else:
             self.timer.stop()  # 停止定时器，表示文本已全部显示完
