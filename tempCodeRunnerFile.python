@@ -1,0 +1,50 @@
+def internet_search(
+    query: str, region: str = "zh-cn", search_type: str = "text", max_results: int = 10
+):
+    """
+    Search on DuckDuckGo using a keyword.
+
+    Args:
+        query (str): The search query.
+        region (str): Region for the search, e.g., 'zh-cn' for Chinese or 'us-en' for English or 'jp-ja' for Japanese.
+        search_type (str): Type of search ('text' or 'news').
+        max_results (int): Maximum number of results to return.
+
+    Returns:
+        list: A list of dictionaries containing search results.
+    """
+    from duckduckgo_search import DDGS
+
+    if not query.strip():
+        raise ValueError("Query cannot be empty!")
+
+    # Ensure the query is a valid UTF-8 string
+    query = query.encode("utf-8").decode("utf-8")
+
+    if not query.strip():
+        raise ValueError("Query cannot be empty!")
+
+    results = []
+    try:
+        with DDGS() as ddgs:
+            if search_type == "text":
+                results = [
+                    r for r in ddgs.text(query, region=region, max_results=max_results)
+                ]
+            elif search_type == "news":
+                results = [
+                    r for r in ddgs.news(query, region=region, max_results=max_results)
+                ]
+            else:
+                raise ValueError("Invalid search type! Use 'text' or 'news'.")
+    except Exception as e:
+        print(f"Error during search: {e}")
+
+    return results
+
+
+results = internet_search(
+    "你好 世界", region="us-en", search_type="text", max_results=10
+)
+
+print(results)

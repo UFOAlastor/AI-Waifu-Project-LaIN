@@ -148,7 +148,9 @@ class SpeechRecognition(QObject):
                 wf.setframerate(self.RATE)
                 wf.writeframes(audio_data)
             if self.initial_prompt == "":
-                result = self.model.transcribe(temp_wav.name)
+                result = self.model.transcribe(
+                    temp_wav.name,
+                )
             else:
                 result = self.model.transcribe(
                     temp_wav.name,

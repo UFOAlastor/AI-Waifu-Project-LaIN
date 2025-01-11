@@ -19,6 +19,9 @@ class vitsSpeaker:
     API_URL = "http://127.0.0.1:23456/voice/vits"
     SPEAKER_ID = 4
     CLEAN_TEXT = True
+    # 标志用于控制停止播放音频
+    is_playing = False
+    stop_event = threading.Event()
 
     @staticmethod
     def set_settings(settings):
@@ -64,10 +67,15 @@ class vitsSpeaker:
             pygame.mixer.init(frequency=audio.frame_rate)  # 初始化pygame的音频播放
             pygame.mixer.music.load(BytesIO(audio_data))  # 加载音频数据
             pygame.mixer.music.play()  # 播放音频
+            vitsSpeaker.is_playing = True  # 标记当前正在播放
 
-            # 等待音频播放完成
-            while pygame.mixer.music.get_busy():
+            # 等待音频播放完成或被打断
+            while pygame.mixer.music.get_busy() and not vitsSpeaker.stop_event.is_set():
                 time.sleep(0.1)
+
+            if vitsSpeaker.stop_event.is_set():
+                logger.info("音频播放已被打断")
+
         except Exception as e:
             logger.error(f"播放音频发生错误: {e}")
 
@@ -101,6 +109,16 @@ class vitsSpeaker:
 
         except Exception as e:
             logger.error(f"发生错误: {e}")
+
+    @staticmethod
+    def stop_audio():
+        """停止音频播放"""
+        if pygame.mixer.get_init():  # 确保pygame.mixer已经初始化
+            if pygame.mixer.music.get_busy():  # 确保有音频正在播放
+                pygame.mixer.music.stop()  # 停止播放音频
+                vitsSpeaker.is_playing = False  # 修改播放状态为未播放
+                vitsSpeaker.stop_event.set()  # 通知播放线程停止
+                logger.info("音频播放已被停止")
 
     @staticmethod
     def clean_text_for_vits(text):

@@ -2,6 +2,7 @@ import sys
 from PyQt5.QtCore import QThread, QTimer
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton
 from asr_module import SpeechRecognition
+from vits_module import vitsSpeaker
 import logging
 
 # 获取根记录器
@@ -78,6 +79,7 @@ class MicButton(QWidget):
     def detect_speech_toggle(self, flag):
         if flag:
             self.set_button_color("green")
+            vitsSpeaker.stop_audio()
         else:
             self.set_button_color("gray")
 
