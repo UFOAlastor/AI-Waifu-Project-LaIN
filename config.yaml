@@ -1,4 +1,4 @@
-# 窗口大小设置(立绘默认自适应窗口大小)
+# 窗口大小设置 (立绘默认自适应窗口大小)
 window_width: 600
 window_height: 800
 always_on_top: true # 设置窗口始终保持顶置
@@ -7,10 +7,10 @@ always_on_top: true # 设置窗口始终保持顶置
 tachie_path: "./tachie/Murasame/" # 立绘文件夹路径
 default_tachie: "正常" # 默认立绘
 opening_tachie: "高兴" # 开场时临时展现的表情
-tachie_suffix: "png" # 立绘图片格式(后缀名)
+tachie_suffix: "png" # 立绘图片格式 (后缀名)
 
 # 对话框设置
-dialog_label: "LaIN 绫" # 对话框标签名称(可作为人物名称)
+dialog_label: "LaIN 绫" # 对话框标签名称 (可作为人物名称)
 dialog_opacity: 0.8 # 对话框透明度设置 (0.0-1.0]
 
 # letta框架的agent_id设置
@@ -23,6 +23,6 @@ vits_clean_text: true # 是否开启文本清洗 (去除难以发音的部分, �
 
 # 语音识别设置
 vad_mode: 3 # vad人声检测参数
-model_name: "small" # whisper模型名称, 可选: tiny, base, small, medium, large, large-v3, large-v3-turbo
+model_name: "large-v3-turbo" # whisper模型名称, 可选: tiny, base, small, medium, large, large-v3, large-v3-turbo
 initial_prompt: "" # whisper初始prompt, 可能起到优化语音识别效果
-max_silence_duration: 1.8 # 持续静音max_silence_duration时间后自动停止录音并结束语音识别
+max_silence_duration: 3 # 持续静音max_silence_duration时间后自动停止录音并结束语音识别

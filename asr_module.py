@@ -96,6 +96,7 @@ class SpeechRecognition(QObject):
     # 音频处理线程
     def audio_consumer(self):
         temp_frames = []
+        has_speech_text = False
         while True:
             try:
                 data = self.audio_queue.get(timeout=0.1)
@@ -111,17 +112,21 @@ class SpeechRecognition(QObject):
                     self.silent_chunks += 1
                     if (
                         len(temp_frames) >= 10
-                    ):  # 添加一个长度限制, 持续非静音才认为存在输入, 能够一定程度减少幻觉
+                    ):  # 添加一个长度限制, 持续一定量非静音数据才认为存在输入, 能够一定程度减少幻觉
                         self.transcribe_and_log(temp_frames)
+                        has_speech_text = True
                         temp_frames.clear()
                 else:
                     self.silent_chunks = 0
-                    self.detect_speech_signal.emit(True)
                     temp_frames.append(data)  # 仅仅在非静音时才输入
+                    if len(temp_frames) >= 10:  # 长度限制
+                        self.detect_speech_signal.emit(True)
 
                 # 手动停止 or 静音超时 --> 停止录音
-                if not self._is_running or self.silent_chunks > (
-                    self.RATE / self.CHUNK * max(self.max_silence_duration, 0.1)
+                if has_speech_text and (
+                    not self._is_running
+                    or self.silent_chunks
+                    > (self.RATE / self.CHUNK * max(self.max_silence_duration, 0.1))
                 ):
                     if self._is_running:
                         logger.info("audio_producer结束: 持续静音")
@@ -150,10 +155,12 @@ class SpeechRecognition(QObject):
             if self.initial_prompt == "":
                 result = self.model.transcribe(
                     temp_wav.name,
+                    language="zh",
                 )
             else:
                 result = self.model.transcribe(
                     temp_wav.name,
+                    language="zh",
                     initial_prompt=self.initial_prompt,
                 )
             if result["text"]:
