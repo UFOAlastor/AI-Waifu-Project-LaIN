@@ -22,7 +22,7 @@ vits_speaker_id: "4" # 采用的vits模型
 vits_clean_text: true # 是否开启文本清洗 (去除难以发音的部分, 例如网页链接等)
 
 # 语音识别设置
-vad_mode: 2 # vad人声检测参数
+vad_mode: 3 # vad人声检测参数
 model_name: "small" # whisper模型名称, 可选: tiny, base, small, medium, large, large-v3, large-v3-turbo
-initial_prompt: "以下是提交给智能助手Lin的普通话为主的语音输入。" # whisper初始prompt, 可以优化语音识别效果
+initial_prompt: "" # whisper初始prompt, 可能起到优化语音识别效果
 max_silence_duration: 1.8 # 持续静音max_silence_duration时间后自动停止录音并结束语音识别

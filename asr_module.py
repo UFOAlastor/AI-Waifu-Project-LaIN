@@ -24,6 +24,7 @@ class SpeechRecognition(QObject):
     # 定义信号
     update_text_signal = pyqtSignal(str)  # 用于实时更新识别文本
     recording_ended_signal = pyqtSignal()  # 用于通知录音结束
+    detect_speech_signal = pyqtSignal(bool)  # 用于通知检测到人声
 
     def __init__(self, main_settings):
         super().__init__()
@@ -32,7 +33,8 @@ class SpeechRecognition(QObject):
         self.vad_mode = self.settings.get("vad_mode", 2)
         self.model_name = self.settings.get("model_name", "small")
         self.initial_prompt = self.settings.get(
-            "initial_prompt", "以下是普通话为主的句子，这是提交给智能助手的语音输入。"
+            "initial_prompt",
+            "",
         )
         self.max_silence_duration = self.settings.get("max_silence_duration", 3)
 
@@ -105,14 +107,16 @@ class SpeechRecognition(QObject):
                 # 检测静音
                 is_speech = self.detect_speech(np.frombuffer(data, dtype=np.int16))
                 if not is_speech:
+                    self.detect_speech_signal.emit(False)
                     self.silent_chunks += 1
                     if (
-                        len(temp_frames) >= 6
-                    ):  # 添加一个长度限制, 持续6块非静音才认为存在输入, 能够一定程度减少幻觉
+                        len(temp_frames) >= 10
+                    ):  # 添加一个长度限制, 持续非静音才认为存在输入, 能够一定程度减少幻觉
                         self.transcribe_and_log(temp_frames)
                         temp_frames.clear()
                 else:
                     self.silent_chunks = 0
+                    self.detect_speech_signal.emit(True)
                     temp_frames.append(data)  # 仅仅在非静音时才输入
 
                 # 手动停止 or 静音超时 --> 停止录音
@@ -143,9 +147,13 @@ class SpeechRecognition(QObject):
                 wf.setsampwidth(2)
                 wf.setframerate(self.RATE)
                 wf.writeframes(audio_data)
-            result = self.model.transcribe(
-                temp_wav.name, initial_prompt=self.initial_prompt
-            )
+            if self.initial_prompt == "":
+                result = self.model.transcribe(temp_wav.name)
+            else:
+                result = self.model.transcribe(
+                    temp_wav.name,
+                    initial_prompt=self.initial_prompt,
+                )
             if result["text"]:
                 logger.debug(f"实时转录结果: {result['text']}")
                 self.update_text_signal.emit(result["text"])  # 发出实时更新信号
