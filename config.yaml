@@ -23,4 +23,4 @@ vits_clean_text: true # 是否开启文本清洗 (去除难以发音的部分, �
 
 # 语音识别设置
 vad_mode: 2 # vad人声检测参数
-max_silence_duration: 1.8 # 持续静音max_silence_duration时间后自动停止录音并结束语音识别
+auto_send_silence_time: 1.8 # 持续静音auto_send_silence_time时间后自动发送 (设置为-1则不自动发送)

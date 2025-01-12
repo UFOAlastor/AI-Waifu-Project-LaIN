@@ -27,7 +27,7 @@ class SpeechRecognition(QObject):
         self.settings = main_settings
         self._is_running = False
         self.vad_mode = self.settings.get("vad_mode", 2)
-        self.max_silence_duration = self.settings.get("max_silence_duration", 3)
+        self.auto_send_silence_time = self.settings.get("auto_send_silence_time", 3)
 
         # 配置录音参数
         self.FORMAT = pyaudio.paInt16
@@ -130,14 +130,14 @@ class SpeechRecognition(QObject):
 
                     if is_active:
                         # 检测到语音，重置静默计时器，存储音频数据
+                        self.detect_speech_signal.emit(True)
                         self.silence_timer = 0
                         self.audio_buffer.append(merged_frames)
-                        self.detect_speech_signal.emit(True)
                         # logger.debug("检测到有效语音，加入缓存")
                     else:
                         # 检测到静默，累积静默时间
+                        self.detect_speech_signal.emit(False)
                         self.silence_timer += frame_window_ms / 1000.0  # 转为秒
-                        logger.debug(f"静默持续时间：{self.silence_timer:.2f}s")
 
                         if self.audio_buffer:  # 如果音频缓存非空, 就进行一次识别
                             self.transcribe_and_log(self.audio_buffer)
@@ -145,9 +145,10 @@ class SpeechRecognition(QObject):
 
                         if (  # 静默时间超限并且存在未发送内容
                             self.transcribe_but_not_send
-                            and self.silence_timer >= self.max_silence_duration
+                            and self.silence_timer >= self.auto_send_silence_time
+                            and self.auto_send_silence_time != -1
                         ):
-                            logger.info("静默时间超限，触发语音转录")
+                            logger.info("静默时间超限，触发结果发送")
                             self.recording_ended_signal.emit()
                             self.transcribe_but_not_send = False  # 重置未发送标志
                             self.silence_timer = 0  # 重置静默计时器
