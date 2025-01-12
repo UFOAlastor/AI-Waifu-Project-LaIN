@@ -1,10 +1,9 @@
-[ABexit/ASR-LLM-TTS: This is a speech interaction system built on an open-source model, integrating ASR, LLM, and TTS in sequence. The ASR model is SenceVoice, the LLM models are QWen2.5-0.5B/1.5B, and there are three TTS models: CosyVoice, Edge-TTS, and pyttsx3](https://github.com/ABexit/ASR-LLM-TTS)
-
 # Project LaIN
 
 一个支持长期记忆, 具有表情切换, 语音识别以及语音输出的AI Waifu.
 
 ![image.png|900](https://s2.loli.net/2025/01/10/bTomcAwVfGUj9se.png)
+
 
 ## 功能
 
@@ -13,6 +12,7 @@
 - 语音输入
 - 语音合成
 - 多种LLM支持
+
 
 ## LInks
 
