@@ -5,19 +5,15 @@ import threading
 import pyaudio
 import webrtcvad
 import numpy as np
-import whisper
 import wave
 import logging
 import tempfile
 from PyQt5.QtCore import pyqtSignal, QObject
+from funasr import AutoModel
+from funasr.utils.postprocess_utils import rich_transcription_postprocess
 
 # 配置日志
 logger = logging.getLogger("asr_module")
-logging.basicConfig(level=logging.DEBUG)
-
-import torch
-
-device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 class SpeechRecognition(QObject):
@@ -31,11 +27,6 @@ class SpeechRecognition(QObject):
         self.settings = main_settings
         self._is_running = False
         self.vad_mode = self.settings.get("vad_mode", 2)
-        self.model_name = self.settings.get("model_name", "small")
-        self.initial_prompt = self.settings.get(
-            "initial_prompt",
-            "",
-        )
         self.max_silence_duration = self.settings.get("max_silence_duration", 3)
 
         # 配置录音参数
@@ -44,31 +35,47 @@ class SpeechRecognition(QObject):
         self.RATE = 16000
         self.CHUNK = 1024
 
-        # 创建 VAD 和 Whisper 模型
+        # 创建 VAD 模型
         self.vad = webrtcvad.Vad(self.vad_mode)
-        self.model = whisper.load_model(self.model_name, device=device)
+
+        # 初始化 SenseVoice 模型
+        model_dir = self.settings.get("model_dir", "./SenseVoiceSmall")
+        self.model = AutoModel(
+            model=model_dir,
+            trust_remote_code=True,
+            device="cuda:0",  # 默认使用 GPU
+        )
+
+        self.silence_timer = 0  # 静默时间累积
+        self.audio_buffer = []  # 用于暂存有效语音数据
+        self.transcribe_but_not_send = False  # 已经识别但是未发送
 
         # 初始化音频队列
         self.audio_queue = queue.Queue()
         self.audio_lock = threading.Lock()
 
-    # 语音检测函数
-    def detect_speech(self, audio_data, sample_rate=16000, frame_duration_ms=30):
-        frames = self.chunk_audio_data(audio_data, frame_duration_ms, sample_rate)
-        for frame in frames:
-            frame_bytes = np.array(frame, dtype=np.int16).tobytes()
-            if self.vad.is_speech(frame_bytes, sample_rate):
-                return True
-        return False
-
-    # 修正 chunk_audio_data 方法
-    def chunk_audio_data(self, audio_data, frame_duration_ms=30, sample_rate=16000):
+    def detect_speech(self, audio_data, sample_rate=16000, frame_duration_ms=20):
+        """
+        使用 WebRTC VAD 检测音频数据是否包含有效语音。
+        """
         frame_size = int(sample_rate * (frame_duration_ms / 1000.0))  # 单帧长度
         frames = [
             audio_data[i : i + frame_size]
             for i in range(0, len(audio_data) - frame_size + 1, frame_size)
         ]
-        return frames
+
+        # 累计检测结果
+        active_segments = 0
+        total_segments = len(frames)
+
+        for frame in frames:
+            frame_bytes = np.array(frame, dtype=np.int16).tobytes()
+            if self.vad.is_speech(frame_bytes, sample_rate):  # 检测是否有语音
+                active_segments += 1
+
+        # 判定语音激活率
+        activation_rate = active_segments / total_segments
+        return activation_rate >= 0.4  # 有效激活率 >= 40%
 
     # 录音线程
     def audio_producer(self):
@@ -93,53 +100,63 @@ class SpeechRecognition(QObject):
             logger.error(f"audio_producer录音线程异常: {e}")
         logger.debug("audio_producer正常退出")
 
-    # 音频处理线程
     def audio_consumer(self):
+        """
+        处理音频队列中的数据，按 500ms 段进行检测，并根据检测结果处理静默时长。
+        """
         temp_frames = []
-        has_speech_text = False
-        while True:
+        chunk_duration_ms = 20  # 每个检测段的持续时间
+        frame_window_ms = 500  # 检测时间段（500ms）
+        frames_per_window = frame_window_ms // chunk_duration_ms  # 每个时间段的帧数
+
+        while self._is_running:
             try:
                 data = self.audio_queue.get(timeout=0.1)
-                # 在 audio_consumer 方法中：
                 if len(data) == 0:
                     logger.warning("audio_producer收到空帧，跳过处理")
                     continue
 
-                # 检测静音
-                is_speech = self.detect_speech(np.frombuffer(data, dtype=np.int16))
-                if not is_speech:
-                    self.detect_speech_signal.emit(False)
-                    self.silent_chunks += 1
-                    if (
-                        len(temp_frames) >= 10
-                    ):  # 添加一个长度限制, 持续一定量非静音数据才认为存在输入, 能够一定程度减少幻觉
-                        self.transcribe_and_log(temp_frames)
-                        has_speech_text = True
-                        temp_frames.clear()
-                else:
-                    self.silent_chunks = 0
-                    temp_frames.append(data)  # 仅仅在非静音时才输入
-                    if len(temp_frames) >= 10:  # 长度限制
-                        self.detect_speech_signal.emit(True)
+                # 缓存音频帧
+                temp_frames.append(np.frombuffer(data, dtype=np.int16))
 
-                # 手动停止 or 静音超时 --> 停止录音
-                if has_speech_text and (
-                    not self._is_running
-                    or self.silent_chunks
-                    > (self.RATE / self.CHUNK * max(self.max_silence_duration, 0.1))
+                # 检测 500ms 的音频数据
+                if len(temp_frames) * self.CHUNK >= self.RATE * (
+                    frame_window_ms / 1000
                 ):
-                    if self._is_running:
-                        logger.info("audio_producer结束: 持续静音")
-                        self._is_running = False
+                    # 合并数据并检测
+                    merged_frames = np.concatenate(temp_frames[:frames_per_window])
+                    is_active = self.detect_speech(merged_frames)
+                    temp_frames = temp_frames[frames_per_window:]  # 移动窗口
+
+                    if is_active:
+                        # 检测到语音，重置静默计时器，存储音频数据
+                        self.silence_timer = 0
+                        self.audio_buffer.append(merged_frames)
+                        self.detect_speech_signal.emit(True)
+                        # logger.debug("检测到有效语音，加入缓存")
                     else:
-                        logger.info("audio_producer结束: 手动触发")
-                    self.recording_ended_signal.emit()  # 通知录音结束
-                    break
+                        # 检测到静默，累积静默时间
+                        self.silence_timer += frame_window_ms / 1000.0  # 转为秒
+                        logger.debug(f"静默持续时间：{self.silence_timer:.2f}s")
+
+                        if self.audio_buffer:  # 如果音频缓存非空, 就进行一次识别
+                            self.transcribe_and_log(self.audio_buffer)
+                            self.audio_buffer = []  # 清空缓存
+
+                        if (  # 静默时间超限并且存在未发送内容
+                            self.transcribe_but_not_send
+                            and self.silence_timer >= self.max_silence_duration
+                        ):
+                            logger.info("静默时间超限，触发语音转录")
+                            self.recording_ended_signal.emit()
+                            self.transcribe_but_not_send = False  # 重置未发送标志
+                            self.silence_timer = 0  # 重置静默计时器
+                    continue
 
             except queue.Empty:
                 continue
             except Exception as e:
-                logger.error(f"audio_producer音频处理异常: {e}")
+                logger.error(f"audio_consumer音频处理异常: {e}")
                 break
         logger.debug("audio_consumer正常退出")
 
@@ -152,39 +169,44 @@ class SpeechRecognition(QObject):
                 wf.setsampwidth(2)
                 wf.setframerate(self.RATE)
                 wf.writeframes(audio_data)
-            if self.initial_prompt == "":
-                result = self.model.transcribe(
-                    temp_wav.name,
-                    language="zh",
-                )
-            else:
-                result = self.model.transcribe(
-                    temp_wav.name,
-                    language="zh",
-                    initial_prompt=self.initial_prompt,
-                )
-            if result["text"]:
-                logger.debug(f"实时转录结果: {result['text']}")
-                self.update_text_signal.emit(result["text"])  # 发出实时更新信号
+            res = self.model.generate(
+                input=temp_wav.name,
+                cache={},
+                language="auto",  # 自动检测语言
+                use_itn=True,
+            )
+            if res and res[0]["text"]:
+                text = rich_transcription_postprocess(res[0]["text"])
+                logger.debug(f"实时转录结果: {text}")
+                self.transcribe_but_not_send = True
+                self.update_text_signal.emit(text)
 
     # 启动流式语音识别
     def start_streaming(self):
-        self._is_running = True
-        # 初始化静音块以及队列
-        self.silent_chunks = 0
-        self.audio_queue.queue.clear()
-        # 启动线程
-        producer_thread = threading.Thread(target=self.audio_producer)
-        consumer_thread = threading.Thread(target=self.audio_consumer)
-        producer_thread.start()
-        consumer_thread.start()
-        producer_thread.join()
-        consumer_thread.join()
-        logger.info("启动流式语音识别")
+        if not self._is_running:
+            logger.info("启动流式语音识别")
+            self._is_running = True
+            self.silence_timer = 0
+            self.audio_buffer = []
+            self.audio_queue.queue.clear()
+            self.transcribe_but_not_send = False
+            producer_thread = threading.Thread(target=self.audio_producer)
+            consumer_thread = threading.Thread(target=self.audio_consumer)
+            producer_thread.start()
+            consumer_thread.start()
+            producer_thread.join()
+            consumer_thread.join()
+        else:
+            logger.info("流式语音识别已经启动")
 
     # 停止流式语音识别
     def stop_streaming(self):
         self._is_running = False
+        if self.transcribe_but_not_send:  # 存在未发送内容
+            logger.info("手动点击按钮，触发语音转录")
+            self.recording_ended_signal.emit()
+            self.transcribe_but_not_send = False  # 重置未发送标志
+            self.silence_timer = 0  # 重置静默计时器
         logger.info("停止流式语音识别")
 
 

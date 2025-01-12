@@ -51,6 +51,8 @@ class MicButton(QWidget):
         if self.recognizer._is_running:
             # 如果语音识别正在进行，停止线程
             self.recognition_thread.stop()
+            self.set_button_color("white")  # 结束录音，按钮变回白色
+            QTimer.singleShot(1000, lambda: self.set_button_color("white"))
         else:
             self.recognition_thread.start()  # 启动识别线程
             self.set_button_color("orange")  # 录音中状态，按钮变橙色
@@ -65,8 +67,8 @@ class MicButton(QWidget):
 
         # 切换按钮图标颜色
         self.set_button_color("red")
-        # 在1秒后将按钮恢复为白色
-        QTimer.singleShot(1000, self.reset_button)
+        # 在1秒后将按钮恢复为灰色
+        QTimer.singleShot(1000, lambda: self.set_button_color("orange"))
 
         logger.info("识别完成，停止录音")
 
@@ -81,12 +83,7 @@ class MicButton(QWidget):
             self.set_button_color("green")
             vitsSpeaker.stop_audio()
         else:
-            self.set_button_color("gray")
-
-    def reset_button(self):
-        self.mic_button.setStyleSheet(
-            "background-color: white; border: 1px solid black; border-radius: 5px;"
-        )  # 恢复按钮为白色
+            self.set_button_color("orange")
 
 
 # 启动应用

@@ -250,6 +250,7 @@ class TachieDisplay(QMainWindow, MicButton):
         super(QTextEdit, self.dialog_text).mousePressEvent(event)
 
     def send_text(self):
+        self.timer.stop() # 停止对话框文本显示
         text = self.dialog_text.toPlainText().replace("\n", "\\n ").strip()
         if text:
             logger.debug(f"发送的文本: {text}")
