@@ -2,12 +2,12 @@
 
 import sys
 import yaml
-from PyQt5.QtCore import QThread, pyqtSignal, QTimer
+from PyQt5.QtCore import QThread, pyqtSignal, QTimer, QEvent
 from PyQt5.QtWidgets import QApplication
 from ui_module import TachieDisplay  # 假设TachieDisplay在tachie_display.py中
 from model_module import Model  # 导入模型类
 from replyParser_module import replyParser  # 导入回复内容解析器
-from vits_module import vitsSpeaker
+from vits_module import vitsSpeaker  # 导入Vits(TTS)模块
 
 import logging, logging_config
 
@@ -51,15 +51,22 @@ def load_settings(file_path="./config.yaml"):
 
 class MainApp:
     def __init__(self):
+        # 加载配置文件
         self.settings = load_settings()  # 默认加载路径为 "./config.yaml"
+        # UI界面初始化
         self.app = QApplication(sys.argv)
         self.window = TachieDisplay(self.settings)  # 初始化图形界面实例
         self.chat_model = Model(self.settings)  # 初始化语言模型实例
-        self.setup_ui()
+        # vits语音模块初始化
+        self.vits_speaker = vitsSpeaker(self.settings)  # vits语音模块加载配置文件
+        self.vits_speaker.audio_played.connect(  # vits语音模块播放结束信号连接到槽
+            self.on_audio_played
+        )
+        # "思考中..."动态效果初始化
         self.typing_animation_timer = QTimer()
         self.typing_dots = ""
-        # vits语音模块加载配置文件
-        vitsSpeaker.set_settings(self.settings)
+        # 显示UI界面
+        self.setup_ui()
 
     def setup_ui(self):
         """显示初始化内容 (提示词, 开场语音)"""
@@ -68,9 +75,19 @@ class MainApp:
         )
         self.window.text_sent.connect(self.on_text_received)
         self.window.show()
-        vitsSpeaker.vits_play(
+        self.vits_speaker.vits_play(
             "チャロ！わが輩はレイだよ！何かお手伝いできること、あるかな～？"
         )
+
+    def on_audio_played(self):
+        """语音播放结束后自动继续开启语音识别"""
+        logger.debug("语音播放结束")
+        if not self.window.recognizer.webrtc_aec:
+            if (  # 当语音识别按钮被点击过但是目前没有被按下才触发, 也就是开启过语音识别但是目前没有被额外点击的状态
+                self.window.mic_button_ever_pressed_flag
+                and not self.window.mic_button_pressed_state
+            ):
+                self.window.toggle_recording()
 
     def on_text_received(self, input_text):
         """等待接收模型回复"""
@@ -162,7 +179,7 @@ class MainApp:
             self.change_tachie(tachie_expression)
 
             # 播放语音, 默认日语
-            vitsSpeaker.vits_play(Japanese_message)
+            self.vits_speaker.vits_play(Japanese_message)
 
         return Chinese_message
 

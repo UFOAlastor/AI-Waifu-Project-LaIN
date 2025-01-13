@@ -27,6 +27,7 @@ class SpeechRecognition(QObject):
         self.settings = main_settings
         self._is_running = False
         self.vad_mode = self.settings.get("vad_mode", 2)
+        self.webrtc_aec = self.settings.get("webrtc_aec", False) # UNDO AEC回声剔除
         self.auto_send_silence_time = self.settings.get("auto_send_silence_time", 3)
 
         # 配置录音参数

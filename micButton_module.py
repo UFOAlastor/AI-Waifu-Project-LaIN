@@ -1,7 +1,7 @@
 # micButton_module.py
 
 import sys
-from PyQt5.QtCore import QThread, QTimer
+from PyQt5.QtCore import QThread
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton
 from asr_module import SpeechRecognition
 from vits_module import vitsSpeaker
@@ -28,6 +28,9 @@ class MicButton(QWidget):
     def __init__(self, main_settings):
         super().__init__()
 
+        # 初始化vits模块
+        self.vits_speaker = vitsSpeaker(main_settings)  # vits语音模块加载配置文件
+
         # 初始化语音识别器
         self.recognizer = SpeechRecognition(main_settings)
 
@@ -42,26 +45,28 @@ class MicButton(QWidget):
 
         # 创建识别线程
         self.recognition_thread = RecognitionThread(self.recognizer)
-        self.recognizer.update_text_signal.connect(self.on_recognition_update)
         self.recognizer.recording_ended_signal.connect(self.on_recognition_complete)
         self.recognizer.detect_speech_signal.connect(self.detect_speech_toggle)
 
         # 设置语音识别中标志, 该标志传递给ui模块以控制对话框文本输出
         self.recognizer_is_updating = False
 
+        # 按钮状态, 初始化按钮状态为没有按下
+        self.mic_button_pressed_state = False
+        # 按钮是否被按下过的标记, 用于区分系统开场提示词与模型输出的显示结束状态
+        self.mic_button_ever_pressed_flag = False
+
     def toggle_recording(self):
         """点击语音识别按钮"""
         if self.recognizer._is_running:
-            # 如果语音识别正在进行，停止线程
-            self.recognition_thread.stop()
+            self.recognition_thread.stop()  # 如果语音识别正在进行，停止线程
             self.set_button_color("white")  # 结束录音，按钮变回白色
+            self.mic_button_pressed_state = False  # 按钮恢复为没有按下
         else:
             self.recognition_thread.start()  # 启动识别线程
             self.set_button_color("gray")  # 开启录音, 按钮灰色
-
-    def on_recognition_update(self, text):
-        # 实时更新文本显示
-        logger.info(f"实时识别结果: {text}")
+            self.mic_button_pressed_state = True  # 按钮更新为已经按下
+            self.mic_button_ever_pressed_flag = True  # 被手动点击后持续为True
 
     def on_recognition_complete(self):
         """语音识别结束操作"""
@@ -69,6 +74,8 @@ class MicButton(QWidget):
         self.recognizer_is_updating = False
         # 切换按钮图标颜色
         self.set_button_color("red")
+        if not self.recognizer.webrtc_aec:
+            self.toggle_recording()  # 模拟一次点击, 停止识别线程
         logger.info("识别完成，停止录音")
 
     def set_button_color(self, color):
@@ -82,7 +89,7 @@ class MicButton(QWidget):
         """当检测到人声输入时的行为"""
         if flag:
             self.set_button_color("green")
-            vitsSpeaker.stop_audio()
+            self.vits_speaker.stop_audio()
         else:
             self.set_button_color("gray")
 

@@ -27,8 +27,7 @@ from micButton_module import MicButton
 
 # 在 TachieDisplay 类中设置事件过滤器
 class TachieDisplay(QMainWindow, MicButton):
-    # 定义一个信号，发送输入的文本
-    text_sent = pyqtSignal(str)
+    text_sent = pyqtSignal(str)  # 发送对话框文本信号
 
     def __init__(self, main_settings):
         super().__init__(main_settings)  # python的继承按 MRO 顺序传递参数
@@ -156,6 +155,9 @@ class TachieDisplay(QMainWindow, MicButton):
         self.recognizer.update_text_signal.connect(self.whisper_stream_update)
         self.recognizer.recording_ended_signal.connect(self.send_text)
 
+        # 打字机效果显示采用计时器实现
+        self.typing_timer = QTimer(self)
+
     def whisper_stream_update(self, text):
         """
         语音识别结果流式追加显示文本内容，is_non_user_input 为 True 时表示启动提示或模型返回内容
@@ -171,9 +173,8 @@ class TachieDisplay(QMainWindow, MicButton):
             # 设置定时器，模拟逐个字符的显示
             self.current_text = ""
             self.html_closed = 0
-            self.timer = QTimer(self)
-            self.timer.timeout.connect(self.on_typing)
-            self.timer.start(self.typing_speed)
+            self.typing_timer.timeout.connect(self.on_typing_display)
+            self.typing_timer.start(self.typing_speed)
         else:
             self.content += text  # 拼接文本
 
@@ -242,8 +243,8 @@ class TachieDisplay(QMainWindow, MicButton):
         """
         if self.is_non_user_input:
             try:
-                if self.timer:  # 停止打字机定时器，防止非用户文本继续显示
-                    self.timer.stop()
+                if self.typing_timer:  # 停止打字机定时器，防止非用户文本继续显示
+                    self.typing_timer.stop()
             except Exception as e:
                 logger.warning(f"self.timer停止错误: {e}")
             self.dialog_text.clear()  # 清空文本框内容
@@ -255,7 +256,7 @@ class TachieDisplay(QMainWindow, MicButton):
 
     def send_text(self):
         """将对话框内文本发送给模型接口"""
-        self.timer.stop() # 停止对话框文本显示
+        self.typing_timer.stop()  # 停止对话框文本显示
         text = self.dialog_text.toPlainText().replace("\n", "\\n ").strip()
         if text:
             logger.debug(f"发送的文本: {text}")
@@ -276,9 +277,8 @@ class TachieDisplay(QMainWindow, MicButton):
         self.current_text = ""
         self.html_closed = 0
         self.typing_speed = 25  # 每个字符之间的延迟 25 毫秒
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.on_typing)
-        self.timer.start(self.typing_speed)
+        self.typing_timer.timeout.connect(self.on_typing_display)
+        self.typing_timer.start(self.typing_speed)
 
     def auto_complete_html_end(self, html_text):
         # 正则表达式，用于匹配HTML标签（包括带属性的标签）
@@ -322,7 +322,7 @@ class TachieDisplay(QMainWindow, MicButton):
             closing_tags.append(f"</{tag}>")
         return "".join(closing_tags)
 
-    def on_typing(self):
+    def on_typing_display(self):
         """每次定时器触发时, 显示一个字符"""
         # 判断html格式是否闭合 (例如: <p未闭合, <p>闭合)
         if self.current_char_index < len(self.content):
@@ -345,7 +345,7 @@ class TachieDisplay(QMainWindow, MicButton):
             # 添加对语音识别流式更新过程的挂起
             pass
         else:
-            self.timer.stop()  # 停止定时器，表示文本已全部显示完
+            self.typing_timer.stop()  # 停止定时器，表示文本已全部显示完
 
     def resizeEvent(self, event):
         """窗口重置函数, 史山遗留代码(去除会导致窗口异常)"""
@@ -373,4 +373,7 @@ if __name__ == "__main__":
     window = TachieDisplay(settings)
     window.display_text("Ciallo～(∠・ω< )⌒☆ UI模块测试提示文本", is_non_user_input=True)
     window.show()
+    def test_response():
+        window.display_text("你好, UI模块测试回复文本", is_non_user_input=True)
+    window.text_sent.connect(test_response)
     sys.exit(app.exec_())

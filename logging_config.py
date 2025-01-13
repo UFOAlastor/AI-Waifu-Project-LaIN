@@ -1,8 +1,7 @@
-# logging_config.py
-
 import os
 import logging
 import logging.config
+import sys
 
 
 def setup_logging():
@@ -11,6 +10,7 @@ def setup_logging():
     if not os.path.exists(log_directory):
         os.makedirs(log_directory)
 
+    # 设置日志配置
     LOG_CONFIG = {
         "version": 1,
         "disable_existing_loggers": False,
@@ -29,6 +29,8 @@ def setup_logging():
                 "level": "DEBUG",
                 "class": "logging.StreamHandler",
                 "formatter": "verbose",
+                # 使用 utf-8 编码
+                "stream": sys.stdout,
             },
             "file": {
                 "level": "DEBUG",
@@ -37,6 +39,8 @@ def setup_logging():
                 "maxBytes": 10 * 1024 * 1024,
                 "backupCount": 5,
                 "formatter": "default",
+                # 使文件处理程序使用 UTF-8 编码
+                "encoding": "utf-8",
             },
         },
         "loggers": {
@@ -81,6 +85,7 @@ def setup_logging():
     # 日志初始化
     logging.config.dictConfig(LOG_CONFIG)
     logging.info("Logging setup complete.")
+
 
 if __name__ == "__main__":
     setup_logging()
