@@ -79,6 +79,7 @@ class SpeechRecognition(QObject):
 
     # 录音线程
     def audio_producer(self):
+        """麦克风收音函数 (音频生产者)"""
         try:
             audio = pyaudio.PyAudio()
             stream = audio.open(
@@ -102,7 +103,7 @@ class SpeechRecognition(QObject):
 
     def audio_consumer(self):
         """
-        处理音频队列中的数据，按 500ms 段进行检测，并根据检测结果处理静默时长。
+        处理音频队列中的数据, 按500ms段进行检测, 并根据检测结果处理静默时长. (音频消费者)
         """
         temp_frames = []
         chunk_duration_ms = 20  # 每个检测段的持续时间
@@ -140,7 +141,7 @@ class SpeechRecognition(QObject):
                         self.silence_timer += frame_window_ms / 1000.0  # 转为秒
 
                         if self.audio_buffer:  # 如果音频缓存非空, 就进行一次识别
-                            self.transcribe_and_log(self.audio_buffer)
+                            self.audio_transcribe(self.audio_buffer)
                             self.audio_buffer = []  # 清空缓存
 
                         if (  # 静默时间超限并且存在未发送内容
@@ -162,7 +163,8 @@ class SpeechRecognition(QObject):
         logger.debug("audio_consumer正常退出")
 
     # 转录并记录
-    def transcribe_and_log(self, frames):
+    def audio_transcribe(self, frames):
+        """对包含人声的音频序列进行语音识别"""
         audio_data = b"".join(frames)
         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_wav:
             with wave.open(temp_wav, "wb") as wf:
@@ -184,6 +186,7 @@ class SpeechRecognition(QObject):
 
     # 启动流式语音识别
     def start_streaming(self):
+        """语音识别线程启动函数"""
         if not self._is_running:
             logger.info("启动流式语音识别")
             self._is_running = True
@@ -202,6 +205,7 @@ class SpeechRecognition(QObject):
 
     # 停止流式语音识别
     def stop_streaming(self):
+        """语音识别线程终止函数"""
         self._is_running = False
         if self.transcribe_but_not_send:  # 存在未发送内容
             logger.info("手动点击按钮，触发语音转录")

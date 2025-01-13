@@ -44,10 +44,11 @@ class MicButton(QWidget):
         self.recognizer.recording_ended_signal.connect(self.on_recognition_complete)
         self.recognizer.detect_speech_signal.connect(self.detect_speech_toggle)
 
-        # 设置识别中标志, 该标志传递给ui模块以控制对话框文本输出
+        # 设置语音识别中标志, 该标志传递给ui模块以控制对话框文本输出
         self.recognizer_is_updating = False
 
     def toggle_recording(self):
+        """点击语音识别按钮"""
         if self.recognizer._is_running:
             # 如果语音识别正在进行，停止线程
             self.recognition_thread.stop()
@@ -61,21 +62,22 @@ class MicButton(QWidget):
         logger.info(f"实时识别结果: {text}")
 
     def on_recognition_complete(self):
+        """语音识别结束操作"""
         # 识别完成, 重置标志
         self.recognizer_is_updating = False
-
         # 切换按钮图标颜色
         self.set_button_color("red")
-
         logger.info("识别完成，停止录音")
 
     def set_button_color(self, color):
+        """设置语音识别按钮颜色"""
         self.mic_button.setText("🎤")
         self.mic_button.setStyleSheet(
             f"background-color: {color}; border: 1px solid black; border-radius: 5px;"
         )
 
     def detect_speech_toggle(self, flag):
+        """当检测到人声输入时的行为"""
         if flag:
             self.set_button_color("green")
             vitsSpeaker.stop_audio()

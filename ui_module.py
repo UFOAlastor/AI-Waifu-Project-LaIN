@@ -158,7 +158,7 @@ class TachieDisplay(QMainWindow, MicButton):
 
     def whisper_stream_update(self, text):
         """
-        追加显示文本内容，is_non_user_input 为 True 时表示启动提示或模型返回内容
+        语音识别结果流式追加显示文本内容，is_non_user_input 为 True 时表示启动提示或模型返回内容
         """
         if not self.recognizer_is_updating:
             self.recognizer_is_updating = True
@@ -178,6 +178,7 @@ class TachieDisplay(QMainWindow, MicButton):
             self.content += text  # 拼接文本
 
     def tachie_display(self, tachie_name):
+        """角色立绘显示"""
         # 如果缓存中已有该图像，直接使用缓存
         if tachie_name in self.cached_images:
             self.character_image = self.cached_images[tachie_name]
@@ -205,17 +206,20 @@ class TachieDisplay(QMainWindow, MicButton):
         self.character_label.setGeometry(0, 0, self.window_width, self.window_height)
 
     def start_drag(self, event):
+        """窗口拖动"""
         # 拖动事件处理函数
         self.offset_x = event.x()
         self.offset_y = event.y()
 
     def drag_window(self, event):
+        """窗口拖动"""
         # 拖动事件处理函数
         delta_x = event.x() - self.offset_x
         delta_y = event.y() - self.offset_y
         self.move(self.x() + delta_x, self.y() + delta_y)
 
     def eventFilter(self, obj, event):
+        """回车键捕获, 用于触发对话框中回车发送操作, 支持ctrl+enter换行"""
         # 捕获回车键事件
         if obj == self.dialog_text and event.type() == QEvent.KeyPress:
             key_event = event
@@ -234,7 +238,7 @@ class TachieDisplay(QMainWindow, MicButton):
 
     def on_mouse_press(self, event):
         """
-        捕获 QPlainTextEdit 的鼠标点击事件
+        捕获 QPlainTextEdit 的鼠标点击事件, 用于对话框点击清空操作
         """
         if self.is_non_user_input:
             try:
@@ -250,6 +254,7 @@ class TachieDisplay(QMainWindow, MicButton):
         super(QTextEdit, self.dialog_text).mousePressEvent(event)
 
     def send_text(self):
+        """将对话框内文本发送给模型接口"""
         self.timer.stop() # 停止对话框文本显示
         text = self.dialog_text.toPlainText().replace("\n", "\\n ").strip()
         if text:
@@ -259,7 +264,7 @@ class TachieDisplay(QMainWindow, MicButton):
 
     def display_text(self, content, is_non_user_input=False):
         """
-        显示文本内容，is_non_user_input 为 True 时表示启动提示或模型返回内容
+        对话框显示文本内容，is_non_user_input 为 True 时表示启动提示或模型返回内容
         """
         self.is_non_user_input = is_non_user_input  # 设置是否为非用户输入内容标记
         self.dialog_text.clear()  # 清空文本框内容
@@ -318,7 +323,7 @@ class TachieDisplay(QMainWindow, MicButton):
         return "".join(closing_tags)
 
     def on_typing(self):
-        """每次定时器触发时，显示一个字符"""
+        """每次定时器触发时, 显示一个字符"""
         # 判断html格式是否闭合 (例如: <p未闭合, <p>闭合)
         if self.current_char_index < len(self.content):
             if self.content[self.current_char_index] == ">":
@@ -342,16 +347,8 @@ class TachieDisplay(QMainWindow, MicButton):
         else:
             self.timer.stop()  # 停止定时器，表示文本已全部显示完
 
-    def start_drag(self, event):
-        self.offset_x = event.x()
-        self.offset_y = event.y()
-
-    def drag_window(self, event):
-        x = event.globalX() - self.offset_x
-        y = event.globalY() - self.offset_y
-        self.move(x, y)
-
     def resizeEvent(self, event):
+        """窗口重置函数, 史山遗留代码(去除会导致窗口异常)"""
         width = self.width()
         height = self.height()
 

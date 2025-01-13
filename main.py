@@ -62,6 +62,7 @@ class MainApp:
         vitsSpeaker.set_settings(self.settings)
 
     def setup_ui(self):
+        """显示初始化内容 (提示词, 开场语音)"""
         self.window.display_text(
             "Ciallo～(∠・ω< )⌒☆ 我是绫！有什么能帮忙的吗?", is_non_user_input=True
         )
