@@ -1,3 +1,5 @@
+# micButton_module.py
+
 import sys
 from PyQt5.QtCore import QThread, QTimer
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton
