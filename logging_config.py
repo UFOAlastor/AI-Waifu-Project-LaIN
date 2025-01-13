@@ -79,6 +79,11 @@ def setup_logging():
                 "level": "DEBUG",
                 "propagate": False,
             },
+            "vpr_module": {
+                "handlers": ["console", "file"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
         },
     }
 
