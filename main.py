@@ -59,6 +59,8 @@ class MainApp:
         self.typing_dots = ""
         # 显示UI界面
         self.setup_ui()
+        # vitsSpeaker播放结束连接槽
+        self.window.vits_speaker.audio_played.connect(self.on_audio_played)
 
     def setup_ui(self):
         """显示初始化内容 (提示词, 开场语音)"""
@@ -67,7 +69,7 @@ class MainApp:
         )
         self.window.text_sent.connect(self.on_text_received)
         self.window.show()
-        self.window.vits_play(
+        self.window.vits_speaker.vits_play(
             "チャロ！わが輩はレイだよ！何かお手伝いできること、あるかな～？"
         )
 
@@ -171,7 +173,7 @@ class MainApp:
             self.change_tachie(tachie_expression)
 
             # 播放语音, 默认日语
-            self.window.vits_play(Japanese_message)
+            self.window.vits_speaker.vits_play(Japanese_message)
 
         return Chinese_message
 

@@ -359,7 +359,7 @@ class UIDisplay(QMainWindow, MicButton):
     def closeEvent(self, event: QEvent):
         if self.recognizer._is_running:
             self.recognition_thread.stop()  # 如果语音识别正在进行，停止线程
-        self.vits_stop_audio()  # 停止音频播放
+        self.vits_speaker.vits_stop_audio()  # 停止音频播放
         event.accept()  # 正常关闭窗口
 
 

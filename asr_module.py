@@ -128,7 +128,7 @@ class SpeechRecognition(QObject):
 
                     if is_active:
                         # 检测到语音，重置静默计时器，存储音频数据
-                        self.detect_speech_signal.emit(True)
+                        self.detect_speech_signal.emit(self._is_running)
                         self.silence_timer = 0
                         self.audio_buffer.append(merged_frames)
                         # logger.debug("检测到有效语音，加入缓存")
@@ -147,8 +147,8 @@ class SpeechRecognition(QObject):
                             and self.auto_send_silence_time != -1
                         ):
                             logger.info("静默时间超限，触发结果发送")
-                            self.recording_ended_signal.emit()
                             self.transcribe_but_not_send = False  # 重置未发送标志
+                            self.recording_ended_signal.emit()
                             self.silence_timer = 0  # 重置静默计时器
                     continue
 

@@ -24,12 +24,14 @@ class RecognitionThread(QThread):
         self.recognizer.stop_streaming()
 
 
-class MicButton(QWidget, vitsSpeaker):
+class MicButton(QWidget):
     def __init__(self, main_settings):
-        super().__init__(main_settings)
+        super().__init__()
 
         # 初始化语音识别器
         self.recognizer = SpeechRecognition(main_settings)
+        # 初始化vitsSpeaker
+        self.vits_speaker = vitsSpeaker(main_settings)
 
         # 创建按钮
         self.mic_button = QPushButton("🎤", self)  # 使用麦克风图标作为按钮文字
@@ -55,6 +57,7 @@ class MicButton(QWidget, vitsSpeaker):
 
     def toggle_recording(self):
         """点击语音识别按钮"""
+        logger.debug("触发了toggle_recording")
         if self.recognizer._is_running:
             self.recognition_thread.stop()  # 如果语音识别正在进行，停止线程
             self.set_button_color("white")  # 结束录音，按钮变回白色
@@ -71,8 +74,10 @@ class MicButton(QWidget, vitsSpeaker):
         self.recognizer_is_updating = False
         # 切换按钮图标颜色
         self.set_button_color("red")
-        if not self.recognizer.webrtc_aec:
-            self.toggle_recording()  # 模拟一次点击, 停止识别线程
+        if self.recognizer._is_running:
+            self.recognition_thread.stop()  # 如果语音识别正在进行，停止线程
+            self.set_button_color("white")  # 结束录音，按钮变回白色
+            self.mic_button_pressed_state = False  # 按钮恢复为没有按下
         logger.info("识别完成，停止录音")
 
     def set_button_color(self, color):
@@ -82,11 +87,11 @@ class MicButton(QWidget, vitsSpeaker):
             f"background-color: {color}; border: 1px solid black; border-radius: 5px;"
         )
 
-    def detect_speech_toggle(self, flag):
+    def detect_speech_toggle(self, flag=False):
         """当检测到人声输入时的行为"""
         if flag:
             self.set_button_color("green")
-            self.vits_stop_audio()
+            self.vits_speaker.vits_stop_audio()
         else:
             self.set_button_color("gray")
 
