@@ -1,14 +1,11 @@
 # main.py
 
-import sys
-import yaml
-from PyQt5.QtCore import QThread, pyqtSignal, QTimer, QEvent
+import sys, yaml
+from PyQt5.QtCore import QThread, pyqtSignal, QTimer
 from PyQt5.QtWidgets import QApplication
-from ui_module import TachieDisplay  # 假设TachieDisplay在tachie_display.py中
+from ui_module import UIDisplay  # 导入界面类
 from model_module import Model  # 导入模型类
 from replyParser_module import replyParser  # 导入回复内容解析器
-from vits_module import vitsSpeaker  # 导入Vits(TTS)模块
-
 import logging, logging_config
 
 # 初始化日志配置
@@ -55,13 +52,8 @@ class MainApp:
         self.settings = load_settings()  # 默认加载路径为 "./config.yaml"
         # UI界面初始化
         self.app = QApplication(sys.argv)
-        self.window = TachieDisplay(self.settings)  # 初始化图形界面实例
+        self.window = UIDisplay(self.settings)  # 初始化图形界面实例
         self.chat_model = Model(self.settings)  # 初始化语言模型实例
-        # vits语音模块初始化
-        self.vits_speaker = vitsSpeaker(self.settings)  # vits语音模块加载配置文件
-        self.vits_speaker.audio_played.connect(  # vits语音模块播放结束信号连接到槽
-            self.on_audio_played
-        )
         # "思考中..."动态效果初始化
         self.typing_animation_timer = QTimer()
         self.typing_dots = ""
@@ -75,7 +67,7 @@ class MainApp:
         )
         self.window.text_sent.connect(self.on_text_received)
         self.window.show()
-        self.vits_speaker.vits_play(
+        self.window.vits_play(
             "チャロ！わが輩はレイだよ！何かお手伝いできること、あるかな～？"
         )
 
@@ -179,7 +171,7 @@ class MainApp:
             self.change_tachie(tachie_expression)
 
             # 播放语音, 默认日语
-            self.vits_speaker.vits_play(Japanese_message)
+            self.window.vits_play(Japanese_message)
 
         return Chinese_message
 

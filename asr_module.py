@@ -1,16 +1,12 @@
 # asr_module.py
 
-import queue
-import threading
-import pyaudio
-import webrtcvad
 import numpy as np
-import wave
-import logging
-import tempfile
+import queue, threading
+import pyaudio, webrtcvad, wave, tempfile
 from PyQt5.QtCore import pyqtSignal, QObject
 from funasr import AutoModel
 from funasr.utils.postprocess_utils import rich_transcription_postprocess
+import logging
 
 # 配置日志
 logger = logging.getLogger("asr_module")
@@ -27,7 +23,7 @@ class SpeechRecognition(QObject):
         self.settings = main_settings
         self._is_running = False
         self.vad_mode = self.settings.get("vad_mode", 2)
-        self.webrtc_aec = self.settings.get("webrtc_aec", False) # UNDO AEC回声剔除
+        self.webrtc_aec = self.settings.get("webrtc_aec", False)  # UNDO AEC回声剔除
         self.auto_send_silence_time = self.settings.get("auto_send_silence_time", 3)
 
         # 配置录音参数

@@ -15,7 +15,6 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import QTimer
 import re, markdown
-
 import logging
 
 # 获取根记录器
@@ -25,8 +24,8 @@ logger = logging.getLogger("ui_module")
 from micButton_module import MicButton
 
 
-# 在 TachieDisplay 类中设置事件过滤器
-class TachieDisplay(QMainWindow, MicButton):
+# 在 UIDisplay 类中设置事件过滤器
+class UIDisplay(QMainWindow, MicButton):
     text_sent = pyqtSignal(str)  # 发送对话框文本信号
 
     def __init__(self, main_settings):
@@ -357,6 +356,12 @@ class TachieDisplay(QMainWindow, MicButton):
 
         self.close_button.move(int(width - (width - self.dialog_width) // 2 - 30), 0)
 
+    def closeEvent(self, event: QEvent):
+        if self.recognizer._is_running:
+            self.recognition_thread.stop()  # 如果语音识别正在进行，停止线程
+        self.vits_stop_audio()  # 停止音频播放
+        event.accept()  # 正常关闭窗口
+
 
 if __name__ == "__main__":
     import yaml
@@ -370,10 +375,12 @@ if __name__ == "__main__":
         settings = yaml.safe_load(f)
 
     app = QApplication(sys.argv)
-    window = TachieDisplay(settings)
+    window = UIDisplay(settings)
     window.display_text("Ciallo～(∠・ω< )⌒☆ UI模块测试提示文本", is_non_user_input=True)
     window.show()
+
     def test_response():
         window.display_text("你好, UI模块测试回复文本", is_non_user_input=True)
+
     window.text_sent.connect(test_response)
     sys.exit(app.exec_())

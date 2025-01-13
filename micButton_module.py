@@ -24,12 +24,9 @@ class RecognitionThread(QThread):
         self.recognizer.stop_streaming()
 
 
-class MicButton(QWidget):
+class MicButton(QWidget, vitsSpeaker):
     def __init__(self, main_settings):
-        super().__init__()
-
-        # 初始化vits模块
-        self.vits_speaker = vitsSpeaker(main_settings)  # vits语音模块加载配置文件
+        super().__init__(main_settings)
 
         # 初始化语音识别器
         self.recognizer = SpeechRecognition(main_settings)
@@ -89,7 +86,7 @@ class MicButton(QWidget):
         """当检测到人声输入时的行为"""
         if flag:
             self.set_button_color("green")
-            self.vits_speaker.stop_audio()
+            self.vits_stop_audio()
         else:
             self.set_button_color("gray")
 

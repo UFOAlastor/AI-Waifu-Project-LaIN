@@ -108,7 +108,7 @@ class vitsSpeaker(QObject):
         except Exception as e:
             logger.error(f"发生错误: {e}")
 
-    def stop_audio(self):
+    def vits_stop_audio(self):
         """停止音频播放"""
         if pygame.mixer.get_init():  # 确保pygame.mixer已经初始化
             if pygame.mixer.music.get_busy():  # 确保有音频正在播放
