@@ -1,13 +1,8 @@
 # vits_module.py
 
-import requests
-import pydub
+import requests, re
 from io import BytesIO
-import time
-import pygame  # 用于播放音频
-import yaml
-import threading
-import re
+import pydub, time, pygame, threading
 from PyQt5.QtCore import pyqtSignal, QObject
 import logging
 
@@ -31,14 +26,14 @@ class vitsSpeaker(QObject):
 
         # 控制停止播放音频事件
         self.stop_event = threading.Event()
+        # 音频播放线程
+        self.audio_thread = None
 
     def get_audio_stream(
-        self, text, speaker_id=None, lang="zh", format="wav", length=1.0
+        self, text, speaker_id=None, lang="jp", format="wav", length=1.0
     ):
         """发送请求并获取音频流"""
-        speaker_id = (
-            speaker_id or self.SPEAKER_ID
-        )  # 如果未传入speaker_id，使用默认的SPEAKER_ID
+        speaker_id = speaker_id or self.SPEAKER_ID  # 默认使用 SPEAKER_ID
         params = {
             "text": text,
             "id": speaker_id,
@@ -70,11 +65,11 @@ class vitsSpeaker(QObject):
             pygame.mixer.music.play()  # 播放音频
 
             # 等待音频播放完成或被打断
-            while pygame.mixer.music.get_busy() and not self.stop_event.is_set():
+            while pygame.mixer.music.get_busy():
+                if self.stop_event.is_set():
+                    logger.info("音频播放已被打断")
+                    break  # 音频播放被打断
                 time.sleep(0.1)
-
-            if self.stop_event.is_set():
-                logger.info("音频播放已被打断")
 
             # 播放完成后发出信号
             self.audio_played.emit()
@@ -82,9 +77,8 @@ class vitsSpeaker(QObject):
         except Exception as e:
             logger.error(f"播放音频发生错误: {e}")
 
-    def vits_play(self, text, speaker_id=None, lang="zh", format="wav", length=1.0):
+    def vits_play(self, text, speaker_id=None, lang="jp", format="wav", length=1.0):
         """输入文本，生成并播放音频"""
-
         if self.CLEAN_TEXT:  # 文本清洗，移除不适合朗读的内容
             text = self.clean_text_for_vits(text)
             logger.debug(f"文本清洗结果: {text}")
@@ -98,11 +92,18 @@ class vitsSpeaker(QObject):
 
             logger.info("音频生成成功，正在播放...")
 
-            # 创建一个新的线程来播放音频，这样主程序就不会被阻塞
-            audio_thread = threading.Thread(target=self.play_audio, args=(audio_data,))
-            audio_thread.start()
+            # 如果已有播放线程，先停止之前的播放
+            if self.audio_thread and self.audio_thread.is_alive():
+                logger.info("正在停止之前的音频播放...")
+                self.vits_stop_audio()
 
-            # 继续执行其他任务
+            # 创建一个新的线程来播放音频，这样主程序就不会被阻塞
+            self.stop_event.clear()  # 清除停止事件，准备播放新音频
+            self.audio_thread = threading.Thread(
+                target=self.play_audio, args=(audio_data,)
+            )
+            self.audio_thread.start()
+
             logger.debug("主程序继续执行，音频正在播放...")
 
         except Exception as e:
@@ -110,11 +111,12 @@ class vitsSpeaker(QObject):
 
     def vits_stop_audio(self):
         """停止音频播放"""
-        if pygame.mixer.get_init():  # 确保pygame.mixer已经初始化
-            if pygame.mixer.music.get_busy():  # 确保有音频正在播放
-                pygame.mixer.music.stop()  # 停止播放音频
-                self.stop_event.set()  # 通知播放线程停止
-                logger.info("音频播放已被停止")
+        if pygame.mixer.get_init() and pygame.mixer.music.get_busy():
+            pygame.mixer.music.stop()  # 停止播放音频
+            self.stop_event.set()  # 设置停止事件
+            if self.audio_thread and self.audio_thread.is_alive():
+                self.audio_thread.join()  # 等待音频播放线程安全停止
+            logger.info("音频播放已被停止")
 
     def clean_text_for_vits(self, text):
         """
@@ -146,7 +148,7 @@ class vitsSpeaker(QObject):
 
 # 测试生成和播放音频
 if __name__ == "__main__":
-    import logging_config
+    import logging_config, yaml
 
     # 初始化日志配置
     logging_config.setup_logging()

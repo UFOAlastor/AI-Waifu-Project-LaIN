@@ -72,7 +72,7 @@ class SpeechRecognition(QObject):
 
         # 判定语音激活率
         activation_rate = active_segments / total_segments
-        return activation_rate >= 0.4  # 有效激活率 >= 40%
+        return activation_rate >= 0.6  # 有效激活率 >= 60%
 
     # 录音线程
     def audio_producer(self):
