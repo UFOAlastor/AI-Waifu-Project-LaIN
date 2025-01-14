@@ -25,3 +25,9 @@ vits_clean_text: true # 是否开启文本清洗 (去除难以发音的部分, �
 vad_mode: 2 # vad人声检测参数
 webrtc_aec: false # 是否开启回声消除功能 (undo, 此项不可修改, 目前未实现)
 auto_send_silence_time: 1.8 # 持续静音auto_send_silence_time时间后自动发送 (设置为-1则不自动发送)
+
+# 声纹检测
+vpr_match_only: ["tor"] # 仅当声纹匹配指定人物才识别 (留空/none表示全匹配)
+vpr_db_dir: "voice_print_db" # 声纹数据库文件夹路径 (相对路径)
+vpr_model: "damo/speech_campplus_sv_zh-cn_16k-common" # 使用的声纹识别模型路径
+vpr_similarity_threshold: 0.7 # 认可声纹匹配的精确度阈值

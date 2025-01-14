@@ -11,6 +11,8 @@ import logging
 # 配置日志
 logger = logging.getLogger("asr_module")
 
+from vpr_module import VoicePrintRecongnition
+
 
 class SpeechRecognition(QObject):
     # 定义信号
@@ -25,6 +27,9 @@ class SpeechRecognition(QObject):
         self.vad_mode = self.settings.get("vad_mode", 2)
         self.webrtc_aec = self.settings.get("webrtc_aec", False)  # UNDO AEC回声剔除
         self.auto_send_silence_time = self.settings.get("auto_send_silence_time", 3)
+
+        # 创建声纹识别工具对象
+        self.vpr = VoicePrintRecongnition(main_settings)
 
         # 配置录音参数
         self.FORMAT = pyaudio.paInt16
@@ -138,7 +143,12 @@ class SpeechRecognition(QObject):
                         self.silence_timer += frame_window_ms / 1000.0  # 转为秒
 
                         if self.audio_buffer:  # 如果音频缓存非空, 就进行一次识别
-                            self.audio_transcribe(self.audio_buffer)
+                            if (  # 如果设置了仅识别特定用户, 判断声纹是否匹配指定用户
+                                self.vpr.vpr_match_only
+                                and self.vpr.match_voiceprint(self.audio_buffer)
+                                in self.vpr.vpr_match_only
+                            ):
+                                self.audio_transcribe(self.audio_buffer)
                             self.audio_buffer = []  # 清空缓存
 
                         if (  # 静默时间超限并且存在未发送内容

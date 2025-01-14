@@ -9,26 +9,27 @@ import logging
 logger = logging.getLogger("vpr_module")
 
 
-class VoicePrintManager:
-    def __init__(
-        self,
-        sample_dir="voice_samples",
-        model="damo/speech_campplus_sv_zh-cn_16k-common",
-        similarity_threshold=0.7,  # 默认相似度阈值
-    ):
+class VoicePrintRecongnition:
+    def __init__(self, main_settings):
+        self.settings = main_settings
+        self.vpr_db_dir = self.settings.get("vpr_db_dir", "voice_samples")
+        self.vpr_model = self.settings.get(
+            "vpr_model", "damo/speech_campplus_sv_zh-cn_16k-common"
+        )
+        self.similarity_threshold = self.settings.get("similarity_threshold", 0.7)
+        self.vpr_match_only = self.settings.get("vpr_match_only", False)
+
         # 初始化声纹识别模型
         self.sv_pipeline = pipeline(
             task="speaker-verification",
-            model=model,
+            model=self.vpr_model,
             model_revision="v1.0.0",
         )
-        self.sample_dir = sample_dir  # 声纹样本库存储路径
-        os.makedirs(self.sample_dir, exist_ok=True)  # 确保样本库目录存在
-        self.sample_db_path = os.path.join(self.sample_dir, "sample_db.pkl")
+        os.makedirs(self.vpr_db_dir, exist_ok=True)  # 确保样本库目录存在
+        self.sample_db_path = os.path.join(self.vpr_db_dir, "voicePrintDB.pkl")
 
         # 初始化样本数据库，加载现有数据
-        self.sample_db = self._load_sample_db()
-        self.similarity_threshold = similarity_threshold  # 相似度阈值配置
+        self.voicePrintDB = self._load_sample_db()
 
     def _generate_unique_id(self):
         """生成唯一的ID"""
@@ -44,7 +45,7 @@ class VoicePrintManager:
     def _save_sample_db(self):
         """将样本数据库持久化存储"""
         with open(self.sample_db_path, "wb") as f:
-            pickle.dump(self.sample_db, f)
+            pickle.dump(self.voicePrintDB, f)
 
     def register_voiceprint(self, audio_frames, person_name=None):
         """注册新的声纹样本"""
@@ -68,21 +69,64 @@ class VoicePrintManager:
         }
 
         # 添加到样本数据库
-        self.sample_db[unique_id] = sample_info
+        self.voicePrintDB[unique_id] = sample_info
         self._save_sample_db()  # 将数据库同步保存到磁盘
+
+        logger.info(f"{person_name}声纹注册成功")
 
         return unique_id
 
+    def remove_voiceprint(self, unique_id=None, person_name=None):
+        """删除声纹库指定数据"""
+        _return_flag = False
+
+        if unique_id == None and person_name == None:
+            logger.warning("请输入声纹的unique_id或person_name")
+            return False
+
+        if unique_id:  # 匹配unique_id
+            for _id, _ in list(self.voicePrintDB.items()):
+                if _id == unique_id:
+                    _return_flag = True
+                    del self.voicePrintDB[_id]
+                    logger.info(f"{unique_id}声纹删除成功")
+
+        if person_name:  # 匹配person_name
+            for _id, sample_info in list(self.voicePrintDB.items()):
+                _person_name = sample_info["person_name"]
+                if _person_name == person_name:
+                    _return_flag = True
+                    del self.voicePrintDB[_id]
+                    logger.info(f"{person_name}声纹删除成功")
+
+        self._save_sample_db()  # 将数据库同步保存到磁盘
+
+        return _return_flag
+
+    def list_voiceprint(self):
+        """查看声纹库数据"""
+        for _id, sample_info in self.voicePrintDB.items():
+            _person_name = sample_info["person_name"]
+            logger.info(f"voicePrintDB: {_person_name}_{_id}")
+
     def match_voiceprint(self, audio_frames):
-        """比对输入的音频序列声纹是否与样本库中任何数据匹配"""
+        """
+        比对输入的音频序列声纹是否与样本库中任何数据匹配
+
+        Parameters:
+            audio_frames(list): 声纹音频序列 <np.frombuffer(stream_data, dtype=np.int16)>
+
+        Returns:
+            beat_match_person(str|None): 声纹库中最高匹配对象名称|无超阈值匹配项返回None
+        """
         audio_data = np.concatenate(audio_frames, axis=0)
         result = self.sv_pipeline([audio_data], output_emb=True)
         input_embedding = result["embs"][0]
         beat_match_percent = 0
-        beat_match_person = None
+        beat_match_person = None  # 如果无匹配对象超过分数阈值, 返回None
 
         # 遍历样本库比对
-        for _, sample_info in self.sample_db.items():
+        for _, sample_info in self.voicePrintDB.items():
             sample_embedding = sample_info["embedding"]
             norm1 = np.linalg.norm(input_embedding)
             norm2 = np.linalg.norm(sample_embedding)
@@ -96,8 +140,11 @@ class VoicePrintManager:
             )
             if similarity_percentage > self.similarity_threshold:  # 使用配置的阈值
                 logger.debug(f"匹配声纹: {sample_info['person_name']}")
-                # return True
-        return False
+                # 结果维护匹配分数最高的声纹对象
+                if beat_match_percent < similarity_percentage:
+                    beat_match_percent = similarity_percentage
+                    beat_match_person = sample_info["person_name"]
+        return beat_match_person
 
     def compare_two_voiceprints(self, audio_frames1, audio_frames2):
         """比对两个音频序列是否匹配"""
@@ -120,13 +167,15 @@ class VoicePrintManager:
 
 # 示例用法
 if __name__ == "__main__":
-    import pyaudio, logging_config
+    import pyaudio, logging_config, yaml
 
     # 初始化日志配置
     logging_config.setup_logging()
 
+    with open("./config.yaml", "r", encoding="utf-8") as f:
+        settings = yaml.safe_load(f)
     # 初始化声纹管理器
-    voice_manager = VoicePrintManager()
+    voice_manager = VoicePrintRecongnition(settings)
 
     audio = pyaudio.PyAudio()
     stream = audio.open(
@@ -151,8 +200,14 @@ if __name__ == "__main__":
         audio.terminate()
         logger.debug("音频流已关闭")
 
+    voice_manager.list_voiceprint()
+
+    # logger.debug(voice_manager.remove_voiceprint(person_name="ayo"))
+
+    # voice_manager.list_voiceprint()
+
     # 注册新的声纹样本
-    # person_name = "lrq"
+    # person_name = "tor"
     # voice_id = voice_manager.register_voiceprint(temp_frames, person_name)
     # print(f"注册成功，声纹ID: {voice_id}")
 
