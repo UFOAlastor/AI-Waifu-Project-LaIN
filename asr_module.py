@@ -191,6 +191,7 @@ class SpeechRecognition(QObject):
                 cache={},
                 language="auto",  # 自动检测语言
                 use_itn=True,
+                ban_emo_unk=True,  # 情感表情输出
             )
             if res and res[0]["text"]:
                 text = rich_transcription_postprocess(res[0]["text"])
@@ -230,7 +231,10 @@ class SpeechRecognition(QObject):
 
 
 if __name__ == "__main__":
-    import yaml
+    import yaml, logging_config
+
+    # 初始化日志配置
+    logging_config.setup_logging()
 
     with open("./config.yaml", "r", encoding="utf-8") as f:
         settings = yaml.safe_load(f)
