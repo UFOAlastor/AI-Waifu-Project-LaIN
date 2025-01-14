@@ -82,7 +82,7 @@ class MainApp:
     def start_voice_rec(self):
         """语音播放结束后自动继续开启语音识别"""
         logger.debug("语音播放结束")
-        if not self.window.recognizer.webrtc_aec:
+        if not self.window.recognizer.asr_webrtc_aec:
             if (  # 当语音识别按钮被点击过但是目前没有被按下才触发, 也就是开启过语音识别但是目前没有被额外点击的状态
                 self.window.mic_button_ever_pressed_flag
                 and not self.window.mic_button_pressed_state
@@ -192,7 +192,7 @@ class MainApp:
 
         # 设置4.5秒后执行回调函数，切换回默认立绘
         QTimer.singleShot(
-            4500, lambda: self.window.tachie_display(self.window.default_tachie)
+            4500, lambda: self.window.tachie_display(self.window.tachie_default)
         )
 
     def run(self):

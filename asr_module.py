@@ -24,9 +24,13 @@ class SpeechRecognition(QObject):
         super().__init__()
         self.settings = main_settings
         self._is_running = False
-        self.vad_mode = self.settings.get("vad_mode", 2)
-        self.webrtc_aec = self.settings.get("webrtc_aec", False)  # UNDO AEC回声剔除
-        self.auto_send_silence_time = self.settings.get("auto_send_silence_time", 3)
+        self.asr_vad_mode = self.settings.get("asr_vad_mode", 2)
+        self.asr_webrtc_aec = self.settings.get(
+            "asr_webrtc_aec", False
+        )  # UNDO AEC回声剔除
+        self.asr_auto_send_silence_time = self.settings.get(
+            "asr_auto_send_silence_time", 3
+        )
 
         # 创建声纹识别工具对象
         self.vpr = VoicePrintRecongnition(main_settings)
@@ -38,7 +42,7 @@ class SpeechRecognition(QObject):
         self.CHUNK = 1024
 
         # 创建 VAD 模型
-        self.vad = webrtcvad.Vad(self.vad_mode)
+        self.vad = webrtcvad.Vad(self.asr_vad_mode)
 
         # 初始化 SenseVoice 模型
         model_dir = self.settings.get("model_dir", "./SenseVoiceSmall")
@@ -161,8 +165,8 @@ class SpeechRecognition(QObject):
 
                         if (  # 静默时间超限并且存在未发送内容
                             self.transcribe_but_not_send
-                            and self.silence_timer >= self.auto_send_silence_time
-                            and self.auto_send_silence_time != -1
+                            and self.silence_timer >= self.asr_auto_send_silence_time
+                            and self.asr_auto_send_silence_time != -1
                         ):
                             logger.info("静默时间超限，触发结果发送")
                             self.transcribe_but_not_send = False  # 重置未发送标志

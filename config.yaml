@@ -1,12 +1,12 @@
 # 窗口大小设置 (立绘默认自适应窗口大小)
 window_width: 600
 window_height: 800
-always_on_top: true # 设置窗口始终保持顶置
+window_always_on_top: true # 设置窗口始终保持顶置
 
 # 立绘设置
 tachie_path: "./tachie/Murasame/" # 立绘文件夹路径
-default_tachie: "微笑" # 默认立绘
-opening_tachie: "高兴" # 开场时临时展现的表情
+tachie_default: "微笑" # 默认立绘
+tachie_opening: "高兴" # 开场时临时展现的表情
 tachie_suffix: "png" # 立绘图片格式 (后缀名)
 
 # 对话框设置
@@ -14,7 +14,7 @@ dialog_label: "LaIN 绫" # 对话框标签名称 (可作为人物名称)
 dialog_opacity: 0.8 # 对话框透明度设置 (0.0-1.0]
 
 # letta框架的agent_id设置
-agent_id: "agent-d32c7fa3-c612-45fe-a1cc-2a059c164510" # 填入你自己的agent_id, 详情参考letta文档: https://docs.letta.com/quickstart
+agent_id: "agent-3933d4ff-72b2-45de-a03a-3bf741db4be1" # 填入你自己的agent_id, 详情参考letta文档: https://docs.letta.com/quickstart
 
 # vits语音生成设置
 vits_api_url: "http://127.0.0.1:23456/voice/vits" # vits模型API路径 (默认接口一般不用修改)
@@ -22,12 +22,12 @@ vits_speaker_id: "4" # 采用的vits模型
 vits_clean_text: true # 是否开启文本清洗 (去除难以发音的部分, 例如网页链接等)
 
 # 语音识别设置
-vad_mode: 2 # vad人声检测参数
-webrtc_aec: false # 是否开启回声消除功能 (undo, 此项不可修改, 目前未实现)
-auto_send_silence_time: 2.3 # 持续静音auto_send_silence_time时间后自动发送 (设置为-1则不自动发送)
+asr_vad_mode: 2 # vad人声检测参数
+asr_webrtc_aec: false # 是否开启回声消除功能 (undo, 此项不可修改, 目前未实现)
+asr_auto_send_silence_time: 2.3 # 持续静音asr_auto_send_silence_time时间后自动发送 (设置为-1则不自动发送)
 
 # 声纹检测
 vpr_match_only: ["tor"] # 对特定群体声纹开启语音识别 (需要关闭可以将List留空或填None, 关闭后匹配所有用户-->会导致无法打断语音, 因为还没实现回声消除XD)
 vpr_db_dir: "voice_print_db" # 声纹数据库文件夹路径 (相对路径, 会自动创建)
 vpr_model: "damo/speech_campplus_sv_zh-cn_16k-common" # 使用的声纹识别模型路径 (不用修改, 会自动下载)
-vpr_similarity_threshold: 0.7 # 认可声纹匹配的精确度阈值 (建议使用0.7-0.8)
+vpr_similarity_threshold: 0.7 # 认可声纹匹配的精确度阈值

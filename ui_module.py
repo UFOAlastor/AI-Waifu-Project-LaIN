@@ -47,8 +47,8 @@ class UIDisplay(QMainWindow, MicButton):
         self.dialog_opacity = self.settings.get("dialog_opacity", 0.8)
         self.label_text = self.settings.get("dialog_label", "")
         self.tachie_path = self.settings.get("tachie_path", "./tachie/Murasame/")
-        self.default_tachie = self.settings.get("default_tachie", "正常")
-        self.opening_tachie = self.settings.get("opening_tachie", "高兴")
+        self.tachie_default = self.settings.get("tachie_default", "正常")
+        self.tachie_opening = self.settings.get("tachie_opening", "高兴")
         self.tachie_suffix = self.settings.get("tachie_suffix", "png")
 
         # 初始化时创建立绘的 QLabel 和设置拖动功能
@@ -68,14 +68,14 @@ class UIDisplay(QMainWindow, MicButton):
         self.setStyleSheet("background-color: transparent;")  # 使整个窗口透明
 
         # 整个窗口始终置顶
-        if self.settings.get("always_on_top", False):
+        if self.settings.get("window_always_on_top", False):
             self.setWindowFlag(Qt.WindowStaysOnTopHint)
 
         # 开场立绘显示
-        self.tachie_display(self.opening_tachie)
+        self.tachie_display(self.tachie_opening)
 
         # 设置2.5秒后执行回调函数，切换回默认立绘
-        QTimer.singleShot(2500, lambda: self.tachie_display(self.default_tachie))
+        QTimer.singleShot(2500, lambda: self.tachie_display(self.tachie_default))
 
         # 对话框设置（带透明度）
         self.dialog_widget = QWidget(self)
