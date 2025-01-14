@@ -14,7 +14,8 @@ dialog_label: "LaIN 绫" # 对话框标签名称 (可作为人物名称)
 dialog_opacity: 0.8 # 对话框透明度设置 (0.0-1.0]
 
 # letta框架的agent_id设置
-agent_id: "agent-c9afbab5-daa0-4813-96f3-ffd7eea2b570"
+# agent_id: "agent-c9afbab5-daa0-4813-96f3-ffd7eea2b570"
+agent_id: "agent-1253e404-bb45-4b8f-be73-034702aa8d84" # test
 
 # vits语音生成设置
 vits_api_url: "http://127.0.0.1:23456/voice/vits" # vits模型API路径 (默认接口一般不用修改)
@@ -24,10 +25,10 @@ vits_clean_text: true # 是否开启文本清洗 (去除难以发音的部分, �
 # 语音识别设置
 vad_mode: 2 # vad人声检测参数
 webrtc_aec: false # 是否开启回声消除功能 (undo, 此项不可修改, 目前未实现)
-auto_send_silence_time: 1.8 # 持续静音auto_send_silence_time时间后自动发送 (设置为-1则不自动发送)
+auto_send_silence_time: 2.3 # 持续静音auto_send_silence_time时间后自动发送 (设置为-1则不自动发送)
 
 # 声纹检测
-vpr_match_only: ["tor"] # 仅当声纹匹配指定人物才识别 (留空/none表示全匹配)
+vpr_match_only: ["tor"] # 仅当声纹匹配指定人物才识别 (list留空/none表示全匹配)
 vpr_db_dir: "voice_print_db" # 声纹数据库文件夹路径 (相对路径)
 vpr_model: "damo/speech_campplus_sv_zh-cn_16k-common" # 使用的声纹识别模型路径
 vpr_similarity_threshold: 0.7 # 认可声纹匹配的精确度阈值

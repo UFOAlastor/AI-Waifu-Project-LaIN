@@ -50,6 +50,7 @@ class MainApp:
     def __init__(self):
         # 加载配置文件
         self.settings = load_settings()  # 默认加载路径为 "./config.yaml"
+        self.vpr_match_only = self.settings.get("vpr_match_only", None)
         # UI界面初始化
         self.app = QApplication(sys.argv)
         self.window = UIDisplay(self.settings)  # 初始化图形界面实例
@@ -59,8 +60,12 @@ class MainApp:
         self.typing_dots = ""
         # 显示UI界面
         self.setup_ui()
-        # vitsSpeaker播放结束连接槽
-        self.window.vits_speaker.audio_played.connect(self.on_audio_played)
+        # vitsSpeaker连接槽
+        if self.vpr_match_only:
+            # 若配置了仅匹配用户, 就能够起到消除回声的作用, 允许启用语音打断
+            self.window.vits_speaker.audio_start_play.connect(self.start_voice_rec)
+        else:
+            self.window.vits_speaker.audio_played.connect(self.start_voice_rec)
 
     def setup_ui(self):
         """显示初始化内容 (提示词, 开场语音)"""
@@ -73,7 +78,7 @@ class MainApp:
             "チャロ！わが輩はレイだよ！何かお手伝いできること、あるかな～？"
         )
 
-    def on_audio_played(self):
+    def start_voice_rec(self):
         """语音播放结束后自动继续开启语音识别"""
         logger.debug("语音播放结束")
         if not self.window.recognizer.webrtc_aec:

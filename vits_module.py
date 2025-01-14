@@ -13,6 +13,7 @@ logger = logging.getLogger("vits_module")
 class vitsSpeaker(QObject):
     # 声明音频播放完成的信号
     audio_played = pyqtSignal()
+    audio_start_play = pyqtSignal()
 
     def __init__(self, main_settings):
         super().__init__()
@@ -63,6 +64,9 @@ class vitsSpeaker(QObject):
             pygame.mixer.init(frequency=audio.frame_rate)  # 初始化pygame的音频播放
             pygame.mixer.music.load(BytesIO(audio_data))  # 加载音频数据
             pygame.mixer.music.play()  # 播放音频
+
+            # 开始播放音频发出型号
+            self.audio_start_play.emit()
 
             # 等待音频播放完成或被打断
             while pygame.mixer.music.get_busy():
@@ -133,6 +137,7 @@ class vitsSpeaker(QObject):
             # r"[a-f0-9-]{32,}",  # UUID（32位或以上的十六进制串，带或不带连字符）
             # r"[{}]{1,2}.*?[{}]{1,2}",  # 花括号包裹的内容，如`{占位符}`或`{{占位符}}`
             # r"`[^`]+`",  # Markdown行内代码语法（`代码`）
+            # r"```[^`]+```",  # Markdown行内代码语法（```代码```）
             # r"--[a-zA-Z0-9_]+(=[^ ]+)?",  # 命令行参数，如 --arg=value
         ]
 

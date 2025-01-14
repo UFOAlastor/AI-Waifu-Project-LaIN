@@ -17,7 +17,7 @@ class VoicePrintRecongnition:
             "vpr_model", "damo/speech_campplus_sv_zh-cn_16k-common"
         )
         self.similarity_threshold = self.settings.get("similarity_threshold", 0.7)
-        self.vpr_match_only = self.settings.get("vpr_match_only", False)
+        self.vpr_match_only = self.settings.get("vpr_match_only", None)
 
         # 初始化声纹识别模型
         self.sv_pipeline = pipeline(
@@ -49,7 +49,7 @@ class VoicePrintRecongnition:
 
     def register_voiceprint(self, audio_frames, person_name=None):
         """注册新的声纹样本"""
-        if not audio_frames:
+        if len(audio_frames) == 0:
             logger.warning("输入声纹序列为空")
             return None
 
@@ -119,6 +119,9 @@ class VoicePrintRecongnition:
         Returns:
             beat_match_person(str|None): 声纹库中最高匹配对象名称|无超阈值匹配项返回None
         """
+        if len(audio_frames) == 0:
+            logger.debug("match_voiceprint: audio_frames为空")
+            return None
         audio_data = np.concatenate(audio_frames, axis=0)
         result = self.sv_pipeline([audio_data], output_emb=True)
         input_embedding = result["embs"][0]
@@ -148,6 +151,9 @@ class VoicePrintRecongnition:
 
     def compare_two_voiceprints(self, audio_frames1, audio_frames2):
         """比对两个音频序列是否匹配"""
+        if len(audio_frames1) == 0 or len(audio_frames2) == 0:
+            logger.warning("compare_two_voiceprints: 输入音频序列为空")
+            return False
         audio_data1 = np.concatenate(audio_frames1, axis=0)
         audio_data2 = np.concatenate(audio_frames2, axis=0)
 

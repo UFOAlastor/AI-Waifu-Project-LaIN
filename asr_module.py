@@ -60,6 +60,9 @@ class SpeechRecognition(QObject):
         """
         使用 WebRTC VAD 检测音频数据是否包含有效语音。
         """
+        # 检查音频数据是否为空
+        if not isinstance(audio_data, (list, np.ndarray)) or audio_data.size == 0:
+            logger.warning("音频数据为空，无法进行语音检测")
         frame_size = int(sample_rate * (frame_duration_ms / 1000.0))  # 单帧长度
         frames = [
             audio_data[i : i + frame_size]
@@ -105,11 +108,11 @@ class SpeechRecognition(QObject):
 
     def audio_consumer(self):
         """
-        处理音频队列中的数据, 按500ms段进行检测, 并根据检测结果处理静默时长. (音频消费者)
+        处理音频队列中的数据, 按frame_window_ms进行检测, 并根据检测结果处理静默时长. (音频消费者)
         """
         temp_frames = []
-        chunk_duration_ms = 20  # 每个检测段的持续时间
-        frame_window_ms = 500  # 检测时间段（500ms）
+        chunk_duration_ms = 30  # 每个检测段的持续时间
+        frame_window_ms = 300  # 检测时间段
         frames_per_window = frame_window_ms // chunk_duration_ms  # 每个时间段的帧数
 
         while self._is_running:
@@ -122,7 +125,7 @@ class SpeechRecognition(QObject):
                 # 缓存音频帧
                 temp_frames.append(np.frombuffer(data, dtype=np.int16))
 
-                # 检测 500ms 的音频数据
+                # 检测 frame_window_ms 的音频数据
                 if len(temp_frames) * self.CHUNK >= self.RATE * (
                     frame_window_ms / 1000
                 ):
@@ -132,11 +135,15 @@ class SpeechRecognition(QObject):
                     temp_frames = temp_frames[frames_per_window:]  # 移动窗口
 
                     if is_active:
-                        # 检测到语音，重置静默计时器，存储音频数据
-                        self.detect_speech_signal.emit(self._is_running)
-                        self.silence_timer = 0
                         self.audio_buffer.append(merged_frames)
-                        # logger.debug("检测到有效语音，加入缓存")
+                        if (  # 如果设置了仅识别特定用户, 判断声纹是否匹配指定用户
+                            self.vpr.vpr_match_only == None
+                            or not any(self.vpr.vpr_match_only)
+                            or self.vpr.match_voiceprint(self.audio_buffer)
+                            in self.vpr.vpr_match_only
+                        ):
+                            self.detect_speech_signal.emit(self._is_running)
+                            self.silence_timer = 0
                     else:
                         # 检测到静默，累积静默时间
                         self.detect_speech_signal.emit(False)
@@ -144,8 +151,9 @@ class SpeechRecognition(QObject):
 
                         if self.audio_buffer:  # 如果音频缓存非空, 就进行一次识别
                             if (  # 如果设置了仅识别特定用户, 判断声纹是否匹配指定用户
-                                self.vpr.vpr_match_only
-                                and self.vpr.match_voiceprint(self.audio_buffer)
+                                self.vpr.vpr_match_only == None
+                                or not any(self.vpr.vpr_match_only)
+                                or self.vpr.match_voiceprint(self.audio_buffer)
                                 in self.vpr.vpr_match_only
                             ):
                                 self.audio_transcribe(self.audio_buffer)
@@ -160,7 +168,6 @@ class SpeechRecognition(QObject):
                             self.transcribe_but_not_send = False  # 重置未发送标志
                             self.recording_ended_signal.emit()
                             self.silence_timer = 0  # 重置静默计时器
-                    continue
 
             except queue.Empty:
                 continue
