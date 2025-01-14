@@ -15,7 +15,7 @@ dialog_opacity: 0.8 # 对话框透明度设置 (0.0-1.0]
 
 # letta框架的agent_id设置
 # agent_id: "agent-c9afbab5-daa0-4813-96f3-ffd7eea2b570"
-agent_id: "agent-1253e404-bb45-4b8f-be73-034702aa8d84" # test
+agent_id: "agent-d32c7fa3-c612-45fe-a1cc-2a059c164510" # test
 
 # vits语音生成设置
 vits_api_url: "http://127.0.0.1:23456/voice/vits" # vits模型API路径 (默认接口一般不用修改)

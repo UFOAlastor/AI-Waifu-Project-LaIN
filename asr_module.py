@@ -16,7 +16,7 @@ from vpr_module import VoicePrintRecongnition
 
 class SpeechRecognition(QObject):
     # 定义信号
-    update_text_signal = pyqtSignal(str)  # 用于实时更新识别文本
+    update_text_signal = pyqtSignal(tuple)  # 用于传递二元组 (用户名称, 文本)
     recording_ended_signal = pyqtSignal()  # 用于通知录音结束
     detect_speech_signal = pyqtSignal(bool)  # 用于通知检测到人声
 
@@ -150,13 +150,13 @@ class SpeechRecognition(QObject):
                         self.silence_timer += frame_window_ms / 1000.0  # 转为秒
 
                         if self.audio_buffer:  # 如果音频缓存非空, 就进行一次识别
+                            temp_user = self.vpr.match_voiceprint(self.audio_buffer)
                             if (  # 如果设置了仅识别特定用户, 判断声纹是否匹配指定用户
                                 self.vpr.vpr_match_only == None
                                 or not any(self.vpr.vpr_match_only)
-                                or self.vpr.match_voiceprint(self.audio_buffer)
-                                in self.vpr.vpr_match_only
+                                or temp_user in self.vpr.vpr_match_only
                             ):
-                                self.audio_transcribe(self.audio_buffer)
+                                self.audio_transcribe(temp_user, self.audio_buffer)
                             self.audio_buffer = []  # 清空缓存
 
                         if (  # 静默时间超限并且存在未发送内容
@@ -177,7 +177,7 @@ class SpeechRecognition(QObject):
         logger.debug("audio_consumer正常退出")
 
     # 转录并记录
-    def audio_transcribe(self, frames):
+    def audio_transcribe(self, user_name, frames):
         """对包含人声的音频序列进行语音识别"""
         audio_data = b"".join(frames)
         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_wav:
@@ -196,7 +196,7 @@ class SpeechRecognition(QObject):
                 text = rich_transcription_postprocess(res[0]["text"])
                 logger.debug(f"实时转录结果: {text}")
                 self.transcribe_but_not_send = True
-                self.update_text_signal.emit(text)
+                self.update_text_signal.emit((user_name, text))
 
     # 启动流式语音识别
     def start_streaming(self):

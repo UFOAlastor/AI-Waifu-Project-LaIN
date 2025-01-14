@@ -121,12 +121,12 @@ class VoicePrintRecongnition:
         """
         if len(audio_frames) == 0:
             logger.debug("match_voiceprint: audio_frames为空")
-            return None
+            return "UnKnown"
         audio_data = np.concatenate(audio_frames, axis=0)
         result = self.sv_pipeline([audio_data], output_emb=True)
         input_embedding = result["embs"][0]
         beat_match_percent = 0
-        beat_match_person = None  # 如果无匹配对象超过分数阈值, 返回None
+        beat_match_person = "UnKnown"  # 如果无匹配对象超过分数阈值, 返回UNKNOWN
 
         # 遍历样本库比对
         for _, sample_info in self.voicePrintDB.items():

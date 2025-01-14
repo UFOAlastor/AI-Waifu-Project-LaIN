@@ -26,7 +26,7 @@ from micButton_module import MicButton
 
 # 在 UIDisplay 类中设置事件过滤器
 class UIDisplay(QMainWindow, MicButton):
-    text_sent = pyqtSignal(str)  # 发送对话框文本信号
+    text_sent_signal = pyqtSignal(tuple)  # 发送对话框信号 (用户名, 文本)
 
     def __init__(self, main_settings):
         super().__init__(main_settings)  # python的继承按 MRO 顺序传递参数
@@ -154,13 +154,20 @@ class UIDisplay(QMainWindow, MicButton):
         self.recognizer.update_text_signal.connect(self.whisper_stream_update)
         self.recognizer.recording_ended_signal.connect(self.send_text)
 
+        # 用户名称, 默认未知
+        self.user_name = "UnKnown"
+
         # 打字机效果显示采用计时器实现
         self.typing_timer = QTimer(self)
 
-    def whisper_stream_update(self, text):
+    def whisper_stream_update(self, tuple_data):
         """
         语音识别结果流式追加显示文本内容，is_non_user_input 为 True 时表示启动提示或模型返回内容
+
+        Parameters:
+            tuple_data(tuple): (user_name(str), test(str)) 用户名称以及用户输入文本信息
         """
+        self.user_name, text = tuple_data
         if not self.recognizer_is_updating:
             self.recognizer_is_updating = True
             self.is_non_user_input = False  # 语音识别为用户输入
@@ -232,6 +239,7 @@ class UIDisplay(QMainWindow, MicButton):
                 return True  # 表示事件已处理，不再传播
             elif key_event.key() == Qt.Key_Return:
                 # 其他情况下触发发送文本的功能
+                self.user_name = "UnKnown"  # 文本发送, 无法识别用户身份
                 self.send_text()
                 return True  # 表示事件已处理，不再传播
         return super().eventFilter(obj, event)
@@ -259,7 +267,9 @@ class UIDisplay(QMainWindow, MicButton):
         text = self.dialog_text.toPlainText().replace("\n", "\\n ").strip()
         if text:
             logger.debug(f"发送的文本: {text}")
-            self.text_sent.emit(text)  # 发射信号，将文本发送出去
+            self.text_sent_signal.emit(
+                (self.user_name, text)
+            )  # 发射信号，将文本发送出去
             self.dialog_text.clear()  # 清空文本框内容
 
     def display_text(self, content, is_non_user_input=False):
@@ -382,5 +392,5 @@ if __name__ == "__main__":
     def test_response():
         window.display_text("你好, UI模块测试回复文本", is_non_user_input=True)
 
-    window.text_sent.connect(test_response)
+    window.text_sent_signal.connect(test_response)
     sys.exit(app.exec_())

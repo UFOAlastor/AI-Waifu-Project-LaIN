@@ -19,14 +19,15 @@ class ChatModelWorker(QThread):
 
     response_ready = pyqtSignal(dict)
 
-    def __init__(self, model, input_text):
+    def __init__(self, model, user_name, input_text):
         super().__init__()
         self.model = model
+        self.user_name = user_name
         self.input_text = input_text
 
     def run(self):
         try:
-            response = self.model.get_response(self.input_text)
+            response = self.model.get_response(self.user_name, self.input_text)
             self.response_ready.emit(response)
         except Exception as e:
             logger.error(f"Error in model worker: {e}")
@@ -72,7 +73,7 @@ class MainApp:
         self.window.display_text(
             "Ciallo～(∠・ω< )⌒☆ 我是绫！有什么能帮忙的吗?", is_non_user_input=True
         )
-        self.window.text_sent.connect(self.on_text_received)
+        self.window.text_sent_signal.connect(self.on_text_received)
         self.window.show()
         self.window.vits_speaker.vits_play(
             "チャロ！わが輩はレイだよ！何かお手伝いできること、あるかな～？"
@@ -88,14 +89,15 @@ class MainApp:
             ):
                 self.window.toggle_recording()
 
-    def on_text_received(self, input_text):
+    def on_text_received(self, tuple_data):
         """等待接收模型回复"""
+        user_name, input_text = tuple_data
         if input_text:
             # 显示动态省略号动画
             self.start_typing_animation()
 
             # 启动后台线程调用模型
-            self.worker = ChatModelWorker(self.chat_model, input_text)
+            self.worker = ChatModelWorker(self.chat_model, user_name, input_text)
             self.worker.response_ready.connect(self.on_model_response)
             self.worker.start()
 

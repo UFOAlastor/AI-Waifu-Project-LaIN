@@ -12,11 +12,27 @@ class Model:
         self.settings = main_settings
         self.agent_id = self.settings.get("agent_id", "agent-xxx")
 
-    def get_response(self, user_input):
-        """发送请求到 Letta API，并获取响应"""
+    def get_response(self, user_name, user_input):
+        """
+        发送请求到 Letta API，并获取响应
+
+        Parameters:
+            user_name(str): 用户名称, 模型能够判断对话对象
+            user_input(str): 用户输入的内容
+
+        Return:
+            response.json(): 模型回复内容在['messages']['tool_call']['arguments']下
+        """
         url = f"http://localhost:8283/v1/agents/{self.agent_id}/messages"
         headers = {"Content-Type": "application/json"}
-        data = {"messages": [{"role": "user", "text": user_input}]}
+        data = {
+            "messages": [
+                {
+                    "role": "user",  # 此处不能修改, 用户输入应当固定为user
+                    "text": "[Speaker: " + user_name + "]\n\n\n" + user_input,
+                }
+            ]
+        }
 
         try:
             response = requests.post(url, headers=headers, json=data)
