@@ -17,6 +17,12 @@
   - 说话人身份识别功能 (ps: 可配置模型prompt登记主人身份)
 - 多种LLM支持
 
+
+## 配置
+
+注意: prompt配置请查看prompt_sample.md文件! **本项目的表情切换依赖prompt配置实现, 请务必关注prompt示例内容!**
+
+
 ## LInks
 
 - [letta-ai/letta: Letta (formerly MemGPT) is a framework for creating LLM services with memory.](https://github.com/letta-ai/letta)
