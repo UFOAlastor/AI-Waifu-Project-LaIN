@@ -22,6 +22,7 @@ class RecognitionThread(QThread):
 
     def stop(self):
         self.recognizer.stop_streaming()
+        self.quit()  # 调用quit来退出线程
 
 
 class MicButton(QWidget):
@@ -60,7 +61,7 @@ class MicButton(QWidget):
         logger.debug("触发了toggle_recording")
         if self.recognizer._is_running:
             self.recognition_thread.stop()  # 如果语音识别正在进行，停止线程
-            self.set_button_color("white")  # 结束录音，按钮变回白色
+            self.recognition_thread.finished.connect(lambda: self.set_button_color("white"))
             self.mic_button_pressed_state = False  # 按钮恢复为没有按下
         else:
             self.recognition_thread.start()  # 启动识别线程
