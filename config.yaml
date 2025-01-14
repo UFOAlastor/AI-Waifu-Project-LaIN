@@ -5,7 +5,7 @@ always_on_top: true # 设置窗口始终保持顶置
 
 # 立绘设置
 tachie_path: "./tachie/Murasame/" # 立绘文件夹路径
-default_tachie: "正常" # 默认立绘
+default_tachie: "微笑" # 默认立绘
 opening_tachie: "高兴" # 开场时临时展现的表情
 tachie_suffix: "png" # 立绘图片格式 (后缀名)
 
