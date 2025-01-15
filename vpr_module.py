@@ -213,13 +213,13 @@ if __name__ == "__main__":
     # voice_manager.list_voiceprint()
 
     # 注册新的声纹样本
-    # person_name = "tor"
-    # voice_id = voice_manager.register_voiceprint(temp_frames, person_name)
-    # print(f"注册成功，声纹ID: {voice_id}")
+    person_name = "tor"
+    voice_id = voice_manager.register_voiceprint(temp_frames, person_name)
+    print(f"注册成功，声纹ID: {voice_id}")
 
     # 比对输入音频序列是否与库中的样本匹配
-    is_match = voice_manager.match_voiceprint(temp_frames)
-    print(f"输入音频与样本库匹配: {is_match}")
+    # is_match = voice_manager.match_voiceprint(temp_frames)
+    # print(f"输入音频与样本库匹配: {is_match}")
 
     # 比对两个音频序列是否匹配
     # is_match_two = voice_manager.compare_two_voiceprints(
