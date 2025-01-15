@@ -10,7 +10,8 @@ logger = logging.getLogger("modle_module")
 class Model:
     def __init__(self, main_settings):
         self.settings = main_settings
-        self.agent_id = self.settings.get("agent_id", "agent-xxx")
+        self.letta_agent_id = self.settings.get("letta_agent_id", "agent-xxx")
+        self.letta_server_ip = self.settings.get("letta_server_ip", "localhost")
 
     def get_response(self, user_name, user_input):
         """
@@ -23,7 +24,7 @@ class Model:
         Return:
             response.json(): 模型回复内容在['messages']['tool_call']['arguments']下
         """
-        url = f"http://localhost:8283/v1/agents/{self.agent_id}/messages"
+        url = f"http://{self.letta_server_ip}:8283/v1/agents/{self.letta_agent_id}/messages"
         headers = {"Content-Type": "application/json"}
         data = {
             "messages": [

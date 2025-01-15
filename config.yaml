@@ -14,10 +14,11 @@ dialog_label: "LaIN 绫" # 对话框标签名称 (可作为人物名称)
 dialog_opacity: 0.8 # 对话框透明度设置 (0.0-1.0]
 
 # letta框架的agent_id设置
-agent_id: "agent-3933d4ff-72b2-45de-a03a-3bf741db4be1" # 填入你自己的agent_id, 详情参考letta文档: https://docs.letta.com/quickstart
+letta_agent_id: "agent-3933d4ff-72b2-45de-a03a-3bf741db4be1" # 填入你自己的agent_id, 详情参考letta文档: https://docs.letta.com/quickstart
+letta_server_ip: "localhost" # letta服务部署的地址 (默认本地地址, 可自行选配远程服务)
 
 # vits语音生成设置
-vits_api_url: "http://127.0.0.1:23456/voice/vits" # vits模型API路径 (默认接口一般不用修改)
+vits_api_url: "http://127.0.0.1:23456/voice/vits" # vits模型API路径 (默认本地接口, 可自行选配远程服务)
 vits_speaker_id: "4" # 采用的vits模型
 vits_clean_text: true # 是否开启文本清洗 (去除难以发音的部分, 例如网页链接等)
 
