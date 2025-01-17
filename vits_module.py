@@ -4,6 +4,7 @@ import requests, re
 from io import BytesIO
 import pydub, time, pygame, threading
 from PyQt5.QtCore import pyqtSignal, QObject
+from lipsync_module import WavHandler
 import logging
 
 # 获取根记录器
@@ -14,6 +15,7 @@ class vitsSpeaker(QObject):
     # 声明音频播放完成的信号
     audio_played = pyqtSignal()
     audio_start_play = pyqtSignal()
+    audio_lipsync_signal = pyqtSignal(float)
 
     def __init__(self, main_settings):
         super().__init__()
@@ -29,6 +31,7 @@ class vitsSpeaker(QObject):
         self.stop_event = threading.Event()
         # 音频播放线程
         self.audio_thread = None
+        self.wav_handler = WavHandler()  # 添加WavHandler实例
 
     def get_audio_stream(
         self, text, speaker_id=None, lang="jp", format="wav", length=1.0
@@ -68,11 +71,17 @@ class vitsSpeaker(QObject):
             # 开始播放音频发出型号
             self.audio_start_play.emit()
 
-            # 等待音频播放完成或被打断
+            self.wav_handler.Start(audio_data)  # 开始处理音频数据
+
             while pygame.mixer.music.get_busy():
                 if self.stop_event.is_set():
                     logger.info("音频播放已被打断")
-                    break  # 音频播放被打断
+                    break
+                if not self.wav_handler.Update():
+                    break  # 音频播放结束
+                else:
+                    self.audio_lipsync_signal.emit(self.wav_handler.GetRms())
+                    logger.debug(f"语音响度: {self.wav_handler.GetRms()}")
                 time.sleep(0.1)
 
             # 播放完成后发出信号
@@ -128,17 +137,7 @@ class vitsSpeaker(QObject):
         """
         # 定义精确匹配的正则模式
         patterns = [
-            r"https?://[a-zA-Z0-9./?=&_%+-]+",  # 精确匹配URL链接
-            # r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}",  # 精确匹配电子邮件地址
-            # r'([a-zA-Z]:)?(\\[^\s\\/:*?"<>|]+)+\\?',  # 精确匹配Windows文件路径
-            # r"<[^>]+>",  # HTML标签（只移除尖括号包裹的内容）
-            # r"\*\*[^*]+\*\*|__[^_]+__",  # Markdown加粗语法（**加粗**或__加粗__）
-            # r"\d{10,}",  # 长数字串（10位或以上）
-            # r"[a-f0-9-]{32,}",  # UUID（32位或以上的十六进制串，带或不带连字符）
-            # r"[{}]{1,2}.*?[{}]{1,2}",  # 花括号包裹的内容，如`{占位符}`或`{{占位符}}`
-            # r"`[^`]+`",  # Markdown行内代码语法（`代码`）
-            # r"```[^`]+```",  # Markdown行内代码语法（```代码```）
-            # r"--[a-zA-Z0-9_]+(=[^ ]+)?",  # 命令行参数，如 --arg=value
+            r"https?://[a-zA-Z0-9./?=&_%+-]+",
         ]
 
         # 依次应用所有正则表达式清理文本
@@ -163,9 +162,7 @@ if __name__ == "__main__":
         vits_speaker = vitsSpeaker(settings)
 
     # 要合成的日语文本
-    # text = "今日はとても楽しい一日だったよ～！シアロ～(∠・ω< )⌒☆ 何か面白いことがあったら教えてね！"
-    text = """
-    今年の世界経済の期待に関する最新の分析は次のとおりです：\\n1. **政治的不安が世界経済に影響を与える可能性** - 特に米国前大統領トランプの可能な復帰のため、各国での政治的不安の影響は世界の繁栄に重大な影響を与えるかもしれません。[こちらから詳細情報をチェック](https://www.msn.com/en-us/money/economy/political-upheaval-around-the-world-could-spell-trouble-for-the-global-economy-in-2025/ar-AA1wyhp4)\\n2. **経済と医療における悲観的な予測** - 一部のアナリストは、医療分野の積極的な変化は難しいと考えており、業界は継続的に利益を上げ続けるが、必ずしも公共の健康を改善するわけではないとしています。[こちらから詳細情報をチェック](https://www.forbes.com/sites/joshuacohen/2025/01/01/2025-not-so-rosy-predictions-on-economy-and-healthcare/)\\n3. **ウォールストリートの2025年の期待** - 影響を及ぼす多くの要因があるとされています。人工知能革命や中国経済の減速、お金を持つべきであることに気をつけるべきです。[こちらから詳細情報をチェック](https://www.bloomberg.com/graphics/2025-investment-outlooks/)\\n4. **ビットコインの価格予測** - 2025年には、機関採用や規制の変化、マクロ経済のトレンドによってビットコインの成長が促進されるでしょう。[こちらから詳細情報をチェック](https://www.forbes.com/sites/digital-assets/2025/01/01/what-is-bitcoins-price-prediction-for-2025/)\\nこれらの情報が世界経済の最新の動向を理解するのに役立つことを願っています！"""
+    text = "今日はとても楽しい一日だったよ～！シアロ～(∠・ω< )⌒☆ 何か面白いことがあったら教えてね！"
 
     # 调用合成并播放的功能
     vits_speaker.vits_play(text)
