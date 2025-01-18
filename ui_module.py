@@ -20,8 +20,8 @@ import logging
 # 获取根记录器
 logger = logging.getLogger("ui_module")
 
-# 被继承的模块
 from micButton_module import MicButton
+from live2d_module import Live2DWidget
 
 
 # 在 UIDisplay 类中设置事件过滤器
@@ -34,10 +34,11 @@ class UIDisplay(QMainWindow, MicButton):
 
         self.setWindowTitle("Project LaIN")
         self.setWindowIcon(QIcon("./ico/lin.ico"))  # 设置图标
-
+        # 窗口设置
         self.settings = main_settings
         self.window_width = self.settings.get("window_width", 500)
         self.window_height = self.settings.get("window_height", 700)
+        # 对话框设置
         self.dialog_x = self.settings.get("dialog_x", self.window_width)
         self.dialog_y = self.settings.get("dialog_y", self.window_height * 0.5)
         self.dialog_width = self.settings.get("dialog_width", self.window_width)
@@ -46,20 +47,46 @@ class UIDisplay(QMainWindow, MicButton):
         )
         self.dialog_opacity = self.settings.get("dialog_opacity", 0.8)
         self.label_text = self.settings.get("dialog_label", "")
-        self.tachie_path = self.settings.get("tachie_path", "./tachie/Murasame/")
-        self.tachie_default = self.settings.get("tachie_default", "正常")
-        self.tachie_opening = self.settings.get("tachie_opening", "高兴")
-        self.tachie_suffix = self.settings.get("tachie_suffix", "png")
+        # 显示模式
+        self.character_display_mode = self.settings.get(
+            "character_display_mode", "tachie"
+        )
 
-        # 初始化时创建立绘的 QLabel 和设置拖动功能
-        self.character_label = QLabel(self)
-        self.character_label.setAlignment(Qt.AlignCenter)
-        self.character_label.setGeometry(0, 0, self.window_width, self.window_height)
+        # 角色定位坐标
         self.offset_x = 0
         self.offset_y = 0
-        self.character_label.mousePressEvent = self.start_drag
-        self.character_label.mouseMoveEvent = self.drag_window
-        self.cached_images = {}  # 用于缓存加载过的图像
+
+        if self.character_display_mode == "tachie":
+            # 立绘(tachie)部分
+            self.tachie_path = self.settings.get("tachie_path", "./tachie/Murasame/")
+            self.tachie_default = self.settings.get("tachie_default", "正常")
+            self.tachie_opening = self.settings.get("tachie_opening", "高兴")
+            self.tachie_suffix = self.settings.get("tachie_suffix", "png")
+            # 开场立绘显示
+            self.character_display(self.tachie_opening)
+            # 设置2.5秒后执行回调函数，切换回默认立绘
+            QTimer.singleShot(2500, lambda: self.character_display(self.tachie_default))
+            # 初始化时创建角色 QLabel 和设置拖动功能
+            self.tachie_label = QLabel(self)
+            self.tachie_label.setAlignment(Qt.AlignCenter)
+            self.tachie_label.setGeometry(0, 0, self.window_width, self.window_height)
+            self.tachie_label.mousePressEvent = self.start_drag
+            self.tachie_label.mouseMoveEvent = self.drag_window
+            self.cached_images = {}  # 用于缓存加载过的图像
+        elif self.character_display_mode == "live2d": # TODO 注意检查live2d显示
+            # Live2D实例部分，嵌入主界面
+            self.live2d_widget = Live2DWidget(
+                self.settings, self
+            )  # 设置父窗口为self，即主窗口
+            self.live2d_widget.setGeometry(
+                0, 0, self.window_width, self.window_height
+            )  # 设置位置和大小，确保与主界面对齐
+            self.live2d_widget.update()  # 触发窗口更新
+            # 设置Live2DWidget拖动效果，绑定鼠标事件
+            self.live2d_widget.mousePressEvent = self.start_drag
+            self.live2d_widget.mouseMoveEvent = self.drag_window
+        else:
+            logger.warning("角色显示参数异常, 请指定一个显示模式!")
 
         # 设置主窗口背景透明
         self.setWindowFlags(Qt.FramelessWindowHint)  # 去除 window frame
@@ -70,12 +97,6 @@ class UIDisplay(QMainWindow, MicButton):
         # 整个窗口始终置顶
         if self.settings.get("window_always_on_top", False):
             self.setWindowFlag(Qt.WindowStaysOnTopHint)
-
-        # 开场立绘显示
-        self.tachie_display(self.tachie_opening)
-
-        # 设置2.5秒后执行回调函数，切换回默认立绘
-        QTimer.singleShot(2500, lambda: self.tachie_display(self.tachie_default))
 
         # 对话框设置（带透明度）
         self.dialog_widget = QWidget(self)
@@ -184,33 +205,32 @@ class UIDisplay(QMainWindow, MicButton):
         else:
             self.content += text  # 拼接文本
 
-    def tachie_display(self, tachie_name):
-        """角色立绘显示"""
-        # 如果缓存中已有该图像，直接使用缓存
-        if tachie_name in self.cached_images:
-            self.character_image = self.cached_images[tachie_name]
-        else:
-            # 加载图像并缓存
-            self.character_image = QImage(
-                self.tachie_path + tachie_name + "." + self.tachie_suffix
+    def character_display(self, expression): # TODO 实现live2d的表情功能
+        """角色显示"""
+        if self.character_display_mode == "tachie":
+            # 如果缓存中已有该图像，直接使用缓存
+            if expression in self.cached_images:
+                self.character_image = self.cached_images[expression]
+            else:
+                # 加载图像并缓存
+                self.character_image = QImage(
+                    self.tachie_path + expression + "." + self.tachie_suffix
+                )
+                self.cached_images[expression] = self.character_image
+            image_width, image_height = (
+                max(self.character_image.width(), 100),
+                max(self.character_image.height(), 100),
             )
-            self.cached_images[tachie_name] = self.character_image
-
-        image_width, image_height = (
-            max(self.character_image.width(), 100),
-            max(self.character_image.height(), 100),
-        )
-        scale_width = self.window_width / image_width
-        scale_height = self.window_height / image_height
-        self.scale = min(scale_width, scale_height)
-
-        self.character_image = self.character_image.scaled(
-            int(image_width * self.scale), int(image_height * self.scale)
-        )
-
-        # 更新 QPixmap 来显示图像
-        self.character_label.setPixmap(QPixmap.fromImage(self.character_image))
-        self.character_label.setGeometry(0, 0, self.window_width, self.window_height)
+            scale_width = self.window_width / image_width
+            scale_height = self.window_height / image_height
+            self.scale = min(scale_width, scale_height)
+            self.character_image = self.character_image.scaled(
+                int(image_width * self.scale), int(image_height * self.scale)
+            )
+            # 更新 QPixmap 来显示图像
+            self.tachie_label.setPixmap(QPixmap.fromImage(self.character_image))
+            # 设置角色画布大小
+            self.tachie_label.setGeometry(0, 0, self.window_width, self.window_height)
 
     def start_drag(self, event):
         """窗口拖动"""
@@ -357,13 +377,17 @@ class UIDisplay(QMainWindow, MicButton):
             self.typing_timer.stop()  # 停止定时器，表示文本已全部显示完
 
     def resizeEvent(self, event):
-        """窗口重置函数, 史山遗留代码(去除会导致窗口异常)"""
+        """窗口定位函数"""
         width = self.width()
         height = self.height()
-
-        self.character_label.setGeometry(0, 0, width, height)
+        # 设置角色尺寸
+        if self.character_display_mode == "tachie":
+            self.tachie_label.setGeometry(0, 0, width, height)
+        elif self.character_display_mode == "live2d":
+            self.live2d_widget.setGeometry(0, 0, width, height)
+        # 设置对话框位置
         self.dialog_widget.move(int((width - self.dialog_width) // 2), int(height // 2))
-
+        # 设置关闭按钮位置
         self.close_button.move(int(width - (width - self.dialog_width) // 2 - 30), 0)
 
     def closeEvent(self, event: QEvent):

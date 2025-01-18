@@ -1,6 +1,6 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QOpenGLWidget
-from PyQt5.QtCore import QTimer
+from PyQt5.QtWidgets import QApplication, QOpenGLWidget
+from PyQt5.QtCore import QTimer, Qt
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 import live2d.v3 as live2d
@@ -13,7 +13,7 @@ logger = logging.getLogger("live2d_module")
 
 
 class Live2DWidget(QOpenGLWidget):
-    def __init__(self, parent, main_settings):
+    def __init__(self, main_settings, parent=None):
         super().__init__(parent)
         self.model = None
         # 获取配置文件信息
@@ -21,6 +21,9 @@ class Live2DWidget(QOpenGLWidget):
             "live2d_model_path", "./live2d/MuraSame/Murasame.model3.json"
         )
         self.lipSyncN = main_settings.get("live2d_lipSyncN", 5)
+        # 设置透明背景
+        self.setAutoFillBackground(False)  # 禁止Qt自动填充背景
+        self.setAttribute(Qt.WA_TranslucentBackground)
         # 初始化响度检测模块
         self.wavHandler = WavHandler()
         self.mouth_open_y = 0.0
@@ -31,14 +34,14 @@ class Live2DWidget(QOpenGLWidget):
         # 配置Idle动作刷新
         self.update_motionIdle_timer = QTimer(self)
         self.update_motionIdle_timer.timeout.connect(self.update_motionIdle)
-        self.update_motionIdle_timer.start(6000) # 眨眼频率
+        self.update_motionIdle_timer.start(6000)  # 眨眼频率
 
     def initializeGL(self):
         """初始化 OpenGL 和 Live2D"""
-        glClearColor(0.0, 0.0, 0.0, 1.0)
         glEnable(GL_DEPTH_TEST)  # 启用深度测试
         glEnable(GL_BLEND)  # 启用透明度混合
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)  # 设置混合模式
+        glClearColor(0, 0, 0, 0)  # 设置透明背景
 
         # 初始化 Live2D
         live2d.glewInit()
@@ -47,18 +50,10 @@ class Live2DWidget(QOpenGLWidget):
         # 加载 Live2D 模型
         self.model = live2d.LAppModel()
         self.model.LoadModelJson(self.model_path)
-
         self.model.Resize(self.width(), self.height())
         self.model.Update()
 
         logger.debug("模型加载完成")
-
-        # 获取全部可用参数
-        for i in range(self.model.GetParameterCount()):
-            param = self.model.GetParameter(i)
-            print(
-                param.id, param.type, param.value, param.max, param.min, param.default
-            )
 
     def resizeGL(self, w, h):
         """调整窗口大小"""
@@ -68,7 +63,8 @@ class Live2DWidget(QOpenGLWidget):
 
     def paintGL(self):
         """绘制模型"""
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)  # 清空颜色和深度缓冲
+        glClearColor(0, 0, 0, 0)  # 强制设置透明背景
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)  # 清除颜色缓冲并设置透明背景
         if self.model:
             self.model.Update()  # 更新模型
             self.model.SetParameterValue(
@@ -91,22 +87,6 @@ class Live2DWidget(QOpenGLWidget):
         self.update()
 
 
-class Live2DApp(QMainWindow):
-    def __init__(self, main_settings):
-        super().__init__()
-        self.setWindowTitle("Live2D PyQt 示例")
-        self.setGeometry(100, 100, 600, 800)
-
-        logger.debug("显示live2d")
-
-        # 添加 Live2DWidget 到主窗口
-        self.live2d_widget = Live2DWidget(self, main_settings)
-        self.setCentralWidget(self.live2d_widget)
-
-    def set_mouth_open_y(self, mouth_open_y):
-        self.live2d_widget.set_mouth_open_y(mouth_open_y)
-
-
 if __name__ == "__main__":
     import logging_config, yaml
 
@@ -117,6 +97,6 @@ if __name__ == "__main__":
         settings = yaml.safe_load(f)
 
     app = QApplication(sys.argv)
-    main_window = Live2DApp(settings)
+    main_window = Live2DWidget(settings)
     main_window.show()
     sys.exit(app.exec_())

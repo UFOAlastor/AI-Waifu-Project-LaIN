@@ -67,6 +67,11 @@ class MainApp:
             self.window.vits_speaker.audio_start_play.connect(self.start_voice_rec)
         else:
             self.window.vits_speaker.audio_played.connect(self.start_voice_rec)
+        # 针对live2d显示模式绑定口型同步信号
+        if self.window.character_display_mode == "live2d":
+            self.window.vits_speaker.audio_lipsync_signal.connect(
+                self.window.live2d_widget.set_mouth_open_y
+            )
 
     def setup_ui(self):
         """显示初始化内容 (提示词, 开场语音)"""
@@ -176,24 +181,24 @@ class MainApp:
             logger.debug(f"Chinese_message: {Chinese_message}")
             logger.debug(f"Japanese_message: {Japanese_message}")
 
-            # 处理立绘切换
-            self.change_tachie(tachie_expression)
+            # 处理角色表情切换
+            self.change_expression(tachie_expression)
 
             # 播放语音, 默认日语
             self.window.vits_speaker.vits_play(Japanese_message)
 
         return Chinese_message
 
-    def change_tachie(self, tachie_name):
-        """立绘切换"""
-        # 展示指定的立绘
-        self.window.tachie_display(tachie_name)
-        logger.debug(f"切换立绘: {tachie_name}")
+    def change_expression(self, expression):
+        """角色表情切换"""
+        self.window.character_display(expression)  # 展示指定的表情
+        logger.debug(f"切换角色表情: {expression}")
 
-        # 设置4.5秒后执行回调函数，切换回默认立绘
-        QTimer.singleShot(
-            4500, lambda: self.window.tachie_display(self.window.tachie_default)
-        )
+        if self.window.character_display_mode == "tachie": # TODO live2d显示需要添加兼容
+            # 设置4.5秒后执行回调函数，切换回默认表情
+            QTimer.singleShot(
+                4500, lambda: self.window.character_display(self.window.tachie_default)
+            )
 
     def run(self):
         sys.exit(self.app.exec_())
