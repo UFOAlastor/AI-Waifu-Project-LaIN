@@ -1,3 +1,6 @@
+# lipsynv_module.py
+# 音频响度检测实现口型同步, 源代码见live2d-py仓库: https://github.com/Arkueid/live2d-py/blob/main/package/live2d/utils/lipsync.py
+
 import wave
 import time
 import numpy as np

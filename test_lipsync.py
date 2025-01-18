@@ -9,18 +9,18 @@ if __name__ == "__main__":
 
     # 初始化日志配置
     logging_config.setup_logging()
-
-    app = QApplication(sys.argv)
-    main_window = Live2DApp("./live2d/MuraSame/Murasame.model3.json")
-    main_window.show()
-
-    def test_lipsync(mouth_open_y):
-        main_window.set_mouth_open_y(mouth_open_y * 2.5)
-
     # 加载配置文件
     with open("./config.yaml", "r", encoding="utf-8") as f:
         settings = yaml.safe_load(f)
-        vits_speaker = vitsSpeaker(settings)
+
+    app = QApplication(sys.argv)
+    main_window = Live2DApp(settings)
+    main_window.show()
+
+    def test_lipsync(mouth_open_y):
+        main_window.set_mouth_open_y(mouth_open_y)
+
+    vits_speaker = vitsSpeaker(settings)
 
     vits_speaker.audio_lipsync_signal.connect(test_lipsync)
 

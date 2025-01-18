@@ -13,16 +13,25 @@ logger = logging.getLogger("live2d_module")
 
 
 class Live2DWidget(QOpenGLWidget):
-    def __init__(self, parent, model_path):
+    def __init__(self, parent, main_settings):
         super().__init__(parent)
         self.model = None
-        self.timer = QTimer(self)  # 定时器
-        self.timer.timeout.connect(self.update_scene)
-        self.timer.start(16)  # 每16毫秒刷新一次（60帧）
+        # 获取配置文件信息
+        self.model_path = main_settings.get(
+            "live2d_model_path", "./live2d/MuraSame/Murasame.model3.json"
+        )
+        self.lipSyncN = main_settings.get("live2d_lipSyncN", 5)
+        # 初始化响度检测模块
         self.wavHandler = WavHandler()
-        self.lipSyncN = 3
-        self.model_path = model_path
         self.mouth_open_y = 0.0
+        # 配置显示刷新
+        self.update_scene_timer = QTimer(self)  # 定时器
+        self.update_scene_timer.timeout.connect(self.update_scene)
+        self.update_scene_timer.start(16)  # 每16毫秒刷新一次（60帧）
+        # 配置Idle动作刷新
+        self.update_motionIdle_timer = QTimer(self)
+        self.update_motionIdle_timer.timeout.connect(self.update_motionIdle)
+        self.update_motionIdle_timer.start(6000) # 眨眼频率
 
     def initializeGL(self):
         """初始化 OpenGL 和 Live2D"""
@@ -63,7 +72,9 @@ class Live2DWidget(QOpenGLWidget):
         if self.model:
             self.model.Update()  # 更新模型
             self.model.SetParameterValue(
-                StandardParams.ParamMouthOpenY, self.mouth_open_y, 1.0
+                StandardParams.ParamMouthOpenY,
+                self.mouth_open_y * self.lipSyncN,
+                1.0,
             )
             self.model.Draw()  # 绘制模型
 
@@ -72,21 +83,24 @@ class Live2DWidget(QOpenGLWidget):
         mouth_open_y = min(1, mouth_open_y)
         self.mouth_open_y = mouth_open_y
 
+    def update_motionIdle(self):
+        self.model.StartRandomMotion("Idle", 1, None, None)
+
     def update_scene(self):
         """更新场景"""
         self.update()
 
 
 class Live2DApp(QMainWindow):
-    def __init__(self, model_path):
+    def __init__(self, main_settings):
         super().__init__()
         self.setWindowTitle("Live2D PyQt 示例")
-        self.setGeometry(100, 100, 800, 600)
+        self.setGeometry(100, 100, 600, 800)
 
         logger.debug("显示live2d")
 
         # 添加 Live2DWidget 到主窗口
-        self.live2d_widget = Live2DWidget(self, model_path)
+        self.live2d_widget = Live2DWidget(self, main_settings)
         self.setCentralWidget(self.live2d_widget)
 
     def set_mouth_open_y(self, mouth_open_y):
@@ -94,12 +108,15 @@ class Live2DApp(QMainWindow):
 
 
 if __name__ == "__main__":
-    import logging_config
+    import logging_config, yaml
 
     # 初始化日志配置
     logging_config.setup_logging()
+    # 加载配置文件
+    with open("./config.yaml", "r", encoding="utf-8") as f:
+        settings = yaml.safe_load(f)
 
     app = QApplication(sys.argv)
-    main_window = Live2DApp("./live2d/MuraSame/Murasame.model3.json")
+    main_window = Live2DApp(settings)
     main_window.show()
     sys.exit(app.exec_())
