@@ -20,7 +20,6 @@ class vitsSpeaker(QObject):
 
     def __init__(self, main_settings):
         super().__init__()
-        """加载配置文件"""
         # 更新配置文件中的 API_URL 和 SPEAKER_ID
         self.API_URL = gcww(
             main_settings, "vits_api_url", "http://127.0.0.1:23456/voice/vits", logger
@@ -37,7 +36,18 @@ class vitsSpeaker(QObject):
     def get_audio_stream(
         self, text, speaker_id=None, lang="jp", format="wav", length=1.0
     ):
-        """发送请求并获取音频流"""
+        """发送TTS请求并获取音频流
+
+        Args:
+            text (str): 需要TTS的文本
+            speaker_id (int, optional): vits模型语音角色ID. Defaults to None.
+            lang (str, optional): 输出语言. Defaults to "jp".
+            format (str, optional): 输出音频文件格式. Defaults to "wav".
+            length (float, optional): _description_. Defaults to 1.0.
+
+        Returns:
+            bytes: 音频序列
+        """
         speaker_id = speaker_id or self.SPEAKER_ID  # 默认使用 SPEAKER_ID
         params = {
             "text": text,
@@ -62,7 +72,11 @@ class vitsSpeaker(QObject):
             return None
 
     def play_audio(self, audio_data):
-        """播放音频"""
+        """播放音频
+
+        Args:
+            audio_data (bytes): 音频序列
+        """
         try:
             audio = pydub.AudioSegment.from_wav(BytesIO(audio_data))
             pygame.mixer.init(frequency=audio.frame_rate)  # 初始化pygame的音频播放
@@ -134,8 +148,13 @@ class vitsSpeaker(QObject):
             logger.info("音频播放已被停止")
 
     def clean_text_for_vits(self, text):
-        """
-        精确清洗文本，移除不适合朗读的内容。
+        """文本清洗, 移除不适合朗读的内容
+
+        Args:
+            text (str): 待清洗文本
+
+        Returns:
+            str: 清洗后文本
         """
         # 定义精确匹配的正则模式
         patterns = [

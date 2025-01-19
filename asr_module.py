@@ -22,6 +22,11 @@ class SpeechRecognition(QObject):
     detect_speech_signal = pyqtSignal(bool)  # 用于通知检测到人声
 
     def __init__(self, main_settings):
+        """语音识别类初始化
+
+        Args:
+            main_settings (dict): 配置文件读取后得到的dict
+        """
         super().__init__()
         self.settings = main_settings
         self._is_running = False
@@ -62,8 +67,15 @@ class SpeechRecognition(QObject):
         self.audio_lock = threading.Lock()
 
     def detect_speech(self, audio_data, sample_rate=16000, frame_duration_ms=20):
-        """
-        使用 WebRTC VAD 检测音频数据是否包含有效语音。
+        """使用 WebRTC VAD 检测音频数据是否包含有效语音。
+
+        Args:
+            audio_data (NDArray): 音频序列
+            sample_rate (int, optional): 音频码率. Defaults to 16000.
+            frame_duration_ms (int, optional): VAD检测间距. Defaults to 20.
+
+        Returns:
+            bool: 音频中是否检测到人声
         """
         # 检查音频数据是否为空
         if not isinstance(audio_data, (list, np.ndarray)) or audio_data.size == 0:
@@ -183,7 +195,12 @@ class SpeechRecognition(QObject):
 
     # 转录并记录
     def audio_transcribe(self, user_name, frames):
-        """对包含人声的音频序列进行语音识别"""
+        """对包含人声的音频序列进行语音识别
+
+        Args:
+            user_name (str): 说话者用户名称
+            frames (NDArray): 音频序列
+        """
         audio_data = b"".join(frames)
         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_wav:
             with wave.open(temp_wav, "wb") as wf:

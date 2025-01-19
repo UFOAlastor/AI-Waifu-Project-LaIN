@@ -201,11 +201,10 @@ class UIDisplay(QMainWindow, MicButton):
         self.typing_timer = QTimer(self)
 
     def whisper_stream_update(self, tuple_data):
-        """
-        语音识别结果流式追加显示文本内容，is_non_user_input 为 True 时表示启动提示或模型返回内容
+        """语音识别结果流式追加显示文本内容，is_non_user_input 为 True 时表示启动提示或模型返回内容
 
-        Parameters:
-            tuple_data(tuple): (user_name(str), test(str)) 用户名称以及用户输入文本信息
+        Args:
+            tuple_data (tuple): 语音识别二元对, 包含用户名称与识别文本
         """
         self.user_name, text = tuple_data
         if not self.recognizer_is_updating:
@@ -225,7 +224,11 @@ class UIDisplay(QMainWindow, MicButton):
             self.content += text  # 拼接文本
 
     def character_display(self, action_name):
-        """角色显示"""
+        """角色动作或表情显示
+
+        Args:
+            action_name (str): 角色动作或表情名称
+        """
         if self.character_display_mode == "tachie":
             # 如果缓存中已有该图像，直接使用缓存
             if action_name in self.cached_images:
@@ -318,8 +321,11 @@ class UIDisplay(QMainWindow, MicButton):
             self.dialog_text.clear()  # 清空文本框内容
 
     def display_text(self, content, is_non_user_input=False):
-        """
-        对话框显示文本内容，is_non_user_input 为 True 时表示启动提示或模型返回内容
+        """对话框显示文本内容，is_non_user_input 为 True 时表示启动提示或模型返回内容
+
+        Args:
+            content (str): 需要显示的文本
+            is_non_user_input (bool, optional): 是否非用户输入. Defaults to False.
         """
         self.is_non_user_input = is_non_user_input  # 设置是否为非用户输入内容标记
         self.dialog_text.clear()  # 清空文本框内容
@@ -335,6 +341,14 @@ class UIDisplay(QMainWindow, MicButton):
         self.typing_timer.start(self.typing_speed)
 
     def auto_complete_html_end(self, html_text):
+        """自动补全html格式, 用于动态渲染html内容
+
+        Args:
+            html_text (str): 可能缺省的html内容
+
+        Returns:
+            str: 补全后的html内容
+        """
         # 正则表达式，用于匹配HTML标签（包括带属性的标签）
         tag_pattern = r"</?([a-zA-Z0-9]+)([^>]*)>"
         # 用栈来保存当前的未闭合标签

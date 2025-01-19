@@ -30,7 +30,11 @@ class WavHandler:
         self.startTime: float = -1
 
     def Start(self, audio_data: bytes) -> None:
-        """接收并处理音频数据"""
+        """接收并处理音频数据
+
+        Args:
+            audio_data (bytes): 音频序列
+        """
         self.ReleasePcmData()
         try:
             audio_stream = BytesIO(audio_data)
@@ -51,15 +55,25 @@ class WavHandler:
             logger.error(f"音频数据加载失败: {e}")
 
     def ReleasePcmData(self):
+        """释放pcm数据"""
         if self.pcmData is not None:
             del self.pcmData
             self.pcmData = None
 
     def GetRms(self) -> float:
+        """返回语音响度数据
+
+        Returns:
+            float: 语音响度, 范围[0,1]
+        """
         return self.currentRms
 
     def Update(self) -> bool:
-        """更新音频帧位置，并计算当前音频段的 RMS"""
+        """更新音频帧位置，并计算当前音频段的 RMS
+
+        Returns:
+            bool: 返回是否更新成功
+        """
         if self.pcmData is None or self.lastOffset >= self.numFrames:
             return False
 

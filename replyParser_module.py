@@ -8,11 +8,14 @@ logger = logging.getLogger("replyParser_module")
 
 
 def replyParser(reply: str, delimiter: str = "|||"):
-    """
-    解析 {表情}|||{中文}|||{日语} 格式的字符串，确保对分隔符冲突的处理安全。
-    :param reply: 输入的字符串，格式如 {表情}|||{中文}|||{日语}
-    :param delimiter: 自定义分隔符，默认为 "|||"
-    :return: 包含 status code 和 message 的字典，包含成功或错误的提示
+    """解析 {表情}|||{中文}|||{日语} 格式的字符串，确保对分隔符冲突的处理安全。
+
+    Args:
+        reply (str): 模型回复文本
+        delimiter (str, optional): 文本分割符. Defaults to "|||".
+
+    Returns:
+        json: 解析后数据
     """
     # 1. 检查 reply 是否为字符串类型
     if not isinstance(reply, str):

@@ -127,7 +127,11 @@ class MainApp:
                 self.window.toggle_recording()
 
     def on_text_received(self, tuple_data):
-        """等待接收模型回复"""
+        """等待接收模型回复
+
+        Args:
+            tuple_data (tuple): 输入给模型的二元对, 内容为(user_name, input_text)
+        """
         user_name, input_text = tuple_data
         if input_text:
             # 显示动态省略号动画
@@ -161,9 +165,12 @@ class MainApp:
         self.typing_animation_timer.timeout.disconnect(self.update_typing_animation)
 
     def on_model_response(self, response):  # ATTENTION 模型回复处理部分
-        """处理模型的回复"""
-        # 停止动态省略号动画
-        self.stop_typing_animation()
+        """处理模型的回复, 解析提取出有效内容
+
+        Args:
+            response (str): 模型原始回复内容
+        """
+        self.stop_typing_animation()  # 停止动态省略号动画
 
         if "error" in response:
             self.window.display_text(
@@ -197,7 +204,14 @@ class MainApp:
         self.window.display_text(final_message, is_non_user_input=True)
 
     def parse_response(self, msg):
-        """对模型回复{表情}|||{中文}|||{日语}进行解析"""
+        """对模型回复{表情}|||{中文}|||{日语}进行解析
+
+        Args:
+            msg (str): 模型原始回复
+
+        Returns:
+            str: 中文回复文本
+        """
         parsed_reply = replyParser(msg)
         parse_status = parsed_reply.get("status")
         parse_message = parsed_reply.get("message")
@@ -222,7 +236,11 @@ class MainApp:
         return Chinese_message
 
     def change_emotion(self, emotion_name):
-        """角色情绪切换"""
+        """角色情绪切换
+
+        Args:
+            emotion_name (str): 情绪名称 (表情/动作名称)
+        """
         self.window.character_display(emotion_name)  # 展示指定的表情
         logger.debug(f"切换角色情绪: {emotion_name}")
 

@@ -82,14 +82,22 @@ class MicButton(QWidget):
         logger.info("识别完成，停止录音")
 
     def set_button_color(self, color):
-        """设置语音识别按钮颜色"""
+        """设置语音识别按钮颜色
+
+        Args:
+            color (str): 按钮颜色名称 (英文)
+        """
         self.mic_button.setText("🎤")
         self.mic_button.setStyleSheet(
             f"background-color: {color}; border: 1px solid black; border-radius: 5px;"
         )
 
     def detect_speech_toggle(self, flag=False):
-        """当检测到人声输入时的行为"""
+        """当检测到人声输入时的行为
+
+        Args:
+            flag (bool, optional): 按钮是否已经按下的标记. Defaults to False.
+        """
         if flag:
             self.set_button_color("green")
             self.vits_speaker.vits_stop_audio()

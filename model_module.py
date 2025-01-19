@@ -17,15 +17,14 @@ class Model:
         )
 
     def get_response(self, user_name, user_input):
-        """
-        发送请求到 Letta API，并获取响应
+        """发送请求到 Letta API，并获取响应
 
-        Parameters:
-            user_name(str): 用户名称, 模型能够判断对话对象
-            user_input(str): 用户输入的内容
+        Args:
+            user_name (str): 用户名称 (模型据此判断对话对象)
+            user_input (str): 用户输入的内容
 
-        Return:
-            response.json(): 模型回复内容在['messages']['tool_call']['arguments']下
+        Returns:
+            json: 模型回复原始json数据
         """
         url = f"http://{self.letta_server_ip}:8283/v1/agents/{self.letta_agent_id}/messages"
         headers = {"Content-Type": "application/json"}

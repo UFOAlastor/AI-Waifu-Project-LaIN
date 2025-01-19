@@ -75,17 +75,32 @@ class Live2DWidget(QOpenGLWidget):
             self.model.Draw()  # 绘制模型
 
     def set_mouth_open_y(self, mouth_open_y):
+        """设置live2d模型口型张开程度
+
+        Args:
+            mouth_open_y (float): 口型张开大小, 范围[0,1]
+        """
         mouth_open_y = max(0, mouth_open_y)
         mouth_open_y = min(1, mouth_open_y)
         self.mouth_open_y = mouth_open_y
 
     def play_motion(self, motion_name):
+        """播放live2d动作
+
+        Args:
+            motion_name (str): 动作名称
+        """
         if self.model is None:
             logger.warning("Model not loaded properly")
             return
         self.model.StartMotion(motion_name, 0, live2d.MotionPriority.FORCE)
 
     def play_expression(self, exp_name):
+        """播放live2d表情
+
+        Args:
+            exp_name (str): 表情名称
+        """
         if self.model is None:
             logger.warning("Model not loaded properly")
             return

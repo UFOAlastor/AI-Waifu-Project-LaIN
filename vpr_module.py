@@ -54,7 +54,15 @@ class VoicePrintRecongnition:
             pickle.dump(self.voicePrintDB, f)
 
     def register_voiceprint(self, audio_frames, person_name=None):
-        """注册新的声纹样本"""
+        """注册新的声纹样本
+
+        Args:
+            audio_frames (bytes): 音频序列
+            person_name (str, optional): 注册用户名称. Defaults to None.
+
+        Returns:
+            int: 声纹UID
+        """
         if len(audio_frames) == 0:
             logger.warning("输入声纹序列为空")
             return None
@@ -83,7 +91,15 @@ class VoicePrintRecongnition:
         return unique_id
 
     def remove_voiceprint(self, unique_id=None, person_name=None):
-        """删除声纹库指定数据"""
+        """删除声纹库指定数据
+
+        Args:
+            unique_id (int, optional): 声纹UID. Defaults to None.
+            person_name (str, optional): 用户名. Defaults to None.
+
+        Returns:
+            bool: 是否成功删除
+        """
         _return_flag = False
 
         if unique_id == None and person_name == None:
@@ -116,14 +132,13 @@ class VoicePrintRecongnition:
             logger.info(f"voicePrintDB: {_person_name}_{_id}")
 
     def match_voiceprint(self, audio_frames):
-        """
-        比对输入的音频序列声纹是否与样本库中任何数据匹配
+        """比对输入的音频序列声纹是否与样本库中任何数据匹配
 
-        Parameters:
-            audio_frames(list): 声纹音频序列 <np.frombuffer(stream_data, dtype=np.int16)>
+        Args:
+            audio_frames (bytes): 音频序列
 
         Returns:
-            beat_match_person(str|None): 声纹库中最高匹配对象名称|无超阈值匹配项返回None
+            str: 匹配到的用户名称, 失配则返回"UnKnown"
         """
         if len(audio_frames) == 0:
             logger.debug("match_voiceprint: audio_frames为空")
@@ -156,7 +171,15 @@ class VoicePrintRecongnition:
         return beat_match_person
 
     def compare_two_voiceprints(self, audio_frames1, audio_frames2):
-        """比对两个音频序列是否匹配"""
+        """比对两个音频声纹序列是否匹配
+
+        Args:
+            audio_frames1 (bytes): 音频序列1
+            audio_frames2 (bytes): 音频序列2
+
+        Returns:
+            bool: 是否匹配
+        """
         if len(audio_frames1) == 0 or len(audio_frames2) == 0:
             logger.warning("compare_two_voiceprints: 输入音频序列为空")
             return False

@@ -93,7 +93,7 @@ def setup_logging():
 
 
 def gcww(config_dict, key, default_value, logger):
-    """Get Config With Warning
+    """获取配置文件信息, 缺失则弹出警告 (Get Config With Warning)
 
     Args:
         config_dict (dict): 配置文件dict
