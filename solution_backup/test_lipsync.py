@@ -21,7 +21,7 @@ if __name__ == "__main__":
     vits_speaker.audio_lipsync_signal.connect(main_window.set_mouth_open_y)
 
     # 要合成的日语文本
-    text = "今日はとても楽しい一日だったよ～！シアロ～(∠・ω< )⌒☆ 何か面白いことがあったら教えてね！"
+    text = "チャロ！わが輩はレイだよ！何かお手伝いできること、あるかな～？"
 
     # 调用合成并播放的功能
     vits_speaker.vits_play(text)

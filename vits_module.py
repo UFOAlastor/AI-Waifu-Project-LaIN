@@ -81,11 +81,12 @@ class vitsSpeaker(QObject):
                     break  # 音频播放结束
                 else:
                     self.audio_lipsync_signal.emit(self.wav_handler.GetRms())
-                    logger.debug(f"语音响度: {self.wav_handler.GetRms()}")
                 time.sleep(0.1)
 
             # 播放完成后发出信号
             self.audio_played.emit()
+            # 播放完成后口型归零
+            self.audio_lipsync_signal.emit(0.0)
 
         except Exception as e:
             logger.error(f"播放音频发生错误: {e}")

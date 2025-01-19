@@ -83,6 +83,17 @@ class MainApp:
         self.window.vits_speaker.vits_play(
             "チャロ！わが輩はレイだよ！何かお手伝いできること、あるかな～？"
         )
+        # 开场角色立绘/动作表情显示
+        if self.window.character_display_mode == "tachie":
+            self.window.character_display(self.window.tachie_opening)
+            QTimer.singleShot(
+                2500, lambda: self.window.character_display(self.window.tachie_default)
+            )
+        elif self.window.character_display_mode == "live2d":
+            QTimer.singleShot(
+                500, lambda: self.window.character_display(self.window.live2d_opening)
+            )
+            QTimer.singleShot(6000, lambda: self.window.character_display("Idle"))
 
     def start_voice_rec(self):
         """语音播放结束后自动继续开启语音识别"""
@@ -182,23 +193,29 @@ class MainApp:
             logger.debug(f"Japanese_message: {Japanese_message}")
 
             # 处理角色表情切换
-            self.change_expression(tachie_expression)
+            self.change_emotion(tachie_expression)
 
             # 播放语音, 默认日语
             self.window.vits_speaker.vits_play(Japanese_message)
 
         return Chinese_message
 
-    def change_expression(self, expression):
-        """角色表情切换"""
-        self.window.character_display(expression)  # 展示指定的表情
-        logger.debug(f"切换角色表情: {expression}")
+    def change_emotion(self, emotion_name):
+        """角色情绪切换"""
+        self.window.character_display(emotion_name)  # 展示指定的表情
+        logger.debug(f"切换角色情绪: {emotion_name}")
 
-        if self.window.character_display_mode == "tachie": # TODO live2d显示需要添加兼容
-            # 设置4.5秒后执行回调函数，切换回默认表情
+        if self.window.character_display_mode == "tachie":
+            # 设置6秒后执行回调函数，切换回默认表情
             QTimer.singleShot(
-                4500, lambda: self.window.character_display(self.window.tachie_default)
+                6000, lambda: self.window.character_display(self.window.tachie_default)
             )
+        elif self.window.character_display_mode == "live2d":
+            # 设置6秒后执行回调函数，切换回默认表情和动作
+            QTimer.singleShot(
+                6000, lambda: self.window.character_display(self.window.live2d_default)
+            )
+            QTimer.singleShot(6000, lambda: self.window.character_display("Idle"))
 
     def run(self):
         sys.exit(self.app.exec_())

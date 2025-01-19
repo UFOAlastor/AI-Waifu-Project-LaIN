@@ -31,10 +31,10 @@ class Live2DWidget(QOpenGLWidget):
         self.update_scene_timer = QTimer(self)  # 定时器
         self.update_scene_timer.timeout.connect(self.update_scene)
         self.update_scene_timer.start(16)  # 每16毫秒刷新一次（60帧）
-        # 配置Idle动作刷新
-        self.update_motionIdle_timer = QTimer(self)
-        self.update_motionIdle_timer.timeout.connect(self.update_motionIdle)
-        self.update_motionIdle_timer.start(6000)  # 眨眼频率
+
+        QTimer.singleShot(500, lambda: self.play_motion("高兴wink"))
+        QTimer.singleShot(4500, lambda: self.play_motion("好奇地探身"))
+        QTimer.singleShot(9000, lambda: self.play_motion("Idle"))
 
     def initializeGL(self):
         """初始化 OpenGL 和 Live2D"""
@@ -79,8 +79,17 @@ class Live2DWidget(QOpenGLWidget):
         mouth_open_y = min(1, mouth_open_y)
         self.mouth_open_y = mouth_open_y
 
-    def update_motionIdle(self):
-        self.model.StartRandomMotion("Idle", 1, None, None)
+    def play_motion(self, motion_name):
+        if self.model is None:
+            logger.warning("Model not loaded properly")
+            return
+        self.model.StartMotion(motion_name, 0, live2d.MotionPriority.FORCE)
+
+    def play_expression(self, exp_name):
+        if self.model is None:
+            logger.warning("Model not loaded properly")
+            return
+        self.model.SetExpression(exp_name)
 
     def update_scene(self):
         """更新场景"""

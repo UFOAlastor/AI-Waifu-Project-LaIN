@@ -49,7 +49,7 @@ class UIDisplay(QMainWindow, MicButton):
         self.label_text = self.settings.get("dialog_label", "")
         # 显示模式
         self.character_display_mode = self.settings.get(
-            "character_display_mode", "tachie"
+            "character_display_mode", "live2d"
         )
 
         # 角色定位坐标
@@ -62,10 +62,6 @@ class UIDisplay(QMainWindow, MicButton):
             self.tachie_default = self.settings.get("tachie_default", "正常")
             self.tachie_opening = self.settings.get("tachie_opening", "高兴")
             self.tachie_suffix = self.settings.get("tachie_suffix", "png")
-            # 开场立绘显示
-            self.character_display(self.tachie_opening)
-            # 设置2.5秒后执行回调函数，切换回默认立绘
-            QTimer.singleShot(2500, lambda: self.character_display(self.tachie_default))
             # 初始化时创建角色 QLabel 和设置拖动功能
             self.tachie_label = QLabel(self)
             self.tachie_label.setAlignment(Qt.AlignCenter)
@@ -73,9 +69,15 @@ class UIDisplay(QMainWindow, MicButton):
             self.tachie_label.mousePressEvent = self.start_drag
             self.tachie_label.mouseMoveEvent = self.drag_window
             self.cached_images = {}  # 用于缓存加载过的图像
-        elif self.character_display_mode == "live2d": # TODO 注意检查live2d显示
-            # Live2D实例部分，嵌入主界面
-            self.live2d_widget = Live2DWidget(
+        elif self.character_display_mode == "live2d":
+            # 获取live2d相关参数
+            self.live2d_motion_list = self.settings.get("live2d_motion_list", [])
+            self.live2d_expression_list = self.settings.get(
+                "live2d_expression_list", []
+            )
+            self.live2d_default = self.settings.get("live2d_default", "微笑脸")
+            self.live2d_opening = self.settings.get("live2d_opening", "高兴wink")
+            self.live2d_widget = Live2DWidget(  # Live2D实例部分，嵌入主界面
                 self.settings, self
             )  # 设置父窗口为self，即主窗口
             self.live2d_widget.setGeometry(
@@ -205,18 +207,18 @@ class UIDisplay(QMainWindow, MicButton):
         else:
             self.content += text  # 拼接文本
 
-    def character_display(self, expression): # TODO 实现live2d的表情功能
+    def character_display(self, action_name):
         """角色显示"""
         if self.character_display_mode == "tachie":
             # 如果缓存中已有该图像，直接使用缓存
-            if expression in self.cached_images:
-                self.character_image = self.cached_images[expression]
+            if action_name in self.cached_images:
+                self.character_image = self.cached_images[action_name]
             else:
                 # 加载图像并缓存
                 self.character_image = QImage(
-                    self.tachie_path + expression + "." + self.tachie_suffix
+                    self.tachie_path + action_name + "." + self.tachie_suffix
                 )
-                self.cached_images[expression] = self.character_image
+                self.cached_images[action_name] = self.character_image
             image_width, image_height = (
                 max(self.character_image.width(), 100),
                 max(self.character_image.height(), 100),
@@ -231,6 +233,12 @@ class UIDisplay(QMainWindow, MicButton):
             self.tachie_label.setPixmap(QPixmap.fromImage(self.character_image))
             # 设置角色画布大小
             self.tachie_label.setGeometry(0, 0, self.window_width, self.window_height)
+        elif self.character_display_mode == "live2d":
+            # 对于live2d模型, 存在动作和表情两种行为, 通过list判断归属
+            if action_name in self.live2d_motion_list:
+                self.live2d_widget.play_motion(action_name)
+            elif action_name in self.live2d_expression_list:
+                self.live2d_widget.play_expression(action_name)
 
     def start_drag(self, event):
         """窗口拖动"""
