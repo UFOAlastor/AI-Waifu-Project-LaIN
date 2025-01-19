@@ -1,7 +1,7 @@
 # ui_module.py
 
 import sys
-from PyQt5.QtCore import Qt, QEvent
+from PyQt5.QtCore import Qt, QEvent, pyqtSignal, QTimer
 from PyQt5.QtGui import QImage, QPixmap, QIcon
 from PyQt5.QtWidgets import (
     QApplication,
@@ -12,10 +12,9 @@ from PyQt5.QtWidgets import (
     QTextEdit,
     QPushButton,
 )
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtCore import QTimer
 import re, markdown
 import logging
+from logging_config import gcww
 
 # 获取根记录器
 logger = logging.getLogger("ui_module")
@@ -36,20 +35,24 @@ class UIDisplay(QMainWindow, MicButton):
         self.setWindowIcon(QIcon("./ico/lin.ico"))  # 设置图标
         # 窗口设置
         self.settings = main_settings
-        self.window_width = self.settings.get("window_width", 500)
-        self.window_height = self.settings.get("window_height", 700)
+        self.window_width = gcww(self.settings, "window_width", 500, logger)
+        self.window_height = gcww(self.settings, "window_height", 700, logger)
         # 对话框设置
-        self.dialog_x = self.settings.get("dialog_x", self.window_width)
-        self.dialog_y = self.settings.get("dialog_y", self.window_height * 0.5)
-        self.dialog_width = self.settings.get("dialog_width", self.window_width)
-        self.dialog_height = self.settings.get(
-            "dialog_height", self.window_height * 0.3
+        self.dialog_x = gcww(self.settings, "dialog_x", 0, logger)
+        self.dialog_y = gcww(
+            self.settings, "dialog_y", self.window_height * 0.5, logger
         )
-        self.dialog_opacity = self.settings.get("dialog_opacity", 0.8)
-        self.label_text = self.settings.get("dialog_label", "")
+        self.dialog_width = gcww(
+            self.settings, "dialog_width", self.window_width, logger
+        )
+        self.dialog_height = gcww(
+            self.settings, "dialog_height", self.window_height * 0.3, logger
+        )
+        self.dialog_opacity = gcww(self.settings, "dialog_opacity", 0.8, logger)
+        self.label_text = gcww(self.settings, "dialog_label", "", logger)
         # 显示模式
-        self.character_display_mode = self.settings.get(
-            "character_display_mode", "live2d"
+        self.character_display_mode = gcww(
+            self.settings, "character_display_mode", "live2d", logger
         )
 
         # 角色定位坐标
@@ -58,10 +61,12 @@ class UIDisplay(QMainWindow, MicButton):
 
         if self.character_display_mode == "tachie":
             # 立绘(tachie)部分
-            self.tachie_path = self.settings.get("tachie_path", "./tachie/Murasame/")
-            self.tachie_default = self.settings.get("tachie_default", "正常")
-            self.tachie_opening = self.settings.get("tachie_opening", "高兴")
-            self.tachie_suffix = self.settings.get("tachie_suffix", "png")
+            self.tachie_path = gcww(
+                self.settings, "tachie_path", "./tachie/Murasame/", logger
+            )
+            self.tachie_default = gcww(self.settings, "tachie_default", "正常", logger)
+            self.tachie_opening = gcww(self.settings, "tachie_opening", "高兴", logger)
+            self.tachie_suffix = gcww(self.settings, "tachie_suffix", "png", logger)
             # 初始化时创建角色 QLabel 和设置拖动功能
             self.tachie_label = QLabel(self)
             self.tachie_label.setAlignment(Qt.AlignCenter)
@@ -71,14 +76,24 @@ class UIDisplay(QMainWindow, MicButton):
             self.cached_images = {}  # 用于缓存加载过的图像
         elif self.character_display_mode == "live2d":
             # 获取live2d相关参数
-            self.live2d_motion_list = self.settings.get("live2d_motion_list", [])
-            self.live2d_expression_list = self.settings.get(
-                "live2d_expression_list", []
+            self.live2d_motion_list = gcww(
+                self.settings, "live2d_motion_list", [], logger
             )
-            self.live2d_default_expression = self.settings.get("live2d_default_expression", "正常脸")
-            self.live2d_default_motion = self.settings.get("live2d_default_motion", "Idle")
-            self.live2d_opening_expression = self.settings.get("live2d_opening_expression", "害羞脸")
-            self.live2d_opening_motion = self.settings.get("live2d_opening_motion", "高兴wink")
+            self.live2d_expression_list = gcww(
+                self.settings, "live2d_expression_list", [], logger
+            )
+            self.live2d_default_expression = gcww(
+                self.settings, "live2d_default_expression", "正常脸", logger
+            )
+            self.live2d_default_motion = gcww(
+                self.settings, "live2d_default_motion", "Idle", logger
+            )
+            self.live2d_opening_expression = gcww(
+                self.settings, "live2d_opening_expression", "害羞脸", logger
+            )
+            self.live2d_opening_motion = gcww(
+                self.settings, "live2d_opening_motion", "高兴wink", logger
+            )
             self.live2d_widget = Live2DWidget(  # Live2D实例部分，嵌入主界面
                 self.settings, self
             )  # 设置父窗口为self，即主窗口
@@ -99,7 +114,7 @@ class UIDisplay(QMainWindow, MicButton):
         self.setStyleSheet("background-color: transparent;")  # 使整个窗口透明
 
         # 整个窗口始终置顶
-        if self.settings.get("window_always_on_top", False):
+        if gcww(self.settings, "window_always_on_top", False, logger):
             self.setWindowFlag(Qt.WindowStaysOnTopHint)
 
         # 对话框设置（带透明度）

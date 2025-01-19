@@ -6,6 +6,7 @@ import pydub, time, pygame, threading
 from PyQt5.QtCore import pyqtSignal, QObject
 from lipsync_module import WavHandler
 import logging
+from logging_config import gcww
 
 # 获取根记录器
 logger = logging.getLogger("vits_module")
@@ -21,11 +22,11 @@ class vitsSpeaker(QObject):
         super().__init__()
         """加载配置文件"""
         # 更新配置文件中的 API_URL 和 SPEAKER_ID
-        self.API_URL = main_settings.get(
-            "vits_api_url", "http://127.0.0.1:23456/voice/vits"
+        self.API_URL = gcww(
+            main_settings, "vits_api_url", "http://127.0.0.1:23456/voice/vits", logger
         )
-        self.SPEAKER_ID = main_settings.get("SPEAKER_ID", 4)
-        self.CLEAN_TEXT = main_settings.get("vits_clean_text", True)
+        self.SPEAKER_ID = gcww(main_settings, "vits_speaker_id", 4, logger)
+        self.CLEAN_TEXT = gcww(main_settings, "vits_clean_text", True, logger)
 
         # 控制停止播放音频事件
         self.stop_event = threading.Event()

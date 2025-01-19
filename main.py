@@ -7,6 +7,7 @@ from ui_module import UIDisplay  # 导入界面类
 from model_module import Model  # 导入模型类
 from replyParser_module import replyParser  # 导入回复内容解析器
 import logging, logging_config
+from logging_config import gcww
 
 # 初始化日志配置
 logging_config.setup_logging()
@@ -51,7 +52,7 @@ class MainApp:
     def __init__(self):
         # 加载配置文件
         self.settings = load_settings()  # 默认加载路径为 "./config.yaml"
-        self.vpr_match_only = self.settings.get("vpr_match_only", None)
+        self.vpr_match_only = gcww(self.settings, "vpr_match_only", None, logger)
         # UI界面初始化
         self.app = QApplication(sys.argv)
         self.window = UIDisplay(self.settings)  # 初始化图形界面实例

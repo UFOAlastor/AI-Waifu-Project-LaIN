@@ -4,6 +4,7 @@ import numpy as np
 import os, uuid, pickle
 from modelscope.pipelines import pipeline
 import logging
+from logging_config import gcww
 
 # 获取根记录器
 logger = logging.getLogger("vpr_module")
@@ -12,12 +13,17 @@ logger = logging.getLogger("vpr_module")
 class VoicePrintRecongnition:
     def __init__(self, main_settings):
         self.settings = main_settings
-        self.vpr_db_dir = self.settings.get("vpr_db_dir", "voice_samples")
-        self.vpr_model = self.settings.get(
-            "vpr_model", "damo/speech_campplus_sv_zh-cn_16k-common"
+        self.vpr_db_dir = gcww(self.settings, "vpr_db_dir", "voice_samples", logger)
+        self.vpr_model = gcww(
+            self.settings,
+            "vpr_model",
+            "damo/speech_campplus_sv_zh-cn_16k-common",
+            logger,
         )
-        self.similarity_threshold = self.settings.get("similarity_threshold", 0.7)
-        self.vpr_match_only = self.settings.get("vpr_match_only", None)
+        self.similarity_threshold = gcww(
+            self.settings, "vpr_similarity_threshold", 0.7, logger
+        )
+        self.vpr_match_only = gcww(self.settings, "vpr_match_only", None, logger)
 
         # 初始化声纹识别模型
         self.sv_pipeline = pipeline(

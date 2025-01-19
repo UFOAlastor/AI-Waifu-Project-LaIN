@@ -7,6 +7,7 @@ import live2d.v3 as live2d
 from live2d.v3 import StandardParams
 from lipsync_module import WavHandler
 import logging
+from logging_config import gcww
 
 # 获取根记录器
 logger = logging.getLogger("live2d_module")
@@ -17,10 +18,13 @@ class Live2DWidget(QOpenGLWidget):
         super().__init__(parent)
         self.model = None
         # 获取配置文件信息
-        self.model_path = main_settings.get(
-            "live2d_model_path", "./live2d/MuraSame/Murasame.model3.json"
+        self.model_path = gcww(
+            main_settings,
+            "live2d_model_path",
+            "./live2d/MuraSame/Murasame.model3.json",
+            logger,
         )
-        self.lipSyncN = main_settings.get("live2d_lipSyncN", 5)
+        self.lipSyncN = gcww(main_settings, "live2d_lipSyncN", 5, logger)
         # 设置透明背景
         self.setAutoFillBackground(False)  # 禁止Qt自动填充背景
         self.setAttribute(Qt.WA_TranslucentBackground)

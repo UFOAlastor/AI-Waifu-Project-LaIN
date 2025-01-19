@@ -1,7 +1,16 @@
-# 窗口大小设置 (立绘默认自适应窗口大小)
+# 主程序窗口大小设置 (立绘默认自适应窗口大小)
 window_width: 600
 window_height: 800
 window_always_on_top: true # 设置窗口始终保持顶置
+
+# 对话框(dialog)位置和大小设置 (直接留空会根据window尺寸自动设置)
+# dialog_x: 0 # 对话框左上角X轴位置 (原点位于窗口左上角, X轴向右, Y轴向下)
+# dialog_y: 400 # 对话框Y轴位置
+# dialog_width: 600 # 对话框宽度
+# dialog_height: 240 # 对话框长度
+# 对话框(dialog)杂项
+dialog_label: "LaIN 绫" # 对话框标签名称 (可作为人物名称)
+dialog_opacity: 0.8 # 对话框透明度设置 (0.0-1.0]
 
 # 显示角色模式选择 (tachie or live2d)
 character_display_mode: "live2d" # 可选项: [tachie|live2d]
@@ -47,20 +56,17 @@ tachie_default: "微笑" # 默认立绘
 tachie_opening: "高兴" # 开场时临时展现的表情
 tachie_suffix: "png" # 立绘图片格式 (后缀名)
 
-# 对话框设置
-dialog_label: "LaIN 绫" # 对话框标签名称 (可作为人物名称)
-dialog_opacity: 0.8 # 对话框透明度设置 (0.0-1.0]
-
 # letta框架的agent_id设置
 letta_agent_id: "agent-6300306b-2e9e-477b-8d2a-add2120a7e39" # 填入你自己的agent_id, 详情参考letta文档: https://docs.letta.com/quickstart
 letta_server_ip: "localhost" # letta服务部署的地址 (默认本地地址, 可自行选配远程服务)
 
 # vits语音生成设置
-vits_api_url: "http://127.0.0.1:23456/voice/vits" # vits模型API路径 (默认本地接口, 可自行选配远程服务)
+vits_api_url: "http://localhost:23456/voice/vits" # vits模型API路径 (默认本地接口, 可自行选配远程服务)
 vits_speaker_id: "4" # 采用的vits模型
 vits_clean_text: true # 是否开启文本清洗 (去除难以发音的部分, 例如网页链接等)
 
 # 语音识别设置
+asr_model_dir: "./SenseVoiceSmall" # SenseVoiceSmall模型权重文件位置
 asr_vad_mode: 2 # vad人声检测参数
 asr_webrtc_aec: false # 是否开启回声消除功能 (undo, 此项不可修改, 目前未实现)
 asr_auto_send_silence_time: 1.8 # 持续静音asr_auto_send_silence_time时间后自动发送 (设置为-1则不自动发送)

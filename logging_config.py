@@ -92,5 +92,23 @@ def setup_logging():
     logging.info("Logging setup complete.")
 
 
+def gcww(config_dict, key, default_value, logger):
+    """Get Config With Warning
+
+    Args:
+        config_dict (dict): 配置文件dict
+        key (str): 配置项名称
+        default_value (_type_): 配置项默认值
+        logger (logging): logging工具
+
+    Returns:
+        _type_: 返回配置值 (加载失败则warning并返回默认值)
+    """
+    if key not in config_dict:
+        logger.warning(f"配置项'{key}'没有加载成功, 使用默认值: {default_value}")
+        return default_value
+    return config_dict[key]
+
+
 if __name__ == "__main__":
     setup_logging()

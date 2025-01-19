@@ -2,6 +2,7 @@
 
 import requests
 import logging
+from logging_config import gcww
 
 # 获取根记录器
 logger = logging.getLogger("modle_module")
@@ -10,8 +11,10 @@ logger = logging.getLogger("modle_module")
 class Model:
     def __init__(self, main_settings):
         self.settings = main_settings
-        self.letta_agent_id = self.settings.get("letta_agent_id", "agent-xxx")
-        self.letta_server_ip = self.settings.get("letta_server_ip", "localhost")
+        self.letta_agent_id = gcww(self.settings, "letta_agent_id", "agent-xxx", logger)
+        self.letta_server_ip = gcww(
+            self.settings, "letta_server_ip", "localhost", logger
+        )
 
     def get_response(self, user_name, user_input):
         """

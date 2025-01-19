@@ -7,6 +7,7 @@ from PyQt5.QtCore import pyqtSignal, QObject
 from funasr import AutoModel
 from funasr.utils.postprocess_utils import rich_transcription_postprocess
 import logging
+from logging_config import gcww
 
 # 配置日志
 logger = logging.getLogger("asr_module")
@@ -24,12 +25,12 @@ class SpeechRecognition(QObject):
         super().__init__()
         self.settings = main_settings
         self._is_running = False
-        self.asr_vad_mode = self.settings.get("asr_vad_mode", 2)
-        self.asr_webrtc_aec = self.settings.get(
-            "asr_webrtc_aec", False
-        )  # UNDO AEC回声剔除
-        self.asr_auto_send_silence_time = self.settings.get(
-            "asr_auto_send_silence_time", 3
+        self.asr_vad_mode = gcww(self.settings, "asr_vad_mode", 2, logger)
+        self.asr_webrtc_aec = gcww( # UNDO AEC回声剔除
+            self.settings, "asr_webrtc_aec", False, logger
+        )
+        self.asr_auto_send_silence_time = gcww(
+            self.settings, "asr_auto_send_silence_time", 3, logger
         )
 
         # 创建声纹识别工具对象
@@ -45,7 +46,7 @@ class SpeechRecognition(QObject):
         self.vad = webrtcvad.Vad(self.asr_vad_mode)
 
         # 初始化 SenseVoice 模型
-        model_dir = self.settings.get("model_dir", "./SenseVoiceSmall")
+        model_dir = gcww(self.settings, "asr_model_dir", "./SenseVoiceSmall", logger)
         self.model = AutoModel(
             model=model_dir,
             trust_remote_code=True,
