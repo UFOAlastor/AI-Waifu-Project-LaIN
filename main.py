@@ -91,9 +91,29 @@ class MainApp:
             )
         elif self.window.character_display_mode == "live2d":
             QTimer.singleShot(
-                500, lambda: self.window.character_display(self.window.live2d_opening)
+                100,
+                lambda: self.window.character_display(
+                    self.window.live2d_opening_expression
+                ),
             )
-            QTimer.singleShot(6000, lambda: self.window.character_display("Idle"))
+            QTimer.singleShot(
+                100,
+                lambda: self.window.character_display(
+                    self.window.live2d_opening_motion
+                ),
+            )
+            QTimer.singleShot(
+                5500,
+                lambda: self.window.character_display(
+                    self.window.live2d_default_expression
+                ),
+            )
+            QTimer.singleShot(
+                5500,
+                lambda: self.window.character_display(
+                    self.window.live2d_default_motion
+                ),
+            )
 
     def start_voice_rec(self):
         """语音播放结束后自动继续开启语音识别"""
@@ -206,16 +226,24 @@ class MainApp:
         logger.debug(f"切换角色情绪: {emotion_name}")
 
         if self.window.character_display_mode == "tachie":
-            # 设置6秒后执行回调函数，切换回默认表情
+            # 设置5.5秒后执行回调函数，切换回默认表情
             QTimer.singleShot(
-                6000, lambda: self.window.character_display(self.window.tachie_default)
+                5500, lambda: self.window.character_display(self.window.tachie_default)
             )
         elif self.window.character_display_mode == "live2d":
             # 设置6秒后执行回调函数，切换回默认表情和动作
             QTimer.singleShot(
-                6000, lambda: self.window.character_display(self.window.live2d_default)
+                5500,
+                lambda: self.window.character_display(
+                    self.window.live2d_default_expression
+                ),
             )
-            QTimer.singleShot(6000, lambda: self.window.character_display("Idle"))
+            QTimer.singleShot(
+                5500,
+                lambda: self.window.character_display(
+                    self.window.live2d_default_motion
+                ),
+            )
 
     def run(self):
         sys.exit(self.app.exec_())

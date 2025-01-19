@@ -85,6 +85,10 @@
         },
         "Expressions": [
             {
+                "Name": "正常脸",
+                "File": "exp/exp0.exp3.json"
+            },
+            {
                 "Name": "微笑脸",
                 "File": "exp/exp1.exp3.json"
             },

@@ -75,8 +75,10 @@ class UIDisplay(QMainWindow, MicButton):
             self.live2d_expression_list = self.settings.get(
                 "live2d_expression_list", []
             )
-            self.live2d_default = self.settings.get("live2d_default", "微笑脸")
-            self.live2d_opening = self.settings.get("live2d_opening", "高兴wink")
+            self.live2d_default_expression = self.settings.get("live2d_default_expression", "正常脸")
+            self.live2d_default_motion = self.settings.get("live2d_default_motion", "Idle")
+            self.live2d_opening_expression = self.settings.get("live2d_opening_expression", "害羞脸")
+            self.live2d_opening_motion = self.settings.get("live2d_opening_motion", "高兴wink")
             self.live2d_widget = Live2DWidget(  # Live2D实例部分，嵌入主界面
                 self.settings, self
             )  # 设置父窗口为self，即主窗口

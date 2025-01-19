@@ -32,10 +32,6 @@ class Live2DWidget(QOpenGLWidget):
         self.update_scene_timer.timeout.connect(self.update_scene)
         self.update_scene_timer.start(16)  # 每16毫秒刷新一次（60帧）
 
-        QTimer.singleShot(500, lambda: self.play_motion("高兴wink"))
-        QTimer.singleShot(4500, lambda: self.play_motion("好奇地探身"))
-        QTimer.singleShot(9000, lambda: self.play_motion("Idle"))
-
     def initializeGL(self):
         """初始化 OpenGL 和 Live2D"""
         glEnable(GL_DEPTH_TEST)  # 启用深度测试
