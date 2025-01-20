@@ -1,7 +1,6 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QOpenGLWidget
-from PyQt5.QtCore import QTimer, Qt, QEvent
-from PyQt5.QtGui import QMouseEvent
+from PyQt5.QtCore import QTimer, Qt
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 import live2d.v3 as live2d
