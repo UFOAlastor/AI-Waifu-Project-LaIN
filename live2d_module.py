@@ -1,6 +1,7 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QOpenGLWidget
-from PyQt5.QtCore import QTimer, Qt
+from PyQt5.QtCore import QTimer, Qt, QEvent
+from PyQt5.QtGui import QMouseEvent
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 import live2d.v3 as live2d
@@ -26,14 +27,13 @@ class Live2DWidget(QOpenGLWidget):
         )
         self.lipSyncN = gcww(main_settings, "live2d_lipSyncN", 5, logger)
         # 设置透明背景
-        self.setAutoFillBackground(False)  # 禁止Qt自动填充背景
-        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setAttribute(Qt.WA_TranslucentBackground, True)
         # 初始化响度检测模块
         self.wavHandler = WavHandler()
         self.mouth_open_y = 0.0
         # 配置显示刷新
         self.update_scene_timer = QTimer(self)  # 定时器
-        self.update_scene_timer.timeout.connect(self.update_scene)
+        self.update_scene_timer.timeout.connect(lambda: self.update())
         self.update_scene_timer.start(16)  # 每16毫秒刷新一次（60帧）
 
     def initializeGL(self):
@@ -105,10 +105,6 @@ class Live2DWidget(QOpenGLWidget):
             logger.warning("Model not loaded properly")
             return
         self.model.SetExpression(exp_name)
-
-    def update_scene(self):
-        """更新场景"""
-        self.update()
 
 
 if __name__ == "__main__":
