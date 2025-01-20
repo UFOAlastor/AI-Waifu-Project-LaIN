@@ -1,8 +1,8 @@
 # ui_module.py
 
 import sys
-from PyQt5.QtCore import Qt, QEvent, pyqtSignal, QTimer
-from PyQt5.QtGui import QImage, QPixmap, QIcon, QTextCursor
+from PyQt5.QtCore import Qt, QEvent, pyqtSignal, QTimer, QUrl
+from PyQt5.QtGui import QImage, QPixmap, QIcon, QDesktopServices
 from PyQt5.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -297,7 +297,13 @@ class UIDisplay(QMainWindow, MicButton):
         """
         捕获 QPlainTextEdit 的鼠标点击事件, 用于对话框点击清空操作
         """
-        if self.is_non_user_input:
+        pos = event.pos()
+        cursor = self.dialog_text.cursorForPosition(pos)
+        anchor = cursor.charFormat().anchorHref()  # 获取光标位置的格式，检查是否是链接
+        if anchor:  # 如果是链接, 触发浏览器跳转
+            QDesktopServices.openUrl(QUrl(anchor))
+            logger.debug(f"链接被点击: {QUrl(anchor).toString()}")
+        elif self.is_non_user_input:
             try:
                 if self.typing_timer:  # 停止打字机定时器，防止非用户文本继续显示
                     self.typing_timer.stop()
@@ -305,8 +311,7 @@ class UIDisplay(QMainWindow, MicButton):
                 logger.warning(f"self.timer停止错误: {e}")
             self.dialog_text.clear()  # 清空文本框内容
             self.is_non_user_input = False  # 重置标记
-        # 处理输入符号点击操作
-        logger.debug("点击了文本框的输入符号区域")
+            logger.debug("点击了文本框的非链接区域, 触发清空")
         # 调用父类的事件处理方法，确保光标行为正常
         super(QTextEdit, self.dialog_text).mousePressEvent(event)
 
@@ -407,7 +412,9 @@ class UIDisplay(QMainWindow, MicButton):
                     self.current_text + self.auto_complete_html_end(self.current_text)
                 )
                 self.dialog_text.setHtml(auto_completed_current_text)
-                self.dialog_text.verticalScrollBar().setValue(self.dialog_text.verticalScrollBar().maximum())
+                self.dialog_text.verticalScrollBar().setValue(
+                    self.dialog_text.verticalScrollBar().maximum()
+                )
             self.current_char_index += 1
         elif (
             self.current_char_index == len(self.content) and self.recognizer_is_updating
@@ -451,35 +458,16 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = UIDisplay(settings)
     window.display_text(
-        """
-使用 Python 直接加载和操作 Live2D 模型，不通过 Web Engine 等间接手段进行渲染。
-
-基于 Python C++ API 对 Live2D Native SDK (C++) 进行了封装。理论上，只要配置好 OpenGL 上下文，可在 Python 中将 live2d 绘制在任何基于 OpenGL 的窗口。
-
-代码使用示例：package
-
-详细使用文档：Wiki
-
-修改和开发的一点提示：CONTRIBUTING
-
-兼容UI库
-理论上兼容所有能使用 OpenGL 进行绘制的UI库： Pygame / PyQt5 / PySide2 / PySide6 / GLFW / pyopengltk/ FreeGlut / Qfluentwidgets ...
-
-支持功能
-加载模型：Cubism 2.1 和 Cubism 3.0 及以上版本
-视线跟踪
-点击交互
-动作播放回调
-口型同步
-模型各部分参数控制
-各部件透明度控制
-精确到部件的点击检测""",
+        """<p>你好！欢迎访问 <a href="https://www.example.com" target="_blank">示例网站</a>，了解更多信息。</p>""",
         is_non_user_input=True,
     )
     window.show()
 
     def test_response():
-        window.display_text("你好, UI模块测试回复文本", is_non_user_input=True)
+        window.display_text(
+            """<p>测试回复！欢迎访问 <a href="https://www.example.com" target="_blank">示例网站</a>，了解更多信息。</p>""",
+            is_non_user_input=True,
+        )
 
     window.text_sent_signal.connect(test_response)
     sys.exit(app.exec_())
