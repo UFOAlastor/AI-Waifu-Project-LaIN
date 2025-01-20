@@ -118,13 +118,12 @@ class MainApp:
 
     def start_voice_rec(self):
         """语音播放结束后自动继续开启语音识别"""
-        logger.debug("语音播放结束")
-        if not self.window.recognizer.asr_webrtc_aec:
-            if (  # 当语音识别按钮被点击过但是目前没有被按下才触发, 也就是开启过语音识别但是目前没有被额外点击的状态
-                self.window.mic_button_ever_pressed_flag
-                and not self.window.mic_button_pressed_state
-            ):
-                self.window.toggle_recording()
+        if self.window.mic_button_pressed_state:
+            # 当语音识别按钮处于被按下状态, 这时允许重新启动语音识别
+            if not self.window.recognizer._is_running:
+                self.window.recognition_thread.start()  # 启动识别线程
+            self.window.set_button_color("gray")  # 开启录音, 按钮灰色
+            logger.debug("语音播放结束, 自动重启语音识别")
 
     def on_text_received(self, tuple_data):
         """等待接收模型回复

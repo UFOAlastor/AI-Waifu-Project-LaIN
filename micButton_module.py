@@ -50,35 +50,29 @@ class MicButton(QWidget):
 
         # 设置语音识别中标志, 该标志传递给ui模块以控制对话框文本输出
         self.recognizer_is_updating = False
-
         # 按钮状态, 初始化按钮状态为没有按下
         self.mic_button_pressed_state = False
-        # 按钮是否被按下过的标记, 用于区分系统开场提示词与模型输出的显示结束状态
-        self.mic_button_ever_pressed_flag = False
 
     def toggle_recording(self):
         """点击语音识别按钮"""
         logger.debug("触发了toggle_recording")
-        if self.recognizer._is_running:
-            self.recognition_thread.stop()  # 如果语音识别正在进行，停止线程
-            self.recognition_thread.finished.connect(lambda: self.set_button_color("white"))
+        if self.mic_button_pressed_state:  # 当按钮已经被按下
+            if self.recognizer._is_running:
+                self.recognition_thread.stop()  # 如果语音识别正在进行，停止线程
+            self.set_button_color("white")  # 关闭录音, 按钮白色
             self.mic_button_pressed_state = False  # 按钮恢复为没有按下
         else:
-            self.recognition_thread.start()  # 启动识别线程
+            if not self.recognizer._is_running:
+                self.recognition_thread.start()  # 启动识别线程
             self.set_button_color("gray")  # 开启录音, 按钮灰色
             self.mic_button_pressed_state = True  # 按钮更新为已经按下
-            self.mic_button_ever_pressed_flag = True  # 被手动点击后持续为True
 
     def on_recognition_complete(self):
         """语音识别结束操作"""
-        # 识别完成, 重置标志
-        self.recognizer_is_updating = False
-        # 切换按钮图标颜色
-        self.set_button_color("red")
+        self.recognizer_is_updating = False  # 识别完成, 重置标志
+        self.set_button_color("red")  # 切换按钮图标颜色
         if self.recognizer._is_running:
             self.recognition_thread.stop()  # 如果语音识别正在进行，停止线程
-            self.set_button_color("white")  # 结束录音，按钮变回白色
-            self.mic_button_pressed_state = False  # 按钮恢复为没有按下
         logger.info("识别完成，停止录音")
 
     def set_button_color(self, color):
