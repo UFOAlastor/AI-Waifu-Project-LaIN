@@ -88,7 +88,7 @@ class MainApp:
         if self.window.character_display_mode == "tachie":
             self.window.character_display(self.window.tachie_opening)
             QTimer.singleShot(
-                2500, lambda: self.window.character_display(self.window.tachie_default)
+                3600, lambda: self.window.character_display(self.window.tachie_default)
             )
         elif self.window.character_display_mode == "live2d":
             QTimer.singleShot(
@@ -104,13 +104,13 @@ class MainApp:
                 ),
             )
             QTimer.singleShot(
-                5500,
+                4700,
                 lambda: self.window.character_display(
                     self.window.live2d_default_expression
                 ),
             )
             QTimer.singleShot(
-                5500,
+                4700,
                 lambda: self.window.character_display(
                     self.window.live2d_default_motion
                 ),
