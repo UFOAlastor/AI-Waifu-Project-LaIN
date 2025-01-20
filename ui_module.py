@@ -2,7 +2,7 @@
 
 import sys
 from PyQt5.QtCore import Qt, QEvent, pyqtSignal, QTimer
-from PyQt5.QtGui import QImage, QPixmap, QIcon
+from PyQt5.QtGui import QImage, QPixmap, QIcon, QTextCursor
 from PyQt5.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import (
     QWidget,
     QTextEdit,
     QPushButton,
+    QSizePolicy,
 )
 import re, markdown
 import logging
@@ -148,7 +149,7 @@ class UIDisplay(QMainWindow, MicButton):
         self.dialog_text.setStyleSheet(
             "font: 14pt Arial; background-color: transparent; border: none; color: #2f2f2f;"
         )
-        self.dialog_text.setFixedHeight(int(self.dialog_height))
+        self.dialog_text.setFixedHeight(int(self.dialog_height - 50))
         self.dialog_text.setFixedWidth(int(self.dialog_width - 20))
         self.dialog_layout.addWidget(self.dialog_text)
 
@@ -406,11 +407,11 @@ class UIDisplay(QMainWindow, MicButton):
                     self.current_text + self.auto_complete_html_end(self.current_text)
                 )
                 self.dialog_text.setHtml(auto_completed_current_text)
+                self.dialog_text.verticalScrollBar().setValue(self.dialog_text.verticalScrollBar().maximum())
             self.current_char_index += 1
-        elif self.recognizer_is_updating and self.current_char_index == len(
-            self.content
-        ):
-            # 添加对语音识别流式更新过程的挂起
+        elif (
+            self.current_char_index == len(self.content) and self.recognizer_is_updating
+        ):  # 添加对语音识别流式更新过程的挂起
             pass
         else:
             self.typing_timer.stop()  # 停止定时器，表示文本已全部显示完
@@ -449,7 +450,32 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
     window = UIDisplay(settings)
-    window.display_text("Ciallo～(∠・ω< )⌒☆ UI模块测试提示文本", is_non_user_input=True)
+    window.display_text(
+        """
+使用 Python 直接加载和操作 Live2D 模型，不通过 Web Engine 等间接手段进行渲染。
+
+基于 Python C++ API 对 Live2D Native SDK (C++) 进行了封装。理论上，只要配置好 OpenGL 上下文，可在 Python 中将 live2d 绘制在任何基于 OpenGL 的窗口。
+
+代码使用示例：package
+
+详细使用文档：Wiki
+
+修改和开发的一点提示：CONTRIBUTING
+
+兼容UI库
+理论上兼容所有能使用 OpenGL 进行绘制的UI库： Pygame / PyQt5 / PySide2 / PySide6 / GLFW / pyopengltk/ FreeGlut / Qfluentwidgets ...
+
+支持功能
+加载模型：Cubism 2.1 和 Cubism 3.0 及以上版本
+视线跟踪
+点击交互
+动作播放回调
+口型同步
+模型各部分参数控制
+各部件透明度控制
+精确到部件的点击检测""",
+        is_non_user_input=True,
+    )
     window.show()
 
     def test_response():
