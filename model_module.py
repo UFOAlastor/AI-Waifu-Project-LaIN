@@ -7,6 +7,8 @@ from logging_config import gcww
 # 获取根记录器
 logger = logging.getLogger("modle_module")
 
+from time_module import DateTime
+
 
 class Model:
     def __init__(self, main_settings):
@@ -15,6 +17,7 @@ class Model:
         self.letta_server_ip = gcww(
             self.settings, "letta_server_ip", "localhost", logger
         )
+        self.formatted_dt = DateTime()
 
     def get_response(self, user_name, user_input):
         """发送请求到 Letta API，并获取响应
@@ -26,13 +29,16 @@ class Model:
         Returns:
             json: 模型回复原始json数据
         """
+        current_date_time = self.formatted_dt.get_formatted_current_datetime()
         url = f"http://{self.letta_server_ip}:8283/v1/agents/{self.letta_agent_id}/messages"
         headers = {"Content-Type": "application/json"}
         data = {
             "messages": [
                 {
                     "role": "user",  # 此处不能修改, 用户输入应当固定为user
-                    "text": "[Speaker: " + user_name + "]\n\n\n" + user_input,
+                    "text": f"[Speaker: {user_name}]\n\n\n"
+                    + f"[当前时间: {current_date_time}]\n\n\n"
+                    + user_input,
                 }
             ]
         }
