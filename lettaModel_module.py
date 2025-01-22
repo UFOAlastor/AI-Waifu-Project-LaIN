@@ -1,4 +1,4 @@
-# model_module.py
+# lettaModel_module.py
 
 import requests
 import logging
@@ -10,7 +10,7 @@ logger = logging.getLogger("modle_module")
 from time_module import DateTime
 
 
-class Model:
+class LettaModel:
     def __init__(self, main_settings):
         self.settings = main_settings
         self.letta_agent_id = gcww(self.settings, "letta_agent_id", "agent-xxx", logger)

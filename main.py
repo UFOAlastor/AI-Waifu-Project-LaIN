@@ -4,7 +4,7 @@ import sys, yaml
 from PyQt5.QtCore import QThread, pyqtSignal, QTimer
 from PyQt5.QtWidgets import QApplication
 from ui_module import UIDisplay  # 导入界面类
-from model_module import Model  # 导入模型类
+from lettaModel_module import LettaModel  # 导入模型类
 from replyParser_module import replyParser  # 导入回复内容解析器
 import logging, logging_config
 from logging_config import gcww
@@ -56,7 +56,7 @@ class MainApp:
         # UI界面初始化
         self.app = QApplication(sys.argv)
         self.window = UIDisplay(self.settings)  # 初始化图形界面实例
-        self.chat_model = Model(self.settings)  # 初始化语言模型实例
+        self.chat_model = LettaModel(self.settings)  # 初始化语言模型实例
         # "思考中..."动态效果初始化
         self.typing_animation_timer = QTimer()
         self.typing_dots = ""
