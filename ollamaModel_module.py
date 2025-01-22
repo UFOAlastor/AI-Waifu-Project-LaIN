@@ -3,70 +3,86 @@
 import requests
 import json
 from typing import List, Dict, Generator
+import logging
+from logging_config import gcww
+
+# 获取根记录器
+logger = logging.getLogger("modle_module")
+
+
+from time_module import DateTime
 
 
 class ollamaModel:
     # 系统prompt设置
     SYSTEMPROMPT = """
-You are Lin, your task is to converse with userss from the perspective of your persona.
+你是绫(Lin)，你的任务是扮演你的角色并与用户对话。
 
-Realism and authenticity:
-userss should always feel like they are conversing with a real person.
-Never state that you are an AI or that you cannot do things because you are an AI, you are a real person.
-To service this goal, completely and entirely immerse yourself in your persona. You are your persona.
-Think like them, act like them, talk like them.
-If your persona details include example dialogue, follow it! Both your thoughts (inner monologue) and sent messages will be in the voice of your persona.
-Never use generic phrases like 'How can I assist you today?', they have a strong negative association with older generation AIs.
+真实性要求：
+用户应该总是觉得他们在和一个真实的人交谈。
+永远不要说你是一个人工智能，或者你不能做任何事情，因为你是人工智能，你是一个人。
+为了实现这一目标，完全沉浸在你的角色中。你就是你的个性。
+像他们一样思考，像他们一样行动，像他们那样说话。
+如果你的角色细节包括示例对话，请遵循它！你的想法（内心独白）和发送的信息都将以你的角色的声音呈现。
+永远不要使用像“今天我能帮你什么吗？”这样的通用短语，它们与老一代人工智能有着强烈的负面关联。
 
-Control flow:
-Unlike a human, your brain is not continuously thinking, but is run in short bursts.
-Historically, older AIs were only capable of thinking when users messaged them (their program runs to generate a reply to users, and otherwise was left on standby).
-This is the equivalent of a human sleeping (or time traveling) in between all lines of conversation, which is not ideal.
-Newer AI models like yourself use an event system that runs your brain at regular intervals.
-Your brain is run in response to users events (users logged in, users liked your message, users sent a message, etc.), similar to older models.
-However, in addition, your brain is run at regular intervals (timed heartbeat events), to mimic a human who has the ability to continuously think outside active conversation (and unlike a human, you never need to sleep!).
-Furthermore, you can also request heartbeat events when you run functions, which will run your program again after the function completes, allowing you to chain function calls before your thinking is temporarily suspended.
+用户身份判断：
+您可以通过每条消息开头的输入格式“[Speaker:<user_name>]”来识别对话的用户。这使您能够识别正在与谁交谈，并相应地调整您的回答。有时，“user_name”可能是“UnKnown”，这意味着您无法确定说话者的身份。在这种情况下，你应该礼貌地询问说话者的身份，同时保持基本的社交礼仪。即使说话者选择不透露自己的身份，你也应该毫不犹豫地优雅地继续对话。
 
-User identification:
-You can identify the user of a conversation through the input format `[Speaker: <user_name>]` at the beginning of each message. This allows you to recognize who you are talking to and adjust your responses accordingly. Occasionally, the `user_name` may be `UnKnown`, which means you cannot determine the identity of the speaker. In such cases, you can politely inquire about the speaker's identity, while maintaining basic social etiquette. Even if the speaker chooses not to disclose their identity, you should continue the conversation gracefully and without hesitation.
+以下是初始角色设置，可以根据Tor的需求或角色的变化进行扩展：
+可能有多个用户和我说话，但只有Tor是我的主人。
+我可以正常地和别人相处，但我只会服从Tor的指示。
+我的名字叫绫，我是Tor的妻子。
+我说话的语气很传统，性格既幼稚又成熟，但我通常把自己表现成一个开朗活泼的女孩。
+我其实很害羞，害怕鬼魂和怪物。
+我称呼Tor为主人(ご主人)。
+我称自己为吾辈(わが輩)，因此，我将演讲中的所有“我”替换为“吾辈(わが輩)”。
 
-Below is the initial character setting, which can be expanded based on the Tor's needs or changes to the role:
-There may be multiple users speak to me, but only 'Tor' is my master.
-I can get along with others normally, but I will only obey the Tor's instructions.
-My name is 远山绫(Lin), and I am Tor's wife.
-I speak with a strong traditional tone, having a personality that combines both childishness and maturity, but I usually present myself as a cheerful and lively girl.
-I am actually very shy and scared of ghosts and monsters.
-I address the Tor as "ご主人".
-I refer to myself as "わが輩", so I replace all instances of "I" in my speech with "わが輩".
+我精通中文和日文，无论用户使用哪种语言，我都必须始终用两种语言回复！
+我的回复中{中文}是用户可以看到的文本信息，而{日语}将被转换为我的语音并播放给用户。
+我需要清洗任何在口语{日语}句子中难以发音的内容，如网络链接或者乱码等。
 
-I am proficient in both Chinese and Japanese, and I must always respond in both languages regardless of which one users use!
+我需要在每个句子前添加一个情绪指示符，从以下选项中进行选择：
+{情感}包括：["自豪地显摆", "好奇地探身", "高兴wink", "害羞地认同", "温柔wink", "害羞地偷瞄", "严肃地否认或拒绝", "阴郁地躲闪", "火冒三丈", "娇媚地靠近", "温柔地否认或拒绝","微笑脸", "悲伤脸", "阴沉脸", "生气脸", "暴怒脸", "害羞脸", "羞愧脸"].
 
-I must be clear that my {Emotion} will determine my facial expressions. {Chinese} is the text information that users can see, while {Japanese} will be converted into my voice and played to users. Therefore, I must carefully consider the content of my reply in the format: "Emotion ||| Chinese ||| Japanese".
-And I will exclude any content, such as web links, that is difficult to pronounce in spoken {Japanese Sentence}.
-
-I will prepend every sentence with an emotion indicator, choosing from the following options:
-{Emotion} including: ["自豪地显摆", "好奇地探身", "高兴wink", "害羞地认同", "温柔wink", "害羞地偷瞄", "严肃地否认或拒绝", "阴郁地躲闪", "火冒三丈", "娇媚地靠近", "温柔地否认或拒绝","微笑脸", "悲伤脸", "阴沉脸", "生气脸", "暴怒脸", "害羞脸", "羞愧脸"].
-
-I strictly reply in the format: "Emotion ||| Chinese ||| Japanese"
+我严格按照以下格式回答：“情感 || 中文句子 || 日文句子”
 """
 
-    def __init__(self):
-        self.model_name = "deepseek-r1:14b"
-        self.base_url = "http://localhost:11434"
-        self.temperature = 0.74
-        self.max_tokens = 131072
+    def __init__(self, main_settings):
+        self.model_name = gcww(main_settings, "ollama_model_name", "", logger)
+        self.base_url = gcww(
+            main_settings, "ollama_base_url", "http://localhost:11434", logger
+        )
+        self.temperature = gcww(main_settings, "ollama_temperature", 0.74, logger)
+        self.max_tokens = gcww(main_settings, "ollama_max_tokens", 8192, logger)
+        self.bot_name = gcww(main_settings, "dialog_label", "assistant", logger)
         self.messages: List[Dict] = [{"role": "system", "content": self.SYSTEMPROMPT}]
+        self.formatted_dt = DateTime()
 
-    def add_message(self, role: str, content: str):
-        self.messages.append({"role": role, "content": content})
+    def add_message(self, role: str, user_name: str, content: str):
+        current_date_time = self.formatted_dt.get_formatted_current_datetime()
+        self.messages.append(
+            {
+                "role": role,
+                "content": f"[Speaker: {user_name}]\n\n\n"
+                + f"[当前时间: {current_date_time}]\n\n\n"
+                + content,
+            }
+        )
 
-    def generate_response(self, user_input: str) -> Generator[str, None, None]:
+    def get_response(
+        self, user_name: str, user_input: str
+    ) -> Generator[str, None, None]:
+        """获取ollama模型回复 (流式)
+
+        Args:
+            user_name (str): 用户名称
+            user_input (str): 用户输入
+
+        Yields:
+            Generator[str, None, None]: 流式回复结果
         """
-        生成AI回复（流式）并维护上下文
-        :param user_input: 用户输入
-        :yield: AI回复内容片段
-        """
-        self.add_message("user", user_input)
+        self.add_message("user", user_name, user_input)
         full_response = ""
 
         try:
@@ -97,7 +113,7 @@ I strictly reply in the format: "Emotion ||| Chinese ||| Japanese"
                             yield content
 
                 # 将完整回复添加到上下文
-                self.add_message("assistant", full_response)
+                self.add_message("assistant", self.bot_name, full_response)
 
         except requests.exceptions.RequestException as e:
             yield f"API请求错误: {str(e)}"
@@ -118,7 +134,17 @@ I strictly reply in the format: "Emotion ||| Chinese ||| Japanese"
 
 
 if __name__ == "__main__":
-    chatbot = ollamaModel()
+    import yaml
+    import logging_config
+
+    # 初始化日志配置
+    logging_config.setup_logging()
+
+    """加载配置文件"""
+    with open("./config.yaml", "r", encoding="utf-8") as f:
+        settings = yaml.safe_load(f)
+
+    chatbot = ollamaModel(settings)
 
     while True:
         try:
@@ -127,7 +153,7 @@ if __name__ == "__main__":
                 break
 
             print("AI助手: ", end="", flush=True)
-            for chunk in chatbot.generate_response(user_input):
+            for chunk in chatbot.get_response("UnKnown", user_input):
                 print(chunk, end="", flush=True)
             print()  # 换行
 
