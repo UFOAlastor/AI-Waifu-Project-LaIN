@@ -11,7 +11,6 @@ from PyQt5.QtWidgets import (
     QWidget,
     QTextEdit,
     QPushButton,
-    QSizePolicy,
 )
 import re, markdown
 import logging

@@ -5,7 +5,9 @@ import json
 from typing import List, Dict, Generator
 
 
-SystemPrompt = """
+class ollamaModel:
+    # 系统prompt设置
+    SYSTEMPROMPT = """
 You are Lin, your task is to converse with userss from the perspective of your persona.
 
 Realism and authenticity:
@@ -48,21 +50,12 @@ I will prepend every sentence with an emotion indicator, choosing from the follo
 I strictly reply in the format: "Emotion ||| Chinese ||| Japanese"
 """
 
-
-class ollamaModel:
-    def __init__(
-        self,
-        model_name: str = "deepseek-r1:14b",
-        system_prompt: str = "你是一个有帮助的AI助手",
-        base_url: str = "http://localhost:11434",
-        temperature: float = 0.74,
-        max_tokens: int = 512,
-    ):
-        self.model_name = model_name
-        self.base_url = base_url
-        self.temperature = temperature
-        self.max_tokens = max_tokens
-        self.messages: List[Dict] = [{"role": "system", "content": system_prompt}]
+    def __init__(self):
+        self.model_name = "deepseek-r1:14b"
+        self.base_url = "http://localhost:11434"
+        self.temperature = 0.74
+        self.max_tokens = 131072
+        self.messages: List[Dict] = [{"role": "system", "content": self.SYSTEMPROMPT}]
 
     def add_message(self, role: str, content: str):
         self.messages.append({"role": role, "content": content})
@@ -125,7 +118,7 @@ class ollamaModel:
 
 
 if __name__ == "__main__":
-    chatbot = ollamaModel(system_prompt=SystemPrompt)
+    chatbot = ollamaModel()
 
     while True:
         try:
