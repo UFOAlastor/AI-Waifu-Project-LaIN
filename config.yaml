@@ -56,6 +56,10 @@ tachie_default: "微笑" # 默认立绘
 tachie_opening: "高兴" # 开场时临时展现的表情
 tachie_suffix: "png" # 立绘图片格式 (后缀名)
 
+# 模型框架方案选取, 可选项: ["ollama", "letta"] (其中letta也是支持ollama的, 具体的区别请自行查询)
+# 这里单独拎出来一个ollama框架, 是因为后期想要拓展对mem0以及框架的接入; letta框架比较封闭了, 很难做优化
+model_frame_type: "ollama"
+
 # letta框架的agent_id设置
 letta_agent_id: "agent-92e23fd2-4fa4-4c8d-b975-d2f62f1182e1" # 填入你自己的agent_id, 详情参考letta文档: https://docs.letta.com/quickstart
 letta_server_ip: "localhost" # letta服务部署的地址 (默认本地地址, 可自行选配远程服务)
@@ -65,6 +69,10 @@ ollama_base_url: "http://localhost:11434" # ollama服务地址 (默认本地地�
 ollama_model_name: "deepseek-r1:14b"
 ollama_temperature: 0.74
 ollama_max_tokens: 131072 # 请根据选取的模型说明进行设定
+
+# 历史消息数据库 (配合ollama使用, letta已经集成了)
+history_db_path: "./dialog_history.db" # 数据库路径
+history_max_num: 2048 # 最大保存记录数 (不用过大, 毕竟模型输入上下文窗口大小有限)
 
 # vits语音生成设置
 vits_api_url: "http://localhost:23456/voice/vits" # vits模型API路径 (默认本地接口, 可自行选配远程服务)

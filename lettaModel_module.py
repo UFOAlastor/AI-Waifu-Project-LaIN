@@ -1,6 +1,6 @@
 # lettaModel_module.py
 
-import requests
+import requests, yaml
 import logging
 from logging_config import gcww
 
@@ -53,10 +53,40 @@ class LettaModel:
 
             # 确保响应是JSON格式
             if response.headers.get("Content-Type") == "application/json":
-                return response.json()  # 返回响应内容
+
+                if "error" in response:
+                    self.window.display_text(
+                        "对不起，发生了错误。请稍后再试。", is_non_user_input=True
+                    )
+                    return
+
+                # 查找第一个包含 'tool_call_message' 且 name = 'send_message' 类型的消息
+                tool_call_message = next(
+                    (
+                        msg
+                        for msg in response.get("messages", [])
+                        if msg.get("message_type") == "tool_call_message"
+                        and msg.get("tool_call", {}).get("name") == "send_message"
+                    ),
+                    None,
+                )
+
+                if tool_call_message:
+                    reply_text = tool_call_message.get("tool_call", {}).get(
+                        "arguments", ""
+                    )
+                    try:
+                        parsed_arguments = yaml.safe_load(reply_text)
+                        return str(
+                            parsed_arguments.get("message", "没有消息内容")
+                        )  # 返回响应内容
+                    except yaml.YAMLError as e:
+                        return "没有有效的回复"
+                else:
+                    return "没有有效的回复"
             else:
                 logger.debug("响应不是JSON格式")
-                return {"messages": [{"text": "返回内容格式错误"}]}
+                return "没有有效的回复"
         except requests.RequestException as e:
             logger.debug(f"请求失败: {e}")
-            return {"messages": [{"text": "请求失败，请稍后重试"}]}  # 返回默认失败消息
+            return "没有有效的回复"  # 返回默认失败消息

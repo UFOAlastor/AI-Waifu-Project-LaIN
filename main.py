@@ -4,7 +4,6 @@ import sys, yaml
 from PyQt5.QtCore import QThread, pyqtSignal, QTimer
 from PyQt5.QtWidgets import QApplication
 from ui_module import UIDisplay  # 导入界面类
-from lettaModel_module import LettaModel  # 导入模型类
 from replyParser_module import replyParser  # 导入回复内容解析器
 import logging, logging_config
 from logging_config import gcww
@@ -14,11 +13,15 @@ logging_config.setup_logging()
 # 获取根记录器
 logger = logging.getLogger()
 
+# 导入模型类
+from lettaModel_module import LettaModel
+from ollamaModel_module import ollamaModel
+
 
 class ChatModelWorker(QThread):
     """用于后台运行模型的线程"""
 
-    response_ready = pyqtSignal(dict)
+    response_ready = pyqtSignal(str)
 
     def __init__(self, model, user_name, input_text):
         super().__init__()
@@ -29,6 +32,7 @@ class ChatModelWorker(QThread):
     def run(self):
         try:
             response = self.model.get_response(self.user_name, self.input_text)
+            logger.debug(f"rsp: {response}")
             self.response_ready.emit(response)
         except Exception as e:
             logger.error(f"Error in model worker: {e}")
@@ -56,7 +60,12 @@ class MainApp:
         # UI界面初始化
         self.app = QApplication(sys.argv)
         self.window = UIDisplay(self.settings)  # 初始化图形界面实例
-        self.chat_model = LettaModel(self.settings)  # 初始化语言模型实例
+        # 模型框架选取
+        self.model_frame_type = gcww(self.settings, "model_frame_type", "letta", logger)
+        if self.model_frame_type == "letta":
+            self.chat_model = LettaModel(self.settings)
+        if self.model_frame_type == "ollama":
+            self.chat_model = ollamaModel(self.settings)
         # "思考中..."动态效果初始化
         self.typing_animation_timer = QTimer()
         self.typing_dots = ""
@@ -171,34 +180,7 @@ class MainApp:
         """
         self.stop_typing_animation()  # 停止动态省略号动画
 
-        if "error" in response:
-            self.window.display_text(
-                "对不起，发生了错误。请稍后再试。", is_non_user_input=True
-            )
-            return
-
-        # 查找第一个包含 'tool_call_message' 且 name = 'send_message' 类型的消息
-        tool_call_message = next(
-            (
-                msg
-                for msg in response.get("messages", [])
-                if msg.get("message_type") == "tool_call_message"
-                and msg.get("tool_call", {}).get("name") == "send_message"
-            ),
-            None,
-        )
-
-        if tool_call_message:
-            reply_text = tool_call_message.get("tool_call", {}).get("arguments", "")
-            try:
-                parsed_arguments = yaml.safe_load(reply_text)
-                final_message = self.parse_response(
-                    str(parsed_arguments.get("message", "没有消息内容"))
-                )
-            except yaml.YAMLError as e:
-                final_message = f"无法解析消息. 错误详情: {e}"
-        else:
-            final_message = "没有有效的回复"
+        final_message = self.parse_response(response)
 
         self.window.display_text(final_message, is_non_user_input=True)
 
