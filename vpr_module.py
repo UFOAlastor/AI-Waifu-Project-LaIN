@@ -242,9 +242,9 @@ if __name__ == "__main__":
     # voice_manager.list_voiceprint()
 
     # 注册新的声纹样本
-    # person_name = "Tor"
-    # voice_id = voice_manager.register_voiceprint(temp_frames, person_name)
-    # print(f"注册成功，声纹ID: {voice_id}")
+    person_name = "Tor"  # 改成你自己的名称, 记得要和prompt对齐, 这样模型才能识别是你
+    voice_id = voice_manager.register_voiceprint(temp_frames, person_name)
+    print(f"注册成功，声纹ID: {voice_id}")
 
     # 比对输入音频序列是否与库中的样本匹配
     # is_match = voice_manager.match_voiceprint(temp_frames)
