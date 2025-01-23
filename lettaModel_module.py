@@ -50,6 +50,9 @@ class LettaModel:
             logger.debug(f"响应状态码: {response.status_code}")
             logger.debug(f"响应内容: {response.text}")
 
+            if response.status_code != 200:
+                return f"请求异常, status code: {response.status_code}"
+
             if response.headers.get("Content-Type") == "application/json":
                 response_data = response.json()  # 解析JSON响应
 
@@ -72,3 +75,29 @@ class LettaModel:
         except requests.RequestException as e:
             logger.debug(f"请求失败: {e}")
             return f"请求失败: {e}"
+
+
+if __name__ == "__main__":
+    import yaml
+    import logging_config
+
+    # 初始化日志配置
+    logging_config.setup_logging()
+
+    """加载配置文件"""
+    with open("./config.yaml", "r", encoding="utf-8") as f:
+        settings = yaml.safe_load(f)
+
+    chatbot = LettaModel(settings)
+
+    while True:  # 非流式生成测试
+        try:
+            user_input = input("用户: ")
+            if user_input.lower() == "exit":
+                break
+
+            print("AI助手: ", end="", flush=True)
+            print(chatbot.get_response("Unknown", user_input), flush=True)
+
+        except KeyboardInterrupt:
+            break
