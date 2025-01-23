@@ -1,4 +1,4 @@
-# Project LaIN
+# AI Waifu Project: LaIN
 
 一个支持长期记忆, 表情动作, 语音识别, 语音输出, 声纹识别, 打断功能的AI Waifu.
 
@@ -10,13 +10,11 @@
 
 ## 项目介绍
 
-我个人的一个小demo, 并非想要做一个开箱即用的桌宠, 目前已经有很多其他成熟可用的项目.
+项目为个人的一个小demo, 并非想要做一个开箱即用的桌宠, 目前已经有很多其他成熟可用的项目值得选择.
 
-我关注的重点是如何让waifu有更加"类人"的表现, 能够真的让人倾注情感, 让人觉得这是一个可以谈心, 可以陪伴自己的存在.
+项目关注的重点是如何让waifu有更加"类人"的表现, 能够真的让人倾注情感, 让人觉得这是一个可以谈心, 可以陪伴自己的存在.
 
-目前可以看到以letta为代表的记忆框架, 能够简易地实现记忆能力, 但是letta依赖模型主动调用记忆接口, 表现效果并不稳定, 后期计划增加对mem0的支持.
-
-多模态也是实现"类人"表现的一种有效方案, 后续计划增加对多模态模型的接入.
+本项目的目标在于学习交流, 功能全部采用模块化设计, 每个功能模块都配置了独立测试, 并且所有代码添加了尽可能细致的注释, 便于理解.
 
 ## 功能介绍
 
@@ -70,4 +68,5 @@
 - [Artrajz/vits-simple-api: A simple VITS HTTP API, developed by extending Moegoe with additional features.](https://github.com/Artrajz/vits-simple-api)
 - [Arkueid/live2d-py: Live2D Library for Python (C++ Wrapper): Supports model loading, lip-sync and basic face rigging, precise click test.](https://github.com/Arkueid/live2d-py)
 - [ABexit/ASR-LLM-TTS: This is a speech interaction system built on an open-source model, integrating ASR, LLM, and TTS in sequence. The ASR model is SenceVoice, the LLM models are QWen2.5-0.5B/1.5B, and there are three TTS models: CosyVoice, Edge-TTS, and pyttsx3](https://github.com/ABexit/ASR-LLM-TTS)
+- [hiyouga/ChatNVL-Towards-Visual-Novel-ChatBot](https://github.com/hiyouga/ChatNVL-Towards-Visual-Novel-ChatBot)
 - [Zao-chen/ZcChat: 一个有长期记忆、表情动作立绘显示、立绘动画、语音合成、语音唤醒、直接对话和打断的ai桌宠](https://github.com/Zao-chen/ZcChat?tab=readme-ov-file)
