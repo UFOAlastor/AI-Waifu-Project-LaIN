@@ -3,6 +3,9 @@ window_width: 600
 window_height: 800
 window_always_on_top: true # 设置窗口始终保持顶置
 
+# 数据库路径
+database_dir: "./database" # 数据库路径
+
 # 对话框(dialog)位置和大小设置 (直接留空会根据window尺寸自动设置)
 # dialog_x: 0 # 对话框左上角X轴位置 (原点位于窗口左上角, X轴向右, Y轴向下)
 # dialog_y: 400 # 对话框Y轴位置
@@ -71,7 +74,6 @@ ollama_temperature: 0.74
 ollama_max_tokens: 131072 # 请根据选取的模型说明进行设定
 
 # 历史消息数据库 (配合ollama使用, letta已经集成了)
-history_db_path: "./dialog_history.db" # 数据库路径
 history_max_num: 2048 # 最大保存记录数 (不用过大, 毕竟模型输入上下文窗口大小有限)
 
 # vits语音生成设置
@@ -86,7 +88,6 @@ asr_webrtc_aec: false # 是否开启回声消除功能 (undo, 此项不可修改
 asr_auto_send_silence_time: 2.7 # 持续静音asr_auto_send_silence_time时间后自动发送 (设置为-1则不自动发送)
 
 # 声纹检测
-vpr_match_only: ["tor", "tor的妈妈"] # 对特定群体声纹开启语音识别 (需要关闭可以将List留空或填None, 关闭后匹配所有用户-->会导致无法打断语音, 因为还没实现回声消除XD)
-vpr_db_dir: "voice_print_db" # 声纹数据库文件夹路径 (相对路径, 会自动创建)
+vpr_match_only: ["Tor"] # 对特定群体声纹开启语音识别 (需要关闭可以将List留空或填None, 关闭后匹配所有用户-->会导致无法打断语音, 因为还没实现回声消除XD)
 vpr_model: "damo/speech_campplus_sv_zh-cn_16k-common" # 使用的声纹识别模型路径 (不用修改, 会自动下载)
 vpr_similarity_threshold: 0.7 # 认可声纹匹配的精确度阈值

@@ -195,7 +195,7 @@ class UIDisplay(QMainWindow, MicButton):
         self.recognizer.recording_ended_signal.connect(self.send_text)
 
         # 用户名称, 默认未知
-        self.user_name = "UnKnown"
+        self.user_name = "Unknown"
 
         # 打字机效果显示采用计时器实现
         self.typing_timer = QTimer(self)
@@ -287,7 +287,7 @@ class UIDisplay(QMainWindow, MicButton):
                 return True  # 表示事件已处理，不再传播
             elif key_event.key() == Qt.Key_Return:
                 # 其他情况下触发发送文本的功能
-                self.user_name = "UnKnown"  # 文本发送, 无法识别用户身份
+                self.user_name = "Unknown"  # 文本发送, 无法识别用户身份
                 self.send_text()
                 return True  # 表示事件已处理，不再传播
         return super().eventFilter(obj, event)

@@ -12,7 +12,7 @@ from logging_config import gcww
 # 配置日志
 logger = logging.getLogger("asr_module")
 
-from vpr_module import VoicePrintRecongnition
+from vpr_module import VoicePrintRecognition
 
 
 class SpeechRecognition(QObject):
@@ -39,7 +39,7 @@ class SpeechRecognition(QObject):
         )
 
         # 创建声纹识别工具对象
-        self.vpr = VoicePrintRecongnition(main_settings)
+        self.vpr = VoicePrintRecognition(main_settings)
 
         # 配置录音参数
         self.FORMAT = pyaudio.paInt16

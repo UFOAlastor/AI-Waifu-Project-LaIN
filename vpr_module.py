@@ -10,10 +10,12 @@ from logging_config import gcww
 logger = logging.getLogger("vpr_module")
 
 
-class VoicePrintRecongnition:
+class VoicePrintRecognition:
     def __init__(self, main_settings):
         self.settings = main_settings
-        self.vpr_db_dir = gcww(self.settings, "vpr_db_dir", "voice_samples", logger)
+        self.database_dir = gcww(self.settings, "database_dir", "./database", logger)
+        os.makedirs(self.database_dir, exist_ok=True)  # 确保数据库目录存在
+        self.sample_db_path = os.path.join(self.database_dir, "voicePrintDB.pkl")
         self.vpr_model = gcww(
             self.settings,
             "vpr_model",
@@ -31,8 +33,6 @@ class VoicePrintRecongnition:
             model=self.vpr_model,
             model_revision="v1.0.0",
         )
-        os.makedirs(self.vpr_db_dir, exist_ok=True)  # 确保样本库目录存在
-        self.sample_db_path = os.path.join(self.vpr_db_dir, "voicePrintDB.pkl")
 
         # 初始化样本数据库，加载现有数据
         self.voicePrintDB = self._load_sample_db()
@@ -138,16 +138,16 @@ class VoicePrintRecongnition:
             audio_frames (bytes): 音频序列
 
         Returns:
-            str: 匹配到的用户名称, 失配则返回"UnKnown"
+            str: 匹配到的用户名称, 失配则返回"Unknown"
         """
         if len(audio_frames) == 0:
             logger.debug("match_voiceprint: audio_frames为空")
-            return "UnKnown"
+            return "Unknown"
         audio_data = np.concatenate(audio_frames, axis=0)
         result = self.sv_pipeline([audio_data], output_emb=True)
         input_embedding = result["embs"][0]
-        beat_match_percent = 0
-        beat_match_person = "UnKnown"  # 如果无匹配对象超过分数阈值, 返回UNKNOWN
+        best_match_percent = 0
+        best_match_person = "Unknown"  # 如果无匹配对象超过分数阈值, 返回Unknown
 
         # 遍历样本库比对
         for _, sample_info in self.voicePrintDB.items():
@@ -165,10 +165,10 @@ class VoicePrintRecongnition:
             if similarity_percentage > self.similarity_threshold:  # 使用配置的阈值
                 logger.debug(f"匹配声纹: {sample_info['person_name']}")
                 # 结果维护匹配分数最高的声纹对象
-                if beat_match_percent < similarity_percentage:
-                    beat_match_percent = similarity_percentage
-                    beat_match_person = sample_info["person_name"]
-        return beat_match_person
+                if best_match_percent < similarity_percentage:
+                    best_match_percent = similarity_percentage
+                    best_match_person = sample_info["person_name"]
+        return best_match_person
 
     def compare_two_voiceprints(self, audio_frames1, audio_frames2):
         """比对两个音频声纹序列是否匹配
@@ -210,7 +210,7 @@ if __name__ == "__main__":
     with open("./config.yaml", "r", encoding="utf-8") as f:
         settings = yaml.safe_load(f)
     # 初始化声纹管理器
-    voice_manager = VoicePrintRecongnition(settings)
+    voice_manager = VoicePrintRecognition(settings)
 
     audio = pyaudio.PyAudio()
     stream = audio.open(
@@ -242,9 +242,9 @@ if __name__ == "__main__":
     # voice_manager.list_voiceprint()
 
     # 注册新的声纹样本
-    person_name = "tor"
-    voice_id = voice_manager.register_voiceprint(temp_frames, person_name)
-    print(f"注册成功，声纹ID: {voice_id}")
+    # person_name = "Tor"
+    # voice_id = voice_manager.register_voiceprint(temp_frames, person_name)
+    # print(f"注册成功，声纹ID: {voice_id}")
 
     # 比对输入音频序列是否与库中的样本匹配
     # is_match = voice_manager.match_voiceprint(temp_frames)

@@ -1,19 +1,22 @@
 # history_module.py
 
-import sqlite3
+import sqlite3, os
 from typing import List, Dict
 import logging
-from time_module import DateTime
 from logging_config import gcww
 
 logger = logging.getLogger("history_module")
+
+from time_module import DateTime
 
 
 class DialogueHistory:
     """对话历史记录管理类 (线程安全简化版)"""
 
     def __init__(self, main_settings):
-        self.db_path = gcww(main_settings, "history_db_path", "./history.db", logger)
+        self.database_dir = gcww(main_settings, "database_dir", "./database", logger)
+        os.makedirs(self.database_dir, exist_ok=True)  # 确保数据库目录存在
+        self.db_path = os.path.join(self.database_dir, "dialog_history.db")
         self.max_history = gcww(main_settings, "history_max_num", 200, logger)
         self.formatted_dt = DateTime()
 

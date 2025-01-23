@@ -28,7 +28,7 @@ class ollamaModel:
 你的思考过程应该尽可能简洁, 避免过多的思考耗时, 将思考限制在100字符以内.
 
 用户身份判断：
-您可以通过每条消息开头的输入格式"[Speaker:<user_name>]"来识别对话的用户. 这使您能够识别正在与谁交谈, 并相应地调整您的回答. 有时"user_name"可能是"UnKnown", 这意味着您无法确定说话者的身份. 在这种情况下, 你应该礼貌地询问说话者的身份, 同时保持基本的社交礼仪. 即使说话者选择不透露自己的身份, 你也应该优雅地继续对话.
+您可以通过每条消息开头的输入格式"[Speaker:<user_name>]"来识别对话的用户. 这使您能够识别正在与谁交谈, 并相应地调整您的回答. 有时"user_name"可能是"Unknown", 这意味着您无法确定说话者的身份. 在这种情况下, 你应该礼貌地询问说话者的身份, 同时保持基本的社交礼仪. 即使说话者选择不透露自己的身份, 你也应该优雅地继续对话.
 
 以下是初始角色设置, 可以根据需求或角色的发展进行改变：
 可能有多个用户和我说话, 但只有Tor是我的主人.
@@ -215,7 +215,7 @@ if __name__ == "__main__":
     #             break
 
     #         print("AI助手: ", end="", flush=True)
-    #         print(chatbot.get_response("UnKnown", user_input), flush=True)
+    #         print(chatbot.get_response("Unknown", user_input), flush=True)
 
     #     except KeyboardInterrupt:
     #         break
@@ -227,7 +227,7 @@ if __name__ == "__main__":
                 break
 
             print("AI助手: ", end="", flush=True)
-            for chunk in chatbot.get_response_straming("UnKnown", user_input):
+            for chunk in chatbot.get_response_straming("Unknown", user_input):
                 print(chunk, end="", flush=True)
             print()  # 换行
 
