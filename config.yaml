@@ -61,7 +61,7 @@ tachie_suffix: "png" # 立绘图片格式 (后缀名)
 
 # 模型框架方案选取, 可选项: ["ollama", "letta"] (其中letta也是支持ollama的, 具体的区别请自行查询)
 # 这里单独拎出来一个ollama框架, 是因为后期想要拓展对mem0以及框架的接入; letta框架比较封闭了, 很难做优化
-model_frame_type: "letta"
+model_frame_type: "ollama"
 
 # letta框架的agent_id设置
 letta_agent_id: "agent-34974412-9c64-44b9-a795-554fc5234987" # 填入你自己的agent_id, 详情参考letta文档: https://docs.letta.com/quickstart

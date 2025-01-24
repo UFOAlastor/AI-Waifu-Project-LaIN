@@ -3,7 +3,6 @@
 import sys, yaml
 from PyQt5.QtCore import QThread, pyqtSignal, QTimer
 from PyQt5.QtWidgets import QApplication
-from ui_module import UIDisplay  # 导入界面类
 from replyParser_module import replyParser  # 导入回复内容解析器
 import logging, logging_config
 from logging_config import gcww
@@ -13,9 +12,11 @@ logging_config.setup_logging()
 # 获取根记录器
 logger = logging.getLogger()
 
-# 导入模型类
-from lettaModel_module import LettaModel
-from ollamaModel_module import ollamaModel
+# 导入模块类
+from ui_module import UIDisplay  # 界面
+from lettaModel_module import LettaModel  # letta框架
+from ollamaModel_module import ollamaModel  # ollama框架
+from mem0_module import memModule  # 记忆模块
 
 
 class ChatModelWorker(QThread):
@@ -66,6 +67,8 @@ class MainApp:
             self.chat_model = LettaModel(self.settings)
         if self.model_frame_type == "ollama":
             self.chat_model = ollamaModel(self.settings)
+        # 记忆框架初始化
+        self.mem_module = memModule()  # TODO 添加setting传递
         # "思考中..."动态效果初始化
         self.typing_animation_timer = QTimer()
         self.typing_dots = ""
@@ -144,7 +147,8 @@ class MainApp:
         if input_text:
             # 显示动态省略号动画
             self.start_typing_animation()
-
+            # ATTENTION 相关记忆召回
+            input_text = self.mem_module.recall_mem(user_name, input_text) + input_text
             # 启动后台线程调用模型
             self.worker = ChatModelWorker(self.chat_model, user_name, input_text)
             self.worker.response_ready.connect(self.on_model_response)
@@ -179,10 +183,9 @@ class MainApp:
             response (str): 模型原始回复内容
         """
         self.stop_typing_animation()  # 停止动态省略号动画
-
         final_message = self.parse_response(response)
-
         self.window.display_text(final_message, is_non_user_input=True)
+        self.mem_module.record_mem(final_message)  # ATTENTION 对话进行记忆存储
 
     def parse_response(self, msg):
         """对模型回复{表情}|||{中文}|||{日语}进行解析
