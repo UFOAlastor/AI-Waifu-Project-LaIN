@@ -24,20 +24,37 @@ class ChatModelWorker(QThread):
 
     response_ready = pyqtSignal(str)
 
-    def __init__(self, model, user_name, input_text):
+    def __init__(self, model, mem_module, user_name, input_text):
         super().__init__()
         self.model = model
+        self.mem_module = mem_module
         self.user_name = user_name
         self.input_text = input_text
 
     def run(self):
         try:
+            self.input_text = (  # ATTENTION 相关记忆召回
+                self.mem_module.recall_mem(self.user_name, self.input_text)
+                + self.input_text
+            )
             response = self.model.get_response(self.user_name, self.input_text)
             logger.debug(f"rsp: {response}")
             self.response_ready.emit(response)
         except Exception as e:
             logger.error(f"Error in model worker: {e}")
             self.response_ready.emit({"error": str(e)})
+
+
+class MemoryRecordWorker(QThread):
+    """记忆记录非阻塞实现"""
+
+    def __init__(self, mem_module, message):
+        super().__init__()
+        self.mem_module = mem_module
+        self.message = message
+
+    def run(self):
+        self.mem_module.record_mem(self.message)
 
 
 def load_settings(file_path="./config.yaml"):
@@ -147,10 +164,8 @@ class MainApp:
         if input_text:
             # 显示动态省略号动画
             self.start_typing_animation()
-            # ATTENTION 相关记忆召回
-            input_text = self.mem_module.recall_mem(user_name, input_text) + input_text
             # 启动后台线程调用模型
-            self.worker = ChatModelWorker(self.chat_model, user_name, input_text)
+            self.worker = ChatModelWorker(self.chat_model, self.mem_module, user_name, input_text)
             self.worker.response_ready.connect(self.on_model_response)
             self.worker.start()
 
@@ -185,7 +200,9 @@ class MainApp:
         self.stop_typing_animation()  # 停止动态省略号动画
         final_message = self.parse_response(response)
         self.window.display_text(final_message, is_non_user_input=True)
-        self.mem_module.record_mem(final_message)  # ATTENTION 对话进行记忆存储
+        # ATTENTION 非阻塞的记忆记录
+        self.mem_record_worker = MemoryRecordWorker(self.mem_module, final_message)
+        self.mem_record_worker.start()
 
     def parse_response(self, msg):
         """对模型回复{表情}|||{中文}|||{日语}进行解析
