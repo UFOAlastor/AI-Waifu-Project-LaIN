@@ -16,6 +16,7 @@ logger = logging.getLogger()
 from ui_module import UIDisplay  # 界面
 from lettaModel_module import LettaModel  # letta框架
 from ollamaModel_module import ollamaModel  # ollama框架
+from deepseek_module import deepseekModel  # deepseek官方API
 from mem0_module import memModule  # 记忆模块
 
 
@@ -82,8 +83,11 @@ class MainApp:
         self.model_frame_type = gcww(self.settings, "model_frame_type", "letta", logger)
         if self.model_frame_type == "letta":
             self.chat_model = LettaModel(self.settings)
-        if self.model_frame_type == "ollama":
+        elif self.model_frame_type == "ollama":
             self.chat_model = ollamaModel(self.settings)
+            self.chat_model = LettaModel(self.settings)
+        elif self.model_frame_type == "deepseek":
+            self.chat_model = deepseekModel(self.settings)
         # 记忆框架初始化
         self.mem_module = memModule()  # TODO 添加setting传递
         # "思考中..."动态效果初始化
