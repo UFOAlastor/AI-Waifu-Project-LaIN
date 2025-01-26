@@ -57,26 +57,27 @@ class ollamaModel:
         self.temperature = gcww(main_settings, "ollama_temperature", 0.74, logger)
         self.max_tokens = gcww(main_settings, "ollama_max_tokens", 8192, logger)
         self.bot_name = gcww(main_settings, "dialog_label", "assistant", logger)
-        self.messages: List[Dict] = [{"role": "system", "content": self.SYSTEMPROMPT}]
-        self.formatted_dt = DateTime()
-        # 历史记录管理器
-        self.history = DialogueHistory(main_settings)
-        # 加载历史记录
         self.messages = [{"role": "system", "content": self.SYSTEMPROMPT}]
+        self.formatted_dt = DateTime()
+        # 加载历史记录
+        self.history = DialogueHistory(main_settings)
         self.messages += self.history.load_history_to_messages()
 
     def add_message(self, role: str, user_name: str, content: str):
         current_date_time = self.formatted_dt.get_formatted_current_datetime()
-        formatted_content = (
-            f"[Speaker: {user_name}]\n\n\n"
-            + f"[当前时间: {current_date_time}]\n\n\n"
-            + content
-        )
+        if role == "user":
+            formatted_content = (
+                f"[Speaker: {user_name}]\n"
+                + f"[当前时间: {current_date_time}]\n"
+                + content
+            )
+        else:
+            formatted_content = content
         # 添加到内存
         self.messages.append({"role": role, "content": formatted_content})
         # 持久化到数据库(不保存系统消息）
         if role != "system":
-            self.history.add_record(role, user_name, content)
+            self.history.add_record(role, user_name, formatted_content)
 
     def get_response_straming(
         self, user_name: str, user_input: str

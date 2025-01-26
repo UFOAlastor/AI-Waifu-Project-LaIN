@@ -131,9 +131,7 @@ class DialogueHistory:
         return [
             {
                 "role": r["role"],
-                "content": f"[Speaker: {r['user_name']}]\n\n\n"
-                + f"[当前时间: {r['timestamp']}]\n\n\n"
-                + r["content"],
+                "content": r["content"],
             }
             for r in reversed(records)
         ]

@@ -34,10 +34,11 @@ class ChatModelWorker(QThread):
 
     def run(self):
         try:
-            self.input_text = (  # ATTENTION 相关记忆召回
-                self.mem_module.recall_mem(self.user_name, self.input_text)
-                + self.input_text
-            )
+            if self.mem_module != None:  # 仅当mem0模块对象存在时才处理传入文本
+                self.input_text = (  # ATTENTION 相关记忆召回
+                    self.mem_module.recall_mem(self.user_name, self.input_text)
+                    + self.input_text
+                )
             response = self.model.get_response(self.user_name, self.input_text)
             logger.debug(f"rsp: {response}")
             self.response_ready.emit(response)
@@ -89,7 +90,9 @@ class MainApp:
         elif self.model_frame_type == "deepseek":
             self.chat_model = deepseekModel(self.settings)
         # 记忆框架初始化
-        self.mem_module = memModule()  # TODO 添加setting传递
+        self.mem_module_open = gcww(self.settings, "mem0_switch", True, logger)
+        if self.mem_module_open:  # 仅当开启mem0模块时才创建该对象
+            self.mem_module = memModule(self.settings)  # TODO 添加setting传递
         # "思考中..."动态效果初始化
         self.typing_animation_timer = QTimer()
         self.typing_dots = ""
@@ -169,7 +172,14 @@ class MainApp:
             # 显示动态省略号动画
             self.start_typing_animation()
             # 启动后台线程调用模型
-            self.worker = ChatModelWorker(self.chat_model, self.mem_module, user_name, input_text)
+            if self.mem_module_open:
+                self.worker = ChatModelWorker(
+                    self.chat_model, self.mem_module, user_name, input_text
+                )
+            else:  # 没有启用mem0模块, 传入None
+                self.worker = ChatModelWorker(
+                    self.chat_model, None, user_name, input_text
+                )
             self.worker.response_ready.connect(self.on_model_response)
             self.worker.start()
 
@@ -204,9 +214,10 @@ class MainApp:
         self.stop_typing_animation()  # 停止动态省略号动画
         final_message = self.parse_response(response)
         self.window.display_text(final_message, is_non_user_input=True)
-        # ATTENTION 非阻塞的记忆记录
-        self.mem_record_worker = MemoryRecordWorker(self.mem_module, final_message)
-        self.mem_record_worker.start()
+        if self.mem_module_open:  # 判断是否开启mem0模块
+            # ATTENTION 非阻塞的记忆记录
+            self.mem_record_worker = MemoryRecordWorker(self.mem_module, final_message)
+            self.mem_record_worker.start()
 
     def parse_response(self, msg):
         """对模型回复{表情}|||{中文}|||{日语}进行解析

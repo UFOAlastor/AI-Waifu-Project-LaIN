@@ -75,12 +75,17 @@ ollama_temperature: 0.74
 ollama_max_tokens: 131072 # 请根据选取的模型说明进行设定
 
 # deepseek官方API模型设置
-deepseek_api_key: "sk-xxx" # 替换为你的api key
+deepseek_api_key: "sk-123b0aa93d7f4ff1ae614666d84ec6e7" # 替换为你的api key
 deepseek_model: "deepseek-chat" # 可选项["deepseek-reasoner", "deepseek-chat"], 分别对应R1和V3模型
-deepseek_temperature: 0.6 # 模型温度
+deepseek_temperature: 1.3 # 模型温度, 参考官方文档: https://api-docs.deepseek.com/zh-cn/quick_start/parameter_settings
 
-# 历史消息数据库 (配合ollama使用, letta已经集成了)
-history_max_num: 2048 # 最大保存记录数 (不用过大, 毕竟模型输入上下文窗口大小有限)
+# 历史消息数据库 (配合ollama或deepseek官方API时使用, letta已经集成了)
+history_max_num: 100 # 最大保存记录数 (不用过大, 毕竟模型输入上下文窗口大小有限)
+
+# mem0记忆系统 (letta框架实现的记忆操作依赖于模型主动调用, 灵活性不足, 所以额外引入mem0进行效果实验)
+mem0_switch: true # 是否开启mem0记忆框架 (mem0会引入额外的推理开销, 但是比letta更加灵活, 并可与letta同时启用)
+mem0_llm_provider: "deepseek" # 本项目仅实现deepseek官方API和ollama本地部署两种, 仅供参考, 更多配置方案请参考mem0官方文档: https://docs.mem0.ai/components/llms/overview
+# mem0ai具体的配置信息较为复杂, 请自行修改./mem0_module.py文件中Mem0Client类的__init__部分
 
 # vits语音生成设置
 vits_api_url: "http://localhost:23456/voice/vits" # vits模型API路径 (默认本地接口, 可自行选配远程服务)

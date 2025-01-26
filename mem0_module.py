@@ -10,7 +10,38 @@ logger = logging.getLogger("modle_module")
 
 
 class Mem0Client:
-    def __init__(self):
+    def __init__(self, main_settings):
+        _llm_provider = gcww(main_settings, "mem0_llm_provider", "deepseek", logger)
+        # 采用ollama本地部署方案的配置格式如下, 仅供参考
+        _ollama_provider = {
+            "provider": "ollama",
+            "config": {
+                "model": "qwen2.5:7b",
+                "temperature": 0,
+                "max_tokens": 131072,
+                "ollama_base_url": "http://localhost:11434",  # Ensure this URL is correct
+            },
+        }
+        # 此处为方便, 直接调用了配置文件里的deepseek相关设置, 请根据个人需求进行调整
+        _dp_api_key = gcww(main_settings, "deepseek_api_key", "", logger)
+        _deepseep_provider = {
+            "provider": "deepseek",
+            "config": {
+                "model": "deepseek-chat",  # 可选项["deepseek-reasoner", "deepseek-chat"], 分别对应R1和V3模型
+                "deepseek_base_url": "https://api.deepseek.com",
+                "api_key": _dp_api_key,  # 请填写你的deepseek官方API key ,可参考https://api-docs.deepseek.com/zh-cn/
+                "temperature": 1.0,
+                "max_tokens": 8192,
+                "top_p": 1.0,
+            },
+        }
+        # 将_llm_provider赋值为对应的dict
+        if _llm_provider == "ollama":
+            _llm_provider = _ollama_provider
+        elif _llm_provider == "deepseek":
+            _llm_provider = _deepseep_provider
+        else:
+            _llm_provider = {}
         config = {
             "vector_store": {
                 "provider": "qdrant",
@@ -21,15 +52,7 @@ class Mem0Client:
                     "embedding_model_dims": 768,  # Change this according to your embedder's dimensions
                 },
             },
-            "llm": {
-                "provider": "ollama",
-                "config": {
-                    "model": "qwen2.5:7b",
-                    "temperature": 0,
-                    "max_tokens": 131072,
-                    "ollama_base_url": "http://localhost:11434",  # Ensure this URL is correct
-                },
-            },
+            "llm": _llm_provider,
             "embedder": {
                 "provider": "ollama",
                 "config": {
@@ -39,7 +62,6 @@ class Mem0Client:
                 },
             },
         }
-
         self.memory_client = Memory.from_config(config)
 
     def add_mem(self, user_text: str, bot_text: str, user_id: str = "Unknown"):
@@ -62,9 +84,8 @@ class Mem0Client:
 
 
 class memModule(Mem0Client):
-    def __init__(self):
-        super().__init__()
-        self.client = Mem0Client()
+    def __init__(self, main_settings):
+        super().__init__(main_settings)
         self.pre_user_name = "Unknown"
         self.pre_user_content = ""
 
@@ -134,8 +155,12 @@ class memModule(Mem0Client):
         mem_entrys = ""
         for mem_dict in mem_list:
             mem_entrys += "\n" + self._format_memory_entry(mem_dict)
-        result = mem_prompt + mem_entrys + "\n\n"
-        logger.debug(f"召回记忆: {result}")
+        if mem_entrys == "":
+            result = ""
+            logger.debug("无召回记忆")
+        else:
+            result = mem_prompt + mem_entrys + "\n\n"
+            logger.debug(f"召回记忆: {result}")
         return result
 
     def record_mem(self, bot_rsp_text: str):
@@ -162,8 +187,6 @@ if __name__ == "__main__":
     with open("./config.yaml", "r", encoding="utf-8") as f:
         settings = yaml.safe_load(f)
 
-    client = memModule()
+    client = memModule(settings)
 
-    print(f"\n记忆召回: \n{client.recall_mem('zzr', '有什么水果推荐吗')}\n")
-
-    client.record_mem("我知道你喜欢吃香蕉")
+    print(f"\n记忆召回: \n{client.get_all_mem('Tor')}\n")
