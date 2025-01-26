@@ -1,5 +1,5 @@
 import re
-from typing import List, Dict, Generator
+from typing import Generator
 from openai import OpenAI
 import logging
 from logging_config import gcww
@@ -49,14 +49,15 @@ class deepseekModel:
 
     def __init__(self, main_settings):
         # 初始化客户端
+        _api_key = gcww(main_settings, "deepseek_api_key", "填入自己的api key", logger)
         self.client = OpenAI(
-            api_key="sk-123b0aa93d7f4ff1ae614666d84ec6e7",  # 替换为你的API Key
+            api_key=_api_key,
             base_url="https://api.deepseek.com",
         )
         self.bot_name = gcww(main_settings, "dialog_label", "assistant", logger)
+        self.model = gcww(main_settings, "deepseek_model", "deepseek-chat", logger)
+        self.temperature = gcww(main_settings, "deepseek_temperature", 0.0, logger)
         self.messages = [{"role": "system", "content": self.SYSTEMPROMPT}]
-        self.model = "deepseek-reasoner"
-        self.temperature = 0.7
         # 初始化时间工具
         self.formatted_dt = DateTime()
         # 历史记录管理器

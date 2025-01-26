@@ -74,6 +74,11 @@ ollama_model_name: "deepseek-r1:14b"
 ollama_temperature: 0.74
 ollama_max_tokens: 131072 # 请根据选取的模型说明进行设定
 
+# deepseek官方API模型设置
+deepseek_api_key: "sk-xxx" # 替换为你的api key
+deepseek_model: "deepseek-chat" # 可选项["deepseek-reasoner", "deepseek-chat"], 分别对应R1和V3模型
+deepseek_temperature: 0.6 # 模型温度
+
 # 历史消息数据库 (配合ollama使用, letta已经集成了)
 history_max_num: 2048 # 最大保存记录数 (不用过大, 毕竟模型输入上下文窗口大小有限)
 
