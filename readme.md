@@ -18,22 +18,32 @@
 
 ## 功能介绍
 
-- 拥有长期记忆 (基于letta框架实现)
+- 拥有长期记忆
+
+  - 可选letta框架, 上手简单, 部署容易
+  - 可选mem0框架, 更高灵活度, 部署较复杂
 - 表情动作显示
+
   - 立绘显示方案: 支持自动表情切换
   - live2d模型显示方案: 支持自动表情与动作切换, 口型同步
   - 原理: 利用prompt规范模型输出为"情感指示符 ||| 中文回复 ||| 日文翻译"结构, 正则解析出"情感指示符"映射到表情或动作上, 想法参考[Zao-chen/ZcChat](https://github.com/Zao-chen/ZcChat?tab=readme-ov-file)
 - 语音识别输入
+
   - 说话人情感识别(😊高兴, 😡生气/兴奋, 😔悲伤)
   - 背景环境音识别(😀笑声, 🎼音乐, 👏掌声, 🤧咳嗽&喷嚏, 😭哭声)
 - 语音合成输出
+
   - 角色显示选择live2d模型支持口型同步
 - 声纹识别
+
   - 可配置限定用户群体语音识别
   - 说话人身份识别功能 (ps: 可配置模型prompt以登记主人身份)
 - 多种LLM支持
+
   - 可选基于letta框架, letta框架原生支持多种LLM
   - 可选基于ollama框架, ollama允许用户简易地自行部署多种LLM
+  - 可选DeepSeek官方API
+- 本地历史记录
 
 ## 使用说明
 
@@ -47,7 +57,8 @@
 4. 模型框架部署:
    1. 默认建议采用[letta](https://github.com/letta-ai/letta)框架, 具有记忆能力, 请参考官方指引搭建本地服务 (支持docker部署)
       1. letta的prompt配置请参考prompt_sample.md文件, 本项目表情切换功能依赖prompt实现.
-   2. 也支持[Ollama](https://ollama.com/), 请参考官网指引安装并部署本地服务 (支持docker部署)
+   2. 支持[Ollama](https://ollama.com/), 请参考官网指引安装并部署本地服务 (支持docker部署)
+   3. 支持DeepSeek官方API, 请参考[官方指引](https://api-docs.deepseek.com/zh-cn/)创建API KEY
 5. 语音生成服务:
    1. [vits-simple-api](https://github.com/Artrajz/vits-simple-api/blob/main/README_zh.md), 请参考vits-simple官方指引进行配置 (支持docker部署)
    2. 丛雨音色模型: https://github.com/YuzhidaOfficial/yuzhidaofficial.github.io/releases/download/Murasame/Murasame.Vits.zip
