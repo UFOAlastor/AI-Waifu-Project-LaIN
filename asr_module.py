@@ -31,7 +31,7 @@ class SpeechRecognition(QObject):
         self.settings = main_settings
         self._is_running = False
         self.asr_vad_mode = gcww(self.settings, "asr_vad_mode", 2, logger)
-        self.asr_webrtc_aec = gcww( # UNDO AEC回声剔除
+        self.asr_webrtc_aec = gcww(  # UNDO AEC回声剔除
             self.settings, "asr_webrtc_aec", False, logger
         )
         self.asr_auto_send_silence_time = gcww(
@@ -128,9 +128,13 @@ class SpeechRecognition(QObject):
         处理音频队列中的数据, 按frame_window_ms进行检测, 并根据检测结果处理静默时长. (音频消费者)
         """
         temp_frames = []
-        chunk_duration_ms = 30  # 每个检测段的持续时间
-        frame_window_ms = 300  # 检测时间段
+        chunk_duration_ms = 20  # 每个检测段的持续时间
+        frame_window_ms = 200  # 检测时间段
         frames_per_window = frame_window_ms // chunk_duration_ms  # 每个时间段的帧数
+
+        # 定义累积语音的时长阈值
+        precheck_duration_s = 0.6  # 快速声纹预检的时长 (秒)
+        full_duration_s = 1.8  # 精确声纹验证的时长 (秒)
 
         while self._is_running:
             try:
@@ -153,14 +157,39 @@ class SpeechRecognition(QObject):
 
                     if is_active:
                         self.audio_buffer.append(merged_frames)
-                        if (  # 如果设置了仅识别特定用户, 判断声纹是否匹配指定用户
-                            self.vpr.vpr_match_only == None
-                            or not any(self.vpr.vpr_match_only)
-                            or self.vpr.match_voiceprint(self.audio_buffer)
-                            in self.vpr.vpr_match_only
+                        self.detect_speech_signal.emit(self._is_running)
+                        self.silence_timer = 0
+                        # 累积到precheck_duration_s时进行快速声纹预检
+                        if (
+                            len(self.audio_buffer) * self.CHUNK
+                            >= self.RATE * precheck_duration_s
                         ):
-                            self.detect_speech_signal.emit(self._is_running)
-                            self.silence_timer = 0
+                            temp_user = self.vpr.match_voiceprint(self.audio_buffer)
+                            if (  # 如果设置了仅识别特定用户, 判断声纹是否匹配指定用户
+                                self.vpr.vpr_match_only == None
+                                or not any(self.vpr.vpr_match_only)
+                                or temp_user in self.vpr.vpr_match_only
+                            ):
+                                # 继续累积到full_duration_s进行精确声纹验证
+                                if (
+                                    len(self.audio_buffer) * self.CHUNK
+                                    >= self.RATE * full_duration_s
+                                ):
+                                    # 精确声纹验证
+                                    final_user = self.vpr.match_voiceprint(
+                                        self.audio_buffer
+                                    )
+                                    if final_user == temp_user:  # 确认用户
+                                        self.audio_transcribe(
+                                            final_user, self.audio_buffer
+                                        )
+                                        self.audio_buffer = []  # 清空缓存
+                                    else:
+                                        logger.info("声纹验证失败，丢弃缓存")
+                                        self.audio_buffer = []  # 清空缓存
+                            else:
+                                logger.info("声纹预检不匹配，丢弃缓存")
+                                self.audio_buffer = []  # 清空缓存
                     else:
                         # 检测到静默，累积静默时间
                         self.detect_speech_signal.emit(False)
@@ -185,7 +214,6 @@ class SpeechRecognition(QObject):
                             self.transcribe_but_not_send = False  # 重置未发送标志
                             self.recording_ended_signal.emit()
                             self.silence_timer = 0  # 重置静默计时器
-
             except queue.Empty:
                 continue
             except Exception as e:
