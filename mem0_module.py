@@ -6,7 +6,7 @@ import logging
 from logging_config import gcww
 
 # 获取根记录器
-logger = logging.getLogger("modle_module")
+logger = logging.getLogger("mem0_module")
 
 
 class Mem0Client:

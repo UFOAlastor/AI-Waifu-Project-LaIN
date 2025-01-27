@@ -59,7 +59,7 @@ def setup_logging():
                 "level": "DEBUG",
                 "propagate": False,
             },
-            "model_module": {
+            "lettaModel_module": {
                 "handlers": ["console", "file"],
                 "level": "DEBUG",
                 "propagate": False,
@@ -80,6 +80,36 @@ def setup_logging():
                 "propagate": False,
             },
             "vpr_module": {
+                "handlers": ["console", "file"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
+            "live2d_module": {
+                "handlers": ["console", "file"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
+            "lipsync_module": {
+                "handlers": ["console", "file"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
+            "mem0_module": {
+                "handlers": ["console", "file"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
+            "history_module": {
+                "handlers": ["console", "file"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
+            "deepseek_module": {
+                "handlers": ["console", "file"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
+            "ollamaModel_module": {
                 "handlers": ["console", "file"],
                 "level": "DEBUG",
                 "propagate": False,

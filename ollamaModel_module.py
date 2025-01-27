@@ -2,12 +2,12 @@
 
 import requests
 import json, re
-from typing import List, Dict, Generator
+from typing import Generator
 import logging
 from logging_config import gcww
 
 # 获取根记录器
-logger = logging.getLogger("modle_module")
+logger = logging.getLogger("ollamaModle_module")
 
 
 from time_module import DateTime
