@@ -62,7 +62,7 @@ tachie_suffix: "png" # 立绘图片格式 (后缀名)
 # 模型框架方案选取, 可选项: ["letta", "deepseek", "ollama"] (其中letta也是支持ollama的, 具体的区别请自行查询)
 # 这里单独拎出来一个ollama框架, 是因为后期想要拓展对mem0以及框架的接入; letta框架比较封闭了, 很难做优化
 # 这里又单独拎出来一个deepseek官方API, 因为r1全尺寸模型没有开源, letta框架目前也还不支持deepseek官方的API
-model_frame_type: "deepseek"
+model_frame_type: "letta"
 
 # letta框架的agent_id设置
 letta_agent_id: "agent-dd43c63e-a33b-4eb9-9b50-eef6e03c0eed" # 填入你自己的agent_id, 详情参考letta文档: https://docs.letta.com/quickstart

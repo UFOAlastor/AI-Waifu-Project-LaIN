@@ -127,14 +127,17 @@ class SpeechRecognition(QObject):
         """
         处理音频队列中的数据, 按frame_window_ms进行检测, 并根据检测结果处理静默时长. (音频消费者)
         """
+        self.silence_timer = 0
+        self.audio_buffer = []
         temp_frames = []
         chunk_duration_ms = 20  # 每个检测段的持续时间
-        frame_window_ms = 200  # 检测时间段
+        frame_window_ms = 160  # VAD检测时间段
         frames_per_window = frame_window_ms // chunk_duration_ms  # 每个时间段的帧数
 
         # 定义累积语音的时长阈值
-        precheck_duration_s = 0.6  # 快速声纹预检的时长 (秒)
-        full_duration_s = 1.8  # 精确声纹验证的时长 (秒)
+        vprcheck_duration_s = 0.48  # 每次声纹检测的窗口大小 (秒)
+        vpr_temp_frames = []
+        flag_vprcheck_start = False
 
         while self._is_running:
             try:
@@ -151,45 +154,34 @@ class SpeechRecognition(QObject):
                     frame_window_ms / 1000
                 ):
                     # 合并数据并检测
-                    merged_frames = np.concatenate(temp_frames[:frames_per_window])
-                    is_active = self.detect_speech(merged_frames)
+                    vad_merged_frames = np.concatenate(temp_frames[:frames_per_window])
+                    is_active = self.detect_speech(vad_merged_frames)
                     temp_frames = temp_frames[frames_per_window:]  # 移动窗口
 
                     if is_active:
-                        self.audio_buffer.append(merged_frames)
-                        self.detect_speech_signal.emit(self._is_running)
-                        self.silence_timer = 0
-                        # 累积到precheck_duration_s时进行快速声纹预检
+                        vpr_temp_frames.append(vad_merged_frames)
                         if (
-                            len(self.audio_buffer) * self.CHUNK
-                            >= self.RATE * precheck_duration_s
+                            len(vpr_temp_frames) * self.CHUNK
+                            >= self.RATE * vprcheck_duration_s
                         ):
-                            temp_user = self.vpr.match_voiceprint(self.audio_buffer)
-                            if (  # 如果设置了仅识别特定用户, 判断声纹是否匹配指定用户
+                            temp_user = self.vpr.match_voiceprint(vpr_temp_frames)
+                            if (  # 如果设置了仅识别特定用户, 判断声纹是否匹配指定用户; 或者没有设置仅识别特定用户, 则认为声纹匹配
                                 self.vpr.vpr_match_only == None
                                 or not any(self.vpr.vpr_match_only)
                                 or temp_user in self.vpr.vpr_match_only
                             ):
-                                # 继续累积到full_duration_s进行精确声纹验证
-                                if (
-                                    len(self.audio_buffer) * self.CHUNK
-                                    >= self.RATE * full_duration_s
-                                ):
-                                    # 精确声纹验证
-                                    final_user = self.vpr.match_voiceprint(
-                                        self.audio_buffer
-                                    )
-                                    if final_user == temp_user:  # 确认用户
-                                        self.audio_transcribe(
-                                            final_user, self.audio_buffer
-                                        )
-                                        self.audio_buffer = []  # 清空缓存
-                                    else:
-                                        logger.info("声纹验证失败，丢弃缓存")
-                                        self.audio_buffer = []  # 清空缓存
+                                self.detect_speech_signal.emit(True)
+                                logger.debug("检测到注册用户发言")
+                                self.silence_timer = 0
+                                if flag_vprcheck_start == False:
+                                    flag_vprcheck_start = True
+                                    self.audio_buffer = vpr_temp_frames
+                                else:
+                                    self.audio_buffer += vpr_temp_frames[-1:]
                             else:
-                                logger.info("声纹预检不匹配，丢弃缓存")
-                                self.audio_buffer = []  # 清空缓存
+                                self.silence_timer += vprcheck_duration_s
+                            # 移动声纹检测窗口
+                            vpr_temp_frames = vpr_temp_frames[1:]
                     else:
                         # 检测到静默，累积静默时间
                         self.detect_speech_signal.emit(False)
@@ -203,6 +195,8 @@ class SpeechRecognition(QObject):
                                 or temp_user in self.vpr.vpr_match_only
                             ):
                                 self.audio_transcribe(temp_user, self.audio_buffer)
+                            flag_vprcheck_start = False
+                            vpr_temp_frames = []
                             self.audio_buffer = []  # 清空缓存
 
                         if (  # 静默时间超限并且存在未发送内容
