@@ -86,7 +86,6 @@ class MainApp:
             self.chat_model = LettaModel(self.settings)
         elif self.model_frame_type == "ollama":
             self.chat_model = ollamaModel(self.settings)
-            self.chat_model = LettaModel(self.settings)
         elif self.model_frame_type == "deepseek":
             self.chat_model = deepseekModel(self.settings)
         # 记忆框架初始化

@@ -65,7 +65,7 @@ tachie_suffix: "png" # 立绘图片格式 (后缀名)
 model_frame_type: "letta"
 
 # letta框架的agent_id设置
-letta_agent_id: "agent-34974412-9c64-44b9-a795-554fc5234987" # 填入你自己的agent_id, 详情参考letta文档: https://docs.letta.com/quickstart
+letta_agent_id: "agent-dd43c63e-a33b-4eb9-9b50-eef6e03c0eed" # 填入你自己的agent_id, 详情参考letta文档: https://docs.letta.com/quickstart
 letta_server_ip: "localhost" # letta服务部署的地址 (默认本地地址, 可自行选配远程服务)
 
 # ollama模型设置
