@@ -91,7 +91,7 @@ class MainApp:
         # 记忆框架初始化
         self.mem_module_open = gcww(self.settings, "mem0_switch", True, logger)
         if self.mem_module_open:  # 仅当开启mem0模块时才创建该对象
-            self.mem_module = memModule(self.settings)  # TODO 添加setting传递
+            self.mem_module = memModule(self.settings)
         # "思考中..."动态效果初始化
         self.typing_animation_timer = QTimer()
         self.typing_dots = ""
