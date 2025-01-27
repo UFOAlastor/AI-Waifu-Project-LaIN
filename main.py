@@ -35,7 +35,7 @@ class ChatModelWorker(QThread):
     def run(self):
         try:
             if self.mem_module != None:  # 仅当mem0模块对象存在时才处理传入文本
-                self.input_text = (  # ATTENTION 相关记忆召回
+                self.input_text = (  # 相关记忆召回
                     self.mem_module.recall_mem(self.user_name, self.input_text)
                     + self.input_text
                 )
@@ -214,7 +214,7 @@ class MainApp:
         final_message = self.parse_response(response)
         self.window.display_text(final_message, is_non_user_input=True)
         if self.mem_module_open:  # 判断是否开启mem0模块
-            # ATTENTION 非阻塞的记忆记录
+            # 非阻塞的记忆记录
             self.mem_record_worker = MemoryRecordWorker(self.mem_module, final_message)
             self.mem_record_worker.start()
 
