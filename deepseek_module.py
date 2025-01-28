@@ -1,4 +1,4 @@
-import re
+import re, os
 from typing import Generator
 from openai import OpenAI
 import logging
@@ -49,7 +49,10 @@ class deepseekModel:
 
     def __init__(self, main_settings):
         # 初始化客户端
-        _api_key = gcww(main_settings, "deepseek_api_key", "填入自己的api key", logger)
+        _api_key = os.environ.get("DEEPSEEK_API_KEY")  # 获取环境变量的API Key
+        if not _api_key:
+            logger.error("未检测到DEEPSEEK_API_KEY环境变量, 请在环境中设置该变量以继续.")
+            raise ValueError("DEEPSEEK_API_KEY未找到, 请配置环境变量.")
         self.client = OpenAI(
             api_key=_api_key,
             base_url="https://api.deepseek.com",

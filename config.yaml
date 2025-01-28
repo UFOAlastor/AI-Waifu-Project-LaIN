@@ -74,8 +74,7 @@ ollama_model_name: "deepseek-r1:14b"
 ollama_temperature: 0.74
 ollama_max_tokens: 131072 # 请根据选取的模型说明进行设定
 
-# deepseek官方API模型设置
-deepseek_api_key: "sk-xxx" # 替换为你的api key
+# deepseek官方API模型设置 (API KEY请配置在环境变量DEEPSEEK_API_KEY中)
 deepseek_model: "deepseek-chat" # 可选项["deepseek-reasoner", "deepseek-chat"], 分别对应R1和V3模型
 deepseek_temperature: 1.3 # 模型温度, 参考官方文档: https://api-docs.deepseek.com/zh-cn/quick_start/parameter_settings
 
