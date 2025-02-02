@@ -1,5 +1,6 @@
 # mem0_module.py
 
+import os
 from mem0 import Memory
 from datetime import datetime
 import logging
@@ -22,8 +23,7 @@ class Mem0Client:
                 "ollama_base_url": "http://localhost:11434",  # Ensure this URL is correct
             },
         }
-        # 此处为方便, 直接调用了配置文件里的deepseek相关设置, 请根据个人需求进行调整
-        _dp_api_key = gcww(main_settings, "deepseek_api_key", "", logger)
+        _dp_api_key = os.environ.get("DEEPSEEK_API_KEY")  # 获取环境变量的API Key
         _deepseep_provider = {
             "provider": "deepseek",
             "config": {
@@ -46,7 +46,7 @@ class Mem0Client:
             "vector_store": {
                 "provider": "qdrant",
                 "config": {
-                    "collection_name": "mem0",
+                    "collection_name": "memory",
                     "host": "localhost",
                     "port": 6333,
                     "embedding_model_dims": 768,  # Change this according to your embedder's dimensions
@@ -56,7 +56,7 @@ class Mem0Client:
             "embedder": {
                 "provider": "ollama",
                 "config": {
-                    "model": "nomic-embed-text:latest",
+                    "model": "shaw/dmeta-embedding-zh",
                     # Alternatively, you can use "snowflake-arctic-embed:latest"
                     "ollama_base_url": "http://localhost:11434",
                 },
@@ -189,4 +189,9 @@ if __name__ == "__main__":
 
     client = memModule(settings)
 
-    print(f"\n记忆召回: \n{client.get_all_mem('Tor')}\n")
+    # client.add_mem("喜欢吃香蕉", "香蕉是水果，很好吃。", "Tor")
+    # client.add_mem("喜欢喝牛奶", "牛奶是一种饮料，对身体有益。", "Tor")
+
+    print(f"\n全部记忆召回: \n{client.get_all_mem('Tor')}\n")
+
+    print(f"\n特定记忆召回: \n{client.recall_mem('Tor', '今天应该吃什么水果')}\n")
