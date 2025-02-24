@@ -23,7 +23,7 @@ from mem0_module import memModule  # 记忆模块
 class ChatModelWorker(QThread):
     """用于后台运行模型的线程"""
 
-    response_ready = pyqtSignal(str)
+    response_ready = pyqtSignal(object)
 
     def __init__(self, model, mem_module, user_name, input_text):
         super().__init__()

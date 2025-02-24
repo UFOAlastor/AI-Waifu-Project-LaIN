@@ -12,3 +12,6 @@ pyqt5
 pyyaml
 requests
 webrtcvad
+mem0ai
+letta
+ollama
