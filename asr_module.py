@@ -2,7 +2,9 @@
 
 import numpy as np
 import queue, threading
-import pyaudio, webrtcvad, wave, tempfile
+from collections import deque
+import pyaudio, wave, tempfile
+from silero_vad import load_silero_vad, get_speech_timestamps
 from PyQt5.QtCore import pyqtSignal, QObject
 from funasr import AutoModel
 from funasr.utils.postprocess_utils import rich_transcription_postprocess
@@ -47,8 +49,8 @@ class SpeechRecognition(QObject):
         self.RATE = 16000
         self.CHUNK = 1024
 
-        # 创建 VAD 模型
-        self.vad = webrtcvad.Vad(self.asr_vad_mode)
+        # 初始化 Silero VAD 模型
+        self.vad_model = load_silero_vad()
 
         # 初始化 SenseVoice 模型
         model_dir = gcww(self.settings, "asr_model_dir", "./SenseVoiceSmall", logger)
@@ -66,38 +68,36 @@ class SpeechRecognition(QObject):
         self.audio_queue = queue.Queue()
         self.audio_lock = threading.Lock()
 
-    def detect_speech(self, audio_data, sample_rate=16000, frame_duration_ms=20):
+    def detect_speech(self, audio_data, sample_rate=16000):
         """使用 WebRTC VAD 检测音频数据是否包含有效语音。
 
         Args:
-            audio_data (NDArray): 音频序列
-            sample_rate (int, optional): 音频码率. Defaults to 16000.
-            frame_duration_ms (int, optional): VAD检测间距. Defaults to 20.
+            audio_data (np.ndarray): 单通道16kHz音频数据（int16或float32格式）
+            sample_rate (int): 必须为16000
 
         Returns:
-            bool: 音频中是否检测到人声
+            bool: 是否检测到人声
         """
-        # 检查音频数据是否为空
-        if not isinstance(audio_data, (list, np.ndarray)) or audio_data.size == 0:
-            logger.warning("音频数据为空，无法进行语音检测")
-        frame_size = int(sample_rate * (frame_duration_ms / 1000.0))  # 单帧长度
-        frames = [
-            audio_data[i : i + frame_size]
-            for i in range(0, len(audio_data) - frame_size + 1, frame_size)
-        ]
+        # 数据预处理
+        if not isinstance(audio_data, np.ndarray) or audio_data.size == 0:
+            return False
 
-        # 累计检测结果
-        active_segments = 0
-        total_segments = len(frames)
+        # 格式标准化（int16转float32）
+        if audio_data.dtype == np.int16:
+            audio_data = audio_data.astype(np.float32) / 32768.0
 
-        for frame in frames:
-            frame_bytes = np.array(frame, dtype=np.int16).tobytes()
-            if self.vad.is_speech(frame_bytes, sample_rate):  # 检测是否有语音
-                active_segments += 1
+        # 语音段检测（阈值建议0.3-0.5）
+        speech_segments = get_speech_timestamps(
+            audio_data,
+            self.vad_model,
+            sampling_rate=sample_rate,
+            threshold=0.3,
+            return_seconds=True,
+        )
 
-        # 判定语音激活率
-        activation_rate = active_segments / total_segments
-        return activation_rate >= 0.6  # 有效激活率 >= 60%
+        logger.debug(f"检测到{len(speech_segments)}个语音段")
+
+        return len(speech_segments) > 0
 
     # 录音线程
     def audio_producer(self):
@@ -128,15 +128,15 @@ class SpeechRecognition(QObject):
         处理音频队列中的数据, 按frame_window_ms进行检测, 并根据检测结果处理静默时长. (音频消费者)
         """
         self.silence_timer = 0
-        self.audio_buffer = []
-        temp_frames = []
+        self.audio_buffer = deque()
+        temp_frames = deque()
         chunk_duration_ms = 20  # 每个检测段的持续时间
-        frame_window_ms = 160  # VAD检测时间段
+        frame_window_ms = 240  # VAD检测时间段
         frames_per_window = frame_window_ms // chunk_duration_ms  # 每个时间段的帧数
 
         # 定义累积语音的时长阈值
-        vprcheck_duration_s = 0.48  # 每次声纹检测的窗口大小 (秒)
-        vpr_temp_frames = []
+        vprcheck_duration_ms = 480  # 每次声纹检测的窗口大小 (毫秒)
+        vpr_temp_frames = deque()
         flag_vprcheck_start = False
 
         while self._is_running:
@@ -148,58 +148,65 @@ class SpeechRecognition(QObject):
 
                 # 缓存音频帧
                 temp_frames.append(np.frombuffer(data, dtype=np.int16))
+                self.audio_buffer.append(np.frombuffer(data, dtype=np.int16))
 
-                # 检测 frame_window_ms 的音频数据
-                if len(temp_frames) * self.CHUNK >= self.RATE * (
-                    frame_window_ms / 1000
-                ):
-                    # 合并数据并检测
-                    vad_merged_frames = np.concatenate(temp_frames[:frames_per_window])
+                # 保持temp_frames的大小不超过frames_per_window
+                if len(temp_frames) > frames_per_window:
+                    temp_frames.popleft()
+
+                # 只有当temp_frames填满时才进行VAD检测
+                if len(temp_frames) == frames_per_window:
+                    vad_merged_frames = np.concatenate(temp_frames)
                     is_active = self.detect_speech(vad_merged_frames)
-                    temp_frames = temp_frames[frames_per_window:]  # 移动窗口
 
                     if is_active:
                         vpr_temp_frames.append(vad_merged_frames)
                         if (
-                            len(vpr_temp_frames) * self.CHUNK
-                            >= self.RATE * vprcheck_duration_s
+                            len(vpr_temp_frames) * chunk_duration_ms
+                            >= vprcheck_duration_ms
                         ):
                             temp_user = self.vpr.match_voiceprint(vpr_temp_frames)
-                            if (  # 如果设置了仅识别特定用户, 判断声纹是否匹配指定用户; 或者没有设置仅识别特定用户, 则认为声纹匹配
-                                self.vpr.vpr_match_only == None
+                            if (
+                                self.vpr.vpr_match_only is None
                                 or not any(self.vpr.vpr_match_only)
                                 or temp_user in self.vpr.vpr_match_only
                             ):
                                 self.detect_speech_signal.emit(True)
                                 logger.debug("检测到注册用户发言")
                                 self.silence_timer = 0
-                                if flag_vprcheck_start == False:
+                                if not flag_vprcheck_start:
                                     flag_vprcheck_start = True
-                                    self.audio_buffer = vpr_temp_frames
-                                else:
-                                    self.audio_buffer += vpr_temp_frames[-1:]
+                                # 不需要清空audio_buffer，这样可以避免音频被掐头
                             else:
-                                self.silence_timer += vprcheck_duration_s
-                            # 移动声纹检测窗口
-                            vpr_temp_frames = vpr_temp_frames[1:]
+                                self.silence_timer += (
+                                    vprcheck_duration_ms / 1000.0
+                                )  # 转为秒
+                            # 保持vpr_temp_frames的大小不超过vprcheck_duration_ms
+                            if (
+                                len(vpr_temp_frames) * chunk_duration_ms
+                                > vprcheck_duration_ms
+                            ):
+                                vpr_temp_frames.popleft()
                     else:
                         # 检测到静默，累积静默时间
                         self.detect_speech_signal.emit(False)
                         self.silence_timer += frame_window_ms / 1000.0  # 转为秒
 
-                        if self.audio_buffer:  # 如果音频缓存非空, 就进行一次识别
+                        if self.audio_buffer:
                             temp_user = self.vpr.match_voiceprint(self.audio_buffer)
-                            if (  # 如果设置了仅识别特定用户, 判断声纹是否匹配指定用户
-                                self.vpr.vpr_match_only == None
+                            if (
+                                self.vpr.vpr_match_only is None
                                 or not any(self.vpr.vpr_match_only)
                                 or temp_user in self.vpr.vpr_match_only
                             ):
-                                self.audio_transcribe(temp_user, self.audio_buffer)
+                                self.audio_transcribe(
+                                    temp_user, list(self.audio_buffer)
+                                )
                             flag_vprcheck_start = False
-                            vpr_temp_frames = []
-                            self.audio_buffer = []  # 清空缓存
+                            vpr_temp_frames.clear()
+                            self.audio_buffer.clear()
 
-                        if (  # 静默时间超限并且存在未发送内容
+                        if (
                             self.transcribe_but_not_send
                             and self.silence_timer >= self.asr_auto_send_silence_time
                             and self.asr_auto_send_silence_time != -1

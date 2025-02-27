@@ -11,7 +11,7 @@ pyopengl
 pyqt5
 pyyaml
 requests
-webrtcvad
+silero_vad
 mem0ai
 letta
 ollama
