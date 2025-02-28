@@ -16,7 +16,7 @@ logger = logging.getLogger()
 from ui_module import UIDisplay  # 界面
 from lettaModel_module import LettaModel  # letta框架
 from ollamaModel_module import ollamaModel  # ollama框架
-from deepseek_module import deepseekModel  # deepseek官方API
+from openaiType_module import openaiTypeModel  # openaiType模型
 from mem0_module import memModule  # 记忆模块
 
 
@@ -86,8 +86,8 @@ class MainApp:
             self.chat_model = LettaModel(self.settings)
         elif self.model_frame_type == "ollama":
             self.chat_model = ollamaModel(self.settings)
-        elif self.model_frame_type == "deepseek":
-            self.chat_model = deepseekModel(self.settings)
+        elif self.model_frame_type == "openaiType":
+            self.chat_model = openaiTypeModel(self.settings)
         # 记忆框架初始化
         self.mem_module_open = gcww(self.settings, "mem0_switch", True, logger)
         if self.mem_module_open:  # 仅当开启mem0模块时才创建该对象
@@ -152,7 +152,7 @@ class MainApp:
             )
 
     def start_voice_rec(self):
-        """语音播放结束后自动继续开启语音识别"""
+        """继续开启语音识别"""
         if self.window.mic_button_pressed_state:
             # 当语音识别按钮处于被按下状态, 这时允许重新启动语音识别
             if not self.window.recognizer._is_running:

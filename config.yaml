@@ -7,10 +7,10 @@ window_always_on_top: true # 设置窗口始终保持顶置
 database_dir: "./database" # 数据库路径
 
 # 对话框(dialog)位置和大小设置 (直接留空会根据window尺寸自动设置)
-# dialog_x: 0 # 对话框左上角X轴位置 (原点位于窗口左上角, X轴向右, Y轴向下)
-# dialog_y: 400 # 对话框Y轴位置
-# dialog_width: 600 # 对话框宽度
-# dialog_height: 240 # 对话框长度
+dialog_x: 0 # 对话框左上角X轴位置 (原点位于窗口左上角, X轴向右, Y轴向下)
+dialog_y: 400 # 对话框Y轴位置
+dialog_width: 600 # 对话框宽度
+dialog_height: 240 # 对话框长度
 # 对话框(dialog)杂项
 dialog_label: "绫 Lin" # 对话框标签名称 (可作为人物名称)
 dialog_opacity: 0.8 # 对话框透明度设置 (0.0-1.0]
@@ -59,10 +59,10 @@ tachie_default: "微笑" # 默认立绘
 tachie_opening: "高兴" # 开场时临时展现的表情
 tachie_suffix: "png" # 立绘图片格式 (后缀名)
 
-# 模型框架方案选取, 可选项: ["letta", "deepseek", "ollama"] (其中letta也是支持ollama的, 具体的区别请自行查询)
+# 模型框架方案选取, 可选项: ["letta", "openaiType", "ollama"] (其中letta也是支持ollama的, 具体的区别请自行查询)
 # 这里单独拎出来一个ollama框架, 是因为后期想要拓展对mem0以及框架的接入; letta框架比较封闭了, 很难做优化
-# 这里又单独拎出来一个deepseek官方API, 因为r1全尺寸模型没有开源, letta框架目前也还不支持deepseek官方的API
-model_frame_type: "letta"
+# 这里又单独拎出来一个openaiType, 可以自行配置支持openai协议格式的模型平台
+model_frame_type: "openaiType"
 
 # letta框架的agent_id设置
 letta_agent_id: "agent-5ac02c04-dd4f-4cf9-a1b3-6b576b8bbf0d" # 填入你自己的agent_id, 详情参考letta文档: https://docs.letta.com/quickstart
@@ -74,9 +74,11 @@ ollama_model_name: "deepseek-r1:14b"
 ollama_temperature: 0.74
 ollama_max_tokens: 131072 # 请根据选取的模型说明进行设定
 
-# deepseek官方API模型设置 (API KEY请配置在环境变量DEEPSEEK_API_KEY中)
-deepseek_model: "deepseek-chat" # 可选项["deepseek-reasoner", "deepseek-chat"], 分别对应R1和V3模型
-deepseek_temperature: 1.3 # 模型温度, 参考官方文档: https://api-docs.deepseek.com/zh-cn/quick_start/parameter_settings
+# openai类模型的API以及baseurl设置 (API KEY请配置在环境变量[API_KEY_NAME]中)
+openai_type_model: "gpt-4o-mini" # 根据选取的模型平台配置
+openai_type_model_temperature: 0.74 # 模型温度
+openai_type_API_KEY_NAME: "GPTPLUS5_API_KEY" # API_KEY的环境变量名称, 配置到环境变量即可
+openai_type_BASEURL: "https://az.gptplus5.com/v1" # API请求的baseurl
 
 # 历史消息数据库 (配合ollama或deepseek官方API时使用, letta已经集成了)
 history_max_num: 100 # 最大保存记录数 (不用过大, 毕竟模型输入上下文窗口大小有限)
@@ -93,9 +95,7 @@ vits_clean_text: true # 是否开启文本清洗 (去除难以发音的部分, �
 
 # 语音识别设置
 asr_model_dir: "./SenseVoiceSmall" # SenseVoiceSmall模型权重文件位置
-asr_vad_mode: 2 # vad人声检测参数
-asr_webrtc_aec: false # 是否开启回声消除功能 (undo, 此项不可修改, 目前未实现)
-asr_auto_send_silence_time: 2.7 # 持续静音asr_auto_send_silence_time时间后自动发送 (设置为-1则不自动发送)
+asr_auto_send_silence_time: 1.8 # 持续静音asr_auto_send_silence_time时间后自动发送 (设置为-1则不自动发送)
 
 # 声纹检测
 vpr_match_only: ["Tor"] # 对特定群体声纹开启语音识别 (需要关闭可以将List留空或填None, 关闭后匹配所有用户-->会导致无法打断语音, 因为还没实现回声消除XD)

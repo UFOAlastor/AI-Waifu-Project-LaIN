@@ -49,7 +49,7 @@
    1. 默认建议采用[letta](https://github.com/letta-ai/letta)框架, 具有记忆能力, 请参考官方指引搭建本地服务 (支持docker部署)
       1. letta的prompt配置请参考prompt_sample.md文件, 本项目表情切换功能依赖prompt实现.
    2. 支持[Ollama](https://ollama.com/), 请参考官网指引安装并部署本地服务 (支持docker部署)
-   3. 支持DeepSeek官方API, 请参考[官方指引](https://api-docs.deepseek.com/zh-cn/)创建API KEY, 然后配置为环境变量 `DEEPSEEK_API_KEY`
+   3. 支持DeepSeek官方API, 请参考[官方指引](https://api-docs.deepseek.com/zh-cn/)创建API KEY, 然后配置环境变量 `DEEPSEEK_API_KEY`
    4. 支持[mem0](https://github.com/mem0ai/mem0)记忆框架, 需要部署qdrant作为数据库, 建议采用docker部署
 5. 语音生成服务:
    1. [vits-simple-api](https://github.com/Artrajz/vits-simple-api/blob/main/README_zh.md), 请参考vits-simple官方指引进行配置 (支持docker部署)

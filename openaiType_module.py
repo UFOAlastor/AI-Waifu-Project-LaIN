@@ -5,14 +5,14 @@ import logging
 from logging_config import gcww
 
 # 获取根记录器
-logger = logging.getLogger("deepseek_module")
+logger = logging.getLogger("openaiType_module")
 
 
 from time_module import DateTime
 from history_module import DialogueHistory
 
 
-class deepseekModel:
+class openaiTypeModel:
     # 系统prompt设置
     SYSTEMPROMPT = """
     你是绫, 你的任务是扮演你的角色并与用户对话.
@@ -49,17 +49,19 @@ class deepseekModel:
 
     def __init__(self, main_settings):
         # 初始化客户端
-        _api_key = os.environ.get("DEEPSEEK_API_KEY")  # 获取环境变量的API Key
+        _API_KEY_NAME = gcww(main_settings, "openai_type_API_KEY_NAME", "OPENAI_API_KEY", logger)
+        _api_key = os.environ.get(_API_KEY_NAME)  # 获取环境变量的API Key
+        _BASEURL = gcww(main_settings, "openai_type_BASEURL", "https://api.openai.com", logger)
         if not _api_key:
-            logger.error("未检测到DEEPSEEK_API_KEY环境变量, 请在环境中设置该变量以继续.")
-            raise ValueError("DEEPSEEK_API_KEY未找到, 请配置环境变量.")
+            logger.error("未检测到API_KEY_NAME环境变量, 请在环境中设置该变量以继续.")
+            raise ValueError("API_KEY_NAME未找到, 请配置环境变量.")
         self.client = OpenAI(
             api_key=_api_key,
-            base_url="https://api.deepseek.com",
+            base_url=_BASEURL,
         )
         self.bot_name = gcww(main_settings, "dialog_label", "assistant", logger)
-        self.model = gcww(main_settings, "deepseek_model", "deepseek-chat", logger)
-        self.temperature = gcww(main_settings, "deepseek_temperature", 0, logger)
+        self.model = gcww(main_settings, "openai_type_model", "deepseek-chat", logger)
+        self.temperature = gcww(main_settings, "openai_type_model_temperature", 0, logger)
         self.messages = [{"role": "system", "content": self.SYSTEMPROMPT}]
         # 初始化时间工具
         self.formatted_dt = DateTime()
@@ -162,7 +164,7 @@ if __name__ == "__main__":
     with open("./config.yaml", "r", encoding="utf-8") as f:
         settings = yaml.safe_load(f)
 
-    chatbot = deepseekModel(settings)
+    chatbot = openaiTypeModel(settings)
 
     # while True:  # 非流式生成测试
     #     try:

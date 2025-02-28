@@ -104,7 +104,7 @@ def setup_logging():
                 "level": "DEBUG",
                 "propagate": False,
             },
-            "deepseek_module": {
+            "openaiType_module": {
                 "handlers": ["console", "file"],
                 "level": "DEBUG",
                 "propagate": False,

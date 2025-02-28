@@ -21,16 +21,15 @@ logger = logging.getLogger("ui_module")
 
 from micButton_module import MicButton
 from live2d_module import Live2DWidget
+from vpr_module import VoicePrintRecognition
 
 
 # 在 UIDisplay 类中设置事件过滤器
 class UIDisplay(QMainWindow, MicButton):
     text_sent_signal = pyqtSignal(tuple)  # 发送对话框信号 (用户名, 文本)
 
-    def __init__(self, main_settings):
-        super().__init__(main_settings)  # python的继承按 MRO 顺序传递参数
-        self.is_non_user_input = False  # 是否为非用户输入内容标记
-
+    def _UI_init(self, main_settings):
+        # 窗口标题和图标
         self.setWindowTitle("Project LaIN")
         self.setWindowIcon(QIcon("./ico/lin.ico"))  # 设置图标
         # 窗口设置
@@ -190,6 +189,15 @@ class UIDisplay(QMainWindow, MicButton):
         # 提升录音按钮层次, 避免遮挡
         self.mic_button.raise_()
 
+    def __init__(self, main_settings):
+        super().__init__(main_settings)  # python的继承按 MRO 顺序传递参数
+        self.is_non_user_input = False  # 是否为非用户输入内容标记
+
+        self._UI_init(main_settings)
+
+        # 初始化声纹管理器
+        self.vpr_manager = VoicePrintRecognition(main_settings)
+
         # 绑定语音识别信号量给对话框更新
         self.recognizer.update_text_signal.connect(self.whisper_stream_update)
         self.recognizer.recording_ended_signal.connect(self.send_text)
@@ -204,17 +212,19 @@ class UIDisplay(QMainWindow, MicButton):
         """语音识别结果流式追加显示文本内容，is_non_user_input 为 True 时表示启动提示或模型返回内容
 
         Args:
-            tuple_data (tuple): 语音识别二元对, 包含用户名称与识别文本
+            tuple_data (tuple): 语音识别二元对, 包含音频序列与识别文本
         """
-        self.user_name, text = tuple_data
+        audio_frames, text = tuple_data
+        self.user_name = self.vpr_manager.match_voiceprint(audio_frames)
         if not self.recognizer_is_updating:
+            logger.debug(f"触发文本显示: {self.user_name}, {text}")
             self.recognizer_is_updating = True
             self.is_non_user_input = False  # 语音识别为用户输入
             self.dialog_text.clear()  # 清空文本框内容
             self.current_char_index = 0  # 当前字符索引
             self.content = text  # 初始化文本
             # 设置每个字符的延迟时间（可以根据需要调整）
-            self.typing_speed = 25  # 每个字符之间的延迟 25 毫秒
+            self.typing_speed = 20  # 每个字符之间的延迟(毫秒)
             # 设置定时器，模拟逐个字符的显示
             self.current_text = ""
             self.html_closed = 0
@@ -341,7 +351,7 @@ class UIDisplay(QMainWindow, MicButton):
         # # 设置定时器，模拟逐个字符的显示
         self.current_text = ""
         self.html_closed = 0
-        self.typing_speed = 25  # 每个字符之间的延迟 25 毫秒
+        self.typing_speed = 20  # 每个字符之间的延迟(毫秒)
         self.typing_timer.timeout.connect(self.on_typing_display)
         self.typing_timer.start(self.typing_speed)
 
@@ -462,9 +472,10 @@ if __name__ == "__main__":
     )
     window.show()
 
-    def test_response():
+    def test_response(tuple_data):
+        user_name, text = tuple_data
         window.display_text(
-            """<p>测试回复！欢迎访问 <a href="https://www.example.com" target="_blank">示例网站</a>，了解更多信息。</p>""",
+            f"""测试回复: 用户{user_name}发送了{text}""",
             is_non_user_input=True,
         )
 
