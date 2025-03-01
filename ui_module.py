@@ -204,6 +204,12 @@ class UIDisplay(QMainWindow, MicButton):
         # 打字机效果显示采用计时器实现
         self.typing_timer = QTimer(self)
 
+    def update_label_text(self, user_name):
+        """更新标签文本并添加显示用户名很"""
+        _label_text = self.label_text + "\t[" + user_name + "]"  # 改变标签文本
+        if self.dialog_label:  # 检查dialog_label是否存在
+            self.dialog_label.setText(_label_text)  # 更新标签显示
+
     def whisper_stream_update(self, tuple_data):
         """语音识别结果流式追加显示文本内容，is_non_user_input 为 True 时表示启动提示或模型返回内容
 
@@ -212,8 +218,8 @@ class UIDisplay(QMainWindow, MicButton):
         """
         audio_frames, text = tuple_data
         self.user_name = self.recognizer.vpr_manager.match_voiceprint(audio_frames)
+        self.update_label_text(self.user_name)
         if not self.recognizer_is_updating:
-            logger.debug(f"触发文本显示: {self.user_name}, {text}")
             self.recognizer_is_updating = True
             self.is_non_user_input = False  # 语音识别为用户输入
             self.dialog_text.clear()  # 清空文本框内容

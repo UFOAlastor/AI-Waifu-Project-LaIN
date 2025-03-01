@@ -95,7 +95,7 @@ vits_clean_text: true # 是否开启文本清洗 (去除难以发音的部分, �
 
 # 语音识别设置
 asr_model_dir: "./SenseVoiceSmall" # SenseVoiceSmall模型权重文件位置
-asr_auto_send_silence_time: 1.6 # 持续静音asr_auto_send_silence_time时间后自动发送 (设置为-1则不自动发送)
+asr_auto_send_silence_time: 1.8 # 持续静音asr_auto_send_silence_time时间后自动发送 (设置为-1则不自动发送)
 
 # 声纹检测
 vpr_model: "damo/speech_campplus_sv_zh-cn_16k-common" # 使用的声纹识别模型路径 (不用修改, 会自动下载)

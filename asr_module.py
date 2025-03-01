@@ -155,7 +155,7 @@ class SpeechRecognition(QObject):
                 # 缓存音频帧到临时帧
                 temp_frames.append(frame)
                 if self.audio_buffer_startup:
-                    logger.debug("记录audio_buffer")
+                    # logger.debug("记录audio_buffer")
                     audio_buffer.append(frame)
 
                 # 保持temp_frames的大小不超过两倍frames_per_window
@@ -176,7 +176,8 @@ class SpeechRecognition(QObject):
                             self.detect_speech_signal.emit(True)
                             if not self.audio_buffer_startup:  # 若还没启动audio_buffer
                                 self.audio_buffer_startup = True  # 开始记录audio_buffer
-                                audio_buffer = temp_frames[:frames_per_window]  # 留缓存
+                                # 留一定比例窗口大小的音频数据缓存, 避免出现头部丢失
+                                audio_buffer = temp_frames[:frames_per_window]
                         silence_timer = 0
                     else:
                         # 检测到静默，累积静默时间
@@ -184,7 +185,7 @@ class SpeechRecognition(QObject):
                         silence_timer += (
                             frame_window_ms / frames_per_window
                         ) / 1000.0  # 转为秒
-                        logger.debug(f"silence_timer: {silence_timer}")
+                        # logger.debug(f"silence_timer: {silence_timer}")
                         if audio_buffer:
                             # 只要检测到人声就进行语音识别
                             if self.detect_speech(np.concatenate(audio_buffer)):
@@ -200,7 +201,7 @@ class SpeechRecognition(QObject):
                             logger.info("静默时间超限，触发结果发送")
                             self.recording_ended_signal.emit()
                             self.transcribe_but_not_send = False  # 重置未发送标志
-                            self._is_running = False  # 结束循环
+                            # self._is_running = False  # 结束循环
             except queue.Empty:
                 continue
             except Exception as e:

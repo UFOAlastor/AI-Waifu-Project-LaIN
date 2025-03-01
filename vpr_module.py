@@ -36,9 +36,6 @@ class VoicePrintRecognition:
         # 初始化样本数据库，加载现有数据
         self.voicePrintDB = self._load_sample_db()
 
-        # # 初始化机器人样本embedding
-        # self.botVoicePrintEmb = None
-
     def _generate_unique_id(self):
         """生成唯一的ID"""
         return str(uuid.uuid4())
@@ -91,47 +88,6 @@ class VoicePrintRecognition:
         logger.info(f"{person_name}声纹注册成功")
 
         return unique_id
-
-    # def save_bot_voiceprint(self, audio_frames):
-    #     """注册临时机器人语音声纹样本
-
-    #     Args:
-    #         audio_frames (bytes): 音频序列
-    #     """
-    #     if len(audio_frames) == 0:
-    #         logger.warning("输入声纹序列为空")
-    #         return None
-
-    #     # 提取音频的声纹特征（embedding）
-    #     audio_data = np.concatenate(audio_frames, axis=0)  # 合并音频数据
-    #     result = self.sv_pipeline([audio_data], output_emb=True)
-    #     self.botVoicePrintEmb = result["embs"][0]  # 提取声纹特征
-
-    #     logger.info(f"机器人临时声纹存储成功")
-
-    # def check_bot_voiceprint(self, audio_frames):
-    #     """检查语音识别结果是否匹配机器人语音声纹
-
-    #     Args:
-    #         audio_frames (bytes): 音频序列
-
-    #     Returns:
-    #         bool: 是否匹配机器人声纹
-    #     """
-    #     if len(audio_frames) == 0 or self.botVoicePrintEmb is None:
-    #         logger.warning("check_bot_voiceprint: 音频序列为空")
-    #         return False
-    #     audio_data1 = np.concatenate(audio_frames, axis=0)
-    #     result1 = self.sv_pipeline([audio_data1], output_emb=True)
-    #     embedding1 = result1["embs"][0]
-    #     embedding2 = self.botVoicePrintEmb
-    #     norm1 = np.linalg.norm(embedding1)
-    #     norm2 = np.linalg.norm(embedding2)
-    #     # 计算标准的余弦相似度
-    #     similarity = np.dot(embedding1, embedding2) / (norm1 * norm2)
-
-    #     logger.debug(f"与机器人语音声纹匹配度: {similarity * 100:.2f}%")
-    #     return bool(similarity > self.similarity_threshold)  # 使用配置的阈值
 
     def remove_voiceprint(self, unique_id=None, person_name=None):
         """删除声纹库指定数据
@@ -202,11 +158,13 @@ class VoicePrintRecognition:
             # 转换为范围[0, 1]
             similarity_percentage = (similarity + 1) / 2.0
 
-            logger.debug(
-                f"和{sample_info['person_name']}匹配度: {similarity_percentage * 100:.2f}%"
-            )
+            # logger.debug(
+            #     f"和{sample_info['person_name']}匹配度: {similarity_percentage * 100:.2f}%"
+            # )
             if similarity_percentage > self.similarity_threshold:  # 使用配置的阈值
-                logger.debug(f"匹配声纹: {sample_info['person_name']}")
+                logger.debug(
+                    f"匹配声纹: {sample_info['person_name']} at {similarity_percentage * 100:.2f}%"
+                )
                 # 结果维护匹配分数最高的声纹对象
                 if best_match_percent < similarity_percentage:
                     best_match_percent = similarity_percentage
