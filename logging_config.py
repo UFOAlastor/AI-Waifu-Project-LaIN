@@ -114,6 +114,11 @@ def setup_logging():
                 "level": "DEBUG",
                 "propagate": False,
             },
+            "functioncall_module": {
+                "handlers": ["console", "file"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
         },
     }
 
