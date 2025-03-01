@@ -3,7 +3,6 @@
 import copy
 import numpy as np
 import queue, threading
-from collections import deque
 import pyaudio, wave, tempfile
 from silero_vad import load_silero_vad, get_speech_timestamps
 from PyQt5.QtCore import pyqtSignal, QObject
@@ -14,6 +13,9 @@ from logging_config import gcww
 
 # 配置日志
 logger = logging.getLogger("asr_module")
+
+from vpr_module import VoicePrintRecognition
+from vits_module import vitsSpeaker
 
 
 class SpeechRecognition(QObject):
@@ -51,13 +53,31 @@ class SpeechRecognition(QObject):
             device="cuda:0",  # 默认使用 GPU
         )
 
+        # 初始化声纹管理器
+        self.vpr_manager = VoicePrintRecognition(main_settings)
+        # 初始化vitsSpeaker
+        self.vits_speaker = vitsSpeaker(main_settings)
+
+        # 连接 vitsSpeaker 的音频播放结束信号
+        self.vits_speaker.audio_start_play.connect(self.on_audio_start_play)
+        self.vits_speaker.audio_played.connect(self.on_audio_played)
+
         # 初始化标志量
         self._is_running = False  # 是否正在运行
+        self.audio_buffer_startup = True  # 是否允许开始记录audio_buffer
         self.transcribe_but_not_send = False  # 已经识别但是未发送
 
         # 初始化音频队列
         self.audio_queue = queue.Queue()
         self.audio_lock = threading.Lock()
+
+    def on_audio_start_play(self):
+        self.audio_buffer_startup = False
+        logger.debug(f"vits音频播放开始: {self.audio_buffer_startup}")
+
+    def on_audio_played(self):
+        self.audio_buffer_startup = True
+        logger.debug(f"vits音频播放结束: {self.audio_buffer_startup}")
 
     def detect_speech(self, audio_data, sample_rate=16000):
         """使用 WebRTC VAD 检测音频数据是否包含有效语音。
@@ -117,10 +137,10 @@ class SpeechRecognition(QObject):
         处理音频队列中的数据, 按frame_window_ms进行检测, 并根据检测结果处理静默时长. (音频消费者)
         """
         silence_timer = 0  # 秒
-        audio_buffer = deque()
-        temp_frames = deque()
+        audio_buffer = []
+        temp_frames = []  # 缓存两倍检测窗口数据
         frames_per_window = 16  # 每个时间段的帧数
-        frame_window_ms = frames_per_window * (self.CHUNK / self.RATE) * 1000
+        frame_window_ms = frames_per_window * (self.CHUNK / self.RATE) * 1000.0
 
         while self._is_running:
             try:
@@ -134,18 +154,29 @@ class SpeechRecognition(QObject):
 
                 # 缓存音频帧到临时帧
                 temp_frames.append(frame)
-                audio_buffer.append(frame)
+                if self.audio_buffer_startup:
+                    logger.debug("记录audio_buffer")
+                    audio_buffer.append(frame)
 
-                # 保持temp_frames的大小不超过frames_per_window
-                if len(temp_frames) > frames_per_window:
-                    temp_frames.popleft()
+                # 保持temp_frames的大小不超过两倍frames_per_window
+                if len(temp_frames) > 2 * frames_per_window:
+                    temp_frames.pop(0)
 
-                # 只有当temp_frames填满时才进行VAD检测
-                if len(temp_frames) == frames_per_window:
-                    is_active = self.detect_speech(np.concatenate(temp_frames))
+                # 只有当temp_frames达到检测窗口大小才进行VAD检测
+                if len(temp_frames) >= frames_per_window:
+                    is_active = self.detect_speech(
+                        np.concatenate(temp_frames[-frames_per_window:])
+                    )
 
                     if is_active:
-                        self.detect_speech_signal.emit(True)
+                        user_name = self.vpr_manager.match_voiceprint(
+                            temp_frames[-frames_per_window:]
+                        )
+                        if user_name != "Unknown":  # 声纹已注册, 发送语音检测信号量
+                            self.detect_speech_signal.emit(True)
+                            if not self.audio_buffer_startup:  # 若还没启动audio_buffer
+                                self.audio_buffer_startup = True  # 开始记录audio_buffer
+                                audio_buffer = temp_frames[:frames_per_window]  # 留缓存
                         silence_timer = 0
                     else:
                         # 检测到静默，累积静默时间
@@ -155,11 +186,12 @@ class SpeechRecognition(QObject):
                         ) / 1000.0  # 转为秒
                         logger.debug(f"silence_timer: {silence_timer}")
                         if audio_buffer:
+                            # 只要检测到人声就进行语音识别
                             if self.detect_speech(np.concatenate(audio_buffer)):
                                 self.audio_transcribe(audio_buffer)
                                 audio_buffer.clear()
                             else:
-                                audio_buffer.popleft()  # 移除最旧的帧
+                                audio_buffer.pop(0)  # 移除最旧的帧
                         if (
                             silence_timer >= self.asr_auto_send_silence_time
                             and self.transcribe_but_not_send
@@ -209,8 +241,8 @@ class SpeechRecognition(QObject):
         """语音识别线程启动函数"""
         if not self._is_running:
             logger.info("启动流式语音识别")
-            self._is_running = True
             self.audio_queue.queue.clear()
+            self._is_running = True
             self.transcribe_but_not_send = False
             producer_thread = threading.Thread(target=self.audio_producer)
             consumer_thread = threading.Thread(target=self.audio_consumer)

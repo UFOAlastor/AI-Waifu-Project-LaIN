@@ -1,6 +1,3 @@
-# aec_module.py
-# 目前采用apa算法方案, 依旧没有达到可用效果, 有待进一步优化和调试, 目前不启用
-
 import sounddevice as sd
 import numpy as np
 import wavio
@@ -8,65 +5,118 @@ import soundfile as sf
 import time
 import os
 import threading
+from numpy.fft import fft, ifft
 
 
-def apa(x, d, N=256, P=5, mu=0.1):
+class PFDAF:
+    def __init__(self, N=4, M=64, mu=0.1, partial_constrain=True):
+        """
+        初始化PFDAF(分区频域自适应滤波器)
+
+        参数:
+        N: 滤波器块数
+        M: 每块的长度
+        mu: 步长参数
+        partial_constrain: 是否使用部分约束
+        """
+        self.N = N
+        self.M = M
+        self.N_freq = 1 + M
+        self.N_fft = 2 * M
+        self.mu = mu
+        self.partial_constrain = partial_constrain
+
+        # 初始化状态变量
+        self.p = 0
+        self.x = np.zeros(shape=(2 * self.M), dtype=np.float32)
+        self.X = np.zeros((N, self.N_fft), dtype=np.complex64)
+        self.H = np.zeros((N, self.N_fft), dtype=np.complex64)
+        self.x_old = np.zeros(self.M)
+        self.window = np.hanning(self.M)  # 使用汉宁窗进行平滑[^1]
+
+    def filt(self, x, d):
+        """
+        使用PFDAF对输入信号进行滤波
+
+        参数:
+        x: 参考信号(块)
+        d: 期望信号(块)
+
+        返回:
+        e: 误差信号(回声消除后的信号)
+        """
+        assert len(x) == self.M
+
+        # 将当前输入与上一个输入拼接
+        x_now = np.concatenate([self.x_old, x])
+
+        # 计算当前输入的FFT
+        X = fft(x_now)
+
+        # 更新输入状态
+        self.X[1:] = self.X[:-1]
+        self.X[0] = X
+        self.x_old = x
+
+        # 计算滤波器输出
+        Y = np.sum(self.H * self.X, axis=0)
+        y = ifft(Y)[self.M :]
+
+        # 计算误差
+        e = d - y
+
+        # 更新滤波器系数
+        self.update(e)
+
+        return e
+
+    def update(self, e):
+        """更新滤波器系数"""
+        # 计算频域误差
+        E = fft(np.concatenate([np.zeros(self.M), e]))
+
+        # 频域更新
+        for p in range(self.N):
+            dH = (
+                self.mu
+                * np.conj(self.X[p])
+                * E
+                / (np.sum(np.abs(self.X) ** 2, axis=0) + 1e-6)
+            )
+
+            # 应用部分约束(如果启用)
+            if self.partial_constrain:
+                h = ifft(dH)
+                h[self.M :] = 0
+                dH = fft(h)
+
+            self.H[p] += dH
+
+
+def pfdaf(x, d, N=4, M=64, mu=0.1, partial_constrain=True):
     """
-    仿射投影算法(Affine Projection Algorithm)实现
+    PFDAF算法的主函数
 
     参数:
-    x: 参考信号（系统音频）
-    d: 带回声信号（麦克风录音）
-    N: 滤波器长度
-    P: 投影阶数
+    x: 参考信号
+    d: 带回声信号
+    N: 滤波器块数
+    M: 每块的长度
     mu: 步长参数
+    partial_constrain: 是否使用部分约束
 
     返回:
     e: 回声消除后的信号
     """
-    nIters = min(len(x), len(d)) - N
-    u = np.zeros(N)
-    A = np.zeros((N, P))
-    D = np.zeros(P)
-    w = np.zeros(N)
-    e = np.zeros(nIters)
+    ft = PFDAF(N, M, mu, partial_constrain)
+    num_block = min(len(x), len(d)) // M
+    e = np.zeros(num_block * M)
 
-    alpha = 0.1  # 正则化参数
-
-    for n in range(nIters):
-        # 更新输入矩阵
-        for i in range(P):
-            if i == 0:
-                A[:, i] = x[n : n + N]
-            else:
-                if n - i >= 0:
-                    A[:, i] = x[n - i : n - i + N]
-
-        # 更新期望输出
-        for i in range(P):
-            if n - i >= 0:
-                D[i] = d[n + N - 1 - i]
-
-        # 计算输出
-        y = np.dot(w, A[:, 0])
-
-        # 计算误差
-        e_n = D[0] - y
-
-        # 计算自相关矩阵
-        R = np.dot(A.T, A)
-
-        # 添加正则化项以确保稳定性
-        R = R + alpha * np.eye(P)
-
-        # 计算更新项
-        dw = mu * np.dot(A, np.linalg.solve(R, D - np.dot(A.T, w)))
-
-        # 更新滤波器系数
-        w = w + dw
-
-        # 保存误差
-        e[n] = e_n
+    for n in range(num_block):
+        x_n = x[n * M : (n + 1) * M]
+        d_n = d[n * M : (n + 1) * M]
+        e_n = ft.filt(x_n, d_n)
+        e[n * M : (n + 1) * M] = e_n
 
     return e
 
@@ -74,7 +124,7 @@ def apa(x, d, N=256, P=5, mu=0.1):
 class DualRecorder:
     def __init__(self):
         """初始化双通道录音器"""
-        print("使用APA(仿射投影算法)进行回声消除")
+        print("使用PFDAF(分区频域自适应滤波器)进行回声消除")
 
     def record_dual_audio(self, duration=5, output_folder="recordings"):
         """同时录制麦克风输入和系统音频"""
@@ -211,15 +261,16 @@ class DualRecorder:
         print(f"系统音频已保存至 {sys_file}")
 
         # 回声消除处理
-        print("正在应用APA回声消除...")
+        print("正在应用PFDAF回声消除...")
 
-        # 应用APA算法
-        clean_audio = apa(
+        # 应用PFDAF算法[^6]
+        clean_audio = pfdaf(
             sys_recording,  # 参考信号（系统音频）
             mic_recording,  # 带回声信号（麦克风录音）
-            N=256,  # 滤波器长度
-            P=5,  # 投影阶数
+            N=8,  # 滤波器块数
+            M=64,  # 每块的长度
             mu=0.1,  # 步长参数
+            partial_constrain=True,  # 使用部分约束
         )
 
         # 处理后的音频可能需要补齐长度
@@ -253,6 +304,7 @@ def main():
 
     args = parser.parse_args()
 
+    # 创建录音器实例
     recorder = DualRecorder()
 
     if args.record:

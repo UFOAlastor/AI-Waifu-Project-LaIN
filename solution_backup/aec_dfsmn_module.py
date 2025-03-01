@@ -1,6 +1,5 @@
-# aec_module.py
-# 目前采用apa算法方案, 依旧没有达到可用效果, 有待进一步优化和调试, 目前不启用
-
+from modelscope.pipelines import pipeline
+from modelscope.utils.constant import Tasks
 import sounddevice as sd
 import numpy as np
 import wavio
@@ -8,73 +7,129 @@ import soundfile as sf
 import time
 import os
 import threading
+from scipy import signal
+import tempfile
 
 
-def apa(x, d, N=256, P=5, mu=0.1):
+def gcc_phat(sig, refsig, fs=1, max_tau=None, interp=16):
     """
-    仿射投影算法(Affine Projection Algorithm)实现
+    使用GCC-PHAT算法计算两个信号的时间延迟
+    sig: 信号
+    refsig: 参考信号
+    fs: 采样率
+    max_tau: 最大延迟时间
+    interp: 插值因子
+    """
+    # 确保信号长度一致
+    n = len(sig)
+
+    # 计算FFT
+    sig_fft = np.fft.rfft(sig)
+    refsig_fft = np.fft.rfft(refsig)
+
+    # 计算互功率谱
+    R = sig_fft * np.conj(refsig_fft)
+
+    # PHAT加权
+    R /= np.abs(R) + 1e-10
+
+    # 计算互相关
+    cc = np.fft.irfft(R)
+
+    # 找到最大互相关
+    max_shift = int(n / 2)
+    if max_tau:
+        max_shift = min(int(fs * max_tau), max_shift)
+
+    cc = np.concatenate((cc[-max_shift:], cc[: max_shift + 1]))
+
+    # 使用插值提高精度
+    if interp > 1:
+        xp = np.linspace(0, len(cc) - 1, len(cc))
+        x = np.linspace(0, len(cc) - 1, len(cc) * interp)
+        cc = np.interp(x, xp, cc)
+
+    # 找到最大值
+    shift = np.argmax(cc) - len(cc) // 2
+    tau = shift / (float(interp) * fs)
+
+    return tau
+
+
+def resample_audio(audio, orig_sr, target_sr):
+    """重采样音频到目标采样率"""
+    if orig_sr == target_sr:
+        return audio
+
+    # 计算重采样比例
+    resample_ratio = target_sr / orig_sr
+
+    # 重采样
+    resampled = signal.resample(audio, int(len(audio) * resample_ratio))
+
+    return resampled
+
+
+def align_audio_arrays(ref_data, mic_data, sr=44100, max_tau=0.5):
+    """
+    对齐参考音频和麦克风音频，并返回对齐后的音频数组。
 
     参数:
-    x: 参考信号（系统音频）
-    d: 带回声信号（麦克风录音）
-    N: 滤波器长度
-    P: 投影阶数
-    mu: 步长参数
+        ref_data (np.ndarray): 参考音频信号
+        mic_data (np.ndarray): 麦克风录音信号
+        sr (int): 采样率
+        max_tau (float): 最大延迟时间（秒）
 
     返回:
-    e: 回声消除后的信号
+        ref_aligned (np.ndarray): 对齐后的参考音频
+        mic_aligned (np.ndarray): 对齐后的麦克风音频
     """
-    nIters = min(len(x), len(d)) - N
-    u = np.zeros(N)
-    A = np.zeros((N, P))
-    D = np.zeros(P)
-    w = np.zeros(N)
-    e = np.zeros(nIters)
+    # 确保两个音频是单声道
+    if ref_data.ndim > 1:
+        ref_data = ref_data[:, 0]
+    if mic_data.ndim > 1:
+        mic_data = mic_data[:, 0]
 
-    alpha = 0.1  # 正则化参数
+    # 计算时间延迟
+    tau = gcc_phat(
+        mic_data[: sr * 10], ref_data[: sr * 10], fs=sr, max_tau=max_tau, interp=16
+    )
+    print(f"原始计算的时间延迟: {tau} 秒")
 
-    for n in range(nIters):
-        # 更新输入矩阵
-        for i in range(P):
-            if i == 0:
-                A[:, i] = x[n : n + N]
-            else:
-                if n - i >= 0:
-                    A[:, i] = x[n - i : n - i + N]
+    # 转换为采样点，并保留符号
+    tau_samples = int(round(tau * sr))
+    print(f"转换后的时间延迟: {tau_samples} 采样点")
 
-        # 更新期望输出
-        for i in range(P):
-            if n - i >= 0:
-                D[i] = d[n + N - 1 - i]
+    # 对齐信号
+    if tau_samples > 0:
+        # mic 信号滞后于 ref 信号，前面补零
+        mic_aligned = np.pad(mic_data, (tau_samples, 0), "constant")[: len(ref_data)]
+        ref_aligned = ref_data[: len(mic_aligned)]
+    elif tau_samples < 0:
+        # mic 信号提前于 ref 信号，前面补零
+        ref_aligned = np.pad(ref_data, (-tau_samples, 0), "constant")[: len(mic_data)]
+        mic_aligned = mic_data[: len(ref_aligned)]
+    else:
+        # 没有延迟
+        ref_aligned = ref_data
+        mic_aligned = mic_data
 
-        # 计算输出
-        y = np.dot(w, A[:, 0])
+    # 确保对齐后的信号长度一致
+    min_len = min(len(ref_aligned), len(mic_aligned))
+    ref_aligned = ref_aligned[:min_len]
+    mic_aligned = mic_aligned[:min_len]
 
-        # 计算误差
-        e_n = D[0] - y
-
-        # 计算自相关矩阵
-        R = np.dot(A.T, A)
-
-        # 添加正则化项以确保稳定性
-        R = R + alpha * np.eye(P)
-
-        # 计算更新项
-        dw = mu * np.dot(A, np.linalg.solve(R, D - np.dot(A.T, w)))
-
-        # 更新滤波器系数
-        w = w + dw
-
-        # 保存误差
-        e[n] = e_n
-
-    return e
+    return ref_aligned, mic_aligned, sr
 
 
 class DualRecorder:
     def __init__(self):
         """初始化双通道录音器"""
-        print("使用APA(仿射投影算法)进行回声消除")
+        print("使用ModelScope的AEC管道进行回声消除")
+        # 初始化ModelScope AEC管道
+        self.aec_pipeline = pipeline(
+            Tasks.acoustic_echo_cancellation, model="damo/speech_dfsmn_aec_psm_16k"
+        )
 
     def record_dual_audio(self, duration=5, output_folder="recordings"):
         """同时录制麦克风输入和系统音频"""
@@ -82,8 +137,9 @@ class DualRecorder:
         os.makedirs(output_folder, exist_ok=True)
 
         # 录音参数设置
-        sample_rate = 44100
-        channels = 2
+        sample_rate = 16000  # ModelScope模型可能要求16k采样率
+        channels = 1  # ModelScope模型可能需要单声道
+
         timestamp = time.strftime("%Y%m%d")
 
         # 文件名
@@ -116,6 +172,7 @@ class DualRecorder:
                 or "Loopback" in dev["name"]
             ):
                 sys_device = i
+                break
 
         if mic_device is None or sys_device is None:
             print("错误: 未找到麦克风或系统音频设备")
@@ -191,9 +248,14 @@ class DualRecorder:
             print("录音失败: 未获取到有效音频数据")
             return None
 
-        # 修改为单通道
-        mic_recording = mic_recording[:, 0]
-        sys_recording = sys_recording[:, 1]
+        # 确保单声道
+        mic_recording = mic_recording[:, 0] if mic_recording.ndim > 1 else mic_recording
+        sys_recording = sys_recording[:, 0] if sys_recording.ndim > 1 else sys_recording
+
+        # 对齐音频数据
+        sys_recording, mic_recording, _ = align_audio_arrays(
+            sys_recording, mic_recording, sr=sample_rate
+        )
 
         # 归一化
         if np.max(np.abs(mic_recording)) > 0:
@@ -211,31 +273,40 @@ class DualRecorder:
         print(f"系统音频已保存至 {sys_file}")
 
         # 回声消除处理
-        print("正在应用APA回声消除...")
+        print("正在应用ModelScope的AEC回声消除...")
 
-        # 应用APA算法
-        clean_audio = apa(
-            sys_recording,  # 参考信号（系统音频）
-            mic_recording,  # 带回声信号（麦克风录音）
-            N=256,  # 滤波器长度
-            P=5,  # 投影阶数
-            mu=0.1,  # 步长参数
-        )
+        # 使用临时文件保存输入音频
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            nearend_mic_path = os.path.join(tmpdirname, "nearend_mic.wav")
+            farend_speech_path = os.path.join(tmpdirname, "farend_speech.wav")
+            cleaned_output_path = os.path.join(tmpdirname, "cleaned_output.wav")
 
-        # 处理后的音频可能需要补齐长度
-        if len(clean_audio) < len(mic_recording):
-            clean_audio = np.pad(
-                clean_audio, (0, len(mic_recording) - len(clean_audio)), "constant"
-            )
+            # 保存对齐后的音频为临时文件
+            sf.write(nearend_mic_path, mic_recording, sample_rate)
+            sf.write(farend_speech_path, sys_recording, sample_rate)
 
-        # 保存处理后的音频
-        sf.write(output_file, clean_audio, sample_rate)
-        print(f"回声消除后的音频已保存至 {output_file}")
+            # 准备输入字典
+            input_dict = {
+                "nearend_mic": nearend_mic_path,
+                "farend_speech": farend_speech_path,
+            }
+
+            # 调用AEC管道
+            result = self.aec_pipeline(input_dict, output_path=cleaned_output_path)
+
+            print("回声消除完成。")
+
+            # 将清理后的音频复制到输出文件夹
+            os.makedirs(output_folder, exist_ok=True)
+            final_clean_file = os.path.join(output_folder, output_file)
+            sf.copy(cleaned_output_path, final_clean_file)
+
+            print(f"回声消除后的音频已保存至 {final_clean_file}")
 
         return {
             "mic_file": mic_file,
             "sys_file": sys_file,
-            "clean_file": output_file,
+            "clean_file": final_clean_file,
         }
 
 
@@ -250,9 +321,11 @@ def main():
     parser.add_argument(
         "--output_folder", type=str, default="./audio", help="录音输出文件夹"
     )
+    # 移除模型路径参数，因为使用ModelScope的预训练模型
 
     args = parser.parse_args()
 
+    # 创建录音器实例，使用ModelScope AEC
     recorder = DualRecorder()
 
     if args.record:
