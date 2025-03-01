@@ -15,8 +15,7 @@ logger = logging.getLogger()
 # 导入模块类
 from ui_module import UIDisplay  # 界面
 from lettaModel_module import LettaModel  # letta框架
-from ollamaModel_module import ollamaModel  # ollama框架
-from openaiTypeModel_module import openaiTypeModel  # openaiType模型
+from functioncall_module import FunctioncallManager  # 带函数调用的模型框架
 from mem0_module import memModule  # 记忆模块
 
 
@@ -82,11 +81,11 @@ class MainApp:
         # 模型框架选取
         self.model_frame_type = gcww(self.settings, "model_frame_type", "letta", logger)
         if self.model_frame_type == "letta":
+            # letta框架自带Function功能, 无需额外加载FunctioncallManager
             self.chat_model = LettaModel(self.settings)
-        elif self.model_frame_type == "ollama":
-            self.chat_model = ollamaModel(self.settings)
-        elif self.model_frame_type == "openaiType":
-            self.chat_model = openaiTypeModel(self.settings)
+        elif self.model_frame_type == "ollama" or self.model_frame_type == "openaiType":
+            # 使用FunctioncallManager实现函数调用
+            self.chat_model = FunctioncallManager(self.settings)
         # 记忆框架初始化
         self.mem_module_open = gcww(self.settings, "mem0_switch", True, logger)
         if self.mem_module_open:  # 仅当开启mem0模块时才创建该对象
@@ -97,7 +96,9 @@ class MainApp:
         # 显示UI界面
         self.setup_ui()
         # vitsSpeaker连接槽
-        self.window.recognizer.vits_speaker.audio_start_play.connect(self.start_voice_rec)
+        self.window.recognizer.vits_speaker.audio_start_play.connect(
+            self.start_voice_rec
+        )
         # 针对live2d显示模式绑定口型同步信号
         if self.window.character_display_mode == "live2d":
             self.window.recognizer.vits_speaker.audio_lipsync_signal.connect(

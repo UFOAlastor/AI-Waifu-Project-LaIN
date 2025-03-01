@@ -18,12 +18,12 @@ from functioncall import load_custom_functions
 
 
 class FunctioncallManager:
-    def __init__(
-        self,
-        main_settings,
-        func_descriptions: List[Dict[str, Any]],
-        func_implementations: Dict,
-    ):
+    def __init__(self, main_settings):
+        """初始化FunctioncallManager类"""
+
+        # 加载自定义函数描述和实现
+        func_descriptions, func_implementations = load_custom_functions()
+        # 获取模型框架类型
         self.model_frame_type = gcww(
             main_settings, "model_frame_type", "openaiType", logger
         )
@@ -138,8 +138,7 @@ if __name__ == "__main__":
     with open("./config.yaml", "r", encoding="utf-8") as f:
         settings = yaml.safe_load(f)
 
-    func_descriptions, func_implementations = load_custom_functions()
-    chat_model = FunctioncallManager(settings, func_descriptions, func_implementations)
+    chat_model = FunctioncallManager(settings)
 
     while True:
         try:
