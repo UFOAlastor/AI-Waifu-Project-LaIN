@@ -16,7 +16,7 @@ logger = logging.getLogger()
 from ui_module import UIDisplay  # 界面
 from lettaModel_module import LettaModel  # letta框架
 from ollamaModel_module import ollamaModel  # ollama框架
-from openaiType_module import openaiTypeModel  # openaiType模型
+from openaiTypeModel_module import openaiTypeModel  # openaiType模型
 from mem0_module import memModule  # 记忆模块
 
 

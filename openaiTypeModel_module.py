@@ -5,7 +5,7 @@ import logging
 from logging_config import gcww
 
 # 获取根记录器
-logger = logging.getLogger("openaiType_module")
+logger = logging.getLogger("openaiTypeModel_module")
 
 
 from time_module import DateTime
