@@ -76,7 +76,6 @@ class MainApp:
     def __init__(self):
         # 加载配置文件
         self.settings = load_settings()  # 默认加载路径为 "./config.yaml"
-        self.vpr_match_only = gcww(self.settings, "vpr_match_only", None, logger)
         # UI界面初始化
         self.app = QApplication(sys.argv)
         self.window = UIDisplay(self.settings)  # 初始化图形界面实例
@@ -98,14 +97,10 @@ class MainApp:
         # 显示UI界面
         self.setup_ui()
         # vitsSpeaker连接槽
-        if self.vpr_match_only:
-            # 若配置了仅匹配用户, 就能够起到消除回声的作用, 允许启用语音打断
-            self.window.vits_speaker.audio_start_play.connect(self.start_voice_rec)
-        else:
-            self.window.vits_speaker.audio_played.connect(self.start_voice_rec)
+        self.window.recognizer.vits_speaker.audio_start_play.connect(self.start_voice_rec)
         # 针对live2d显示模式绑定口型同步信号
         if self.window.character_display_mode == "live2d":
-            self.window.vits_speaker.audio_lipsync_signal.connect(
+            self.window.recognizer.vits_speaker.audio_lipsync_signal.connect(
                 self.window.live2d_widget.set_mouth_open_y
             )
 
@@ -116,7 +111,7 @@ class MainApp:
         )
         self.window.text_sent_signal.connect(self.on_text_received)
         self.window.show()
-        self.window.vits_speaker.vits_play(
+        self.window.recognizer.vits_speaker.vits_play(
             "チャロ！わが輩はレイだよ！何かお手伝いできること、あるかな～？"
         )
         # 开场角色立绘/动作表情显示
@@ -246,7 +241,7 @@ class MainApp:
             self.change_emotion(tachie_expression)
 
             # 播放语音, 默认日语
-            self.window.vits_speaker.vits_play(Japanese_message)
+            self.window.recognizer.vits_speaker.vits_play(Japanese_message)
 
         return Chinese_message
 

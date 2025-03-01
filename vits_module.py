@@ -48,6 +48,10 @@ class vitsSpeaker(QObject):
         Returns:
             bytes: 音频序列
         """
+        if self.CLEAN_TEXT:  # 文本清洗，移除不适合朗读的内容
+            text = self.clean_text_for_vits(text)
+            logger.debug(f"文本清洗结果: {text}")
+
         speaker_id = speaker_id or self.SPEAKER_ID  # 默认使用 SPEAKER_ID
         params = {
             "text": text,
@@ -98,6 +102,7 @@ class vitsSpeaker(QObject):
                     self.audio_lipsync_signal.emit(self.wav_handler.GetRms())
                 time.sleep(0.1)
 
+            logger.debug("音频播放完成")
             # 播放完成后发出信号
             self.audio_played.emit()
             # 播放完成后口型归零
@@ -108,13 +113,35 @@ class vitsSpeaker(QObject):
 
     def vits_play(self, text, speaker_id=None, lang="jp", format="wav", length=1.0):
         """输入文本，生成并播放音频"""
-        if self.CLEAN_TEXT:  # 文本清洗，移除不适合朗读的内容
-            text = self.clean_text_for_vits(text)
-            logger.debug(f"文本清洗结果: {text}")
-
         try:
             audio_data = self.get_audio_stream(text, speaker_id, lang, format, length)
 
+            if audio_data is None:
+                logger.error("生成音频失败，无法播放。")
+                return
+
+            logger.info("音频生成成功，正在播放...")
+
+            # 如果已有播放线程，先停止之前的播放
+            if self.audio_thread and self.audio_thread.is_alive():
+                logger.info("正在停止之前的音频播放...")
+                self.vits_stop_audio()
+
+            # 创建一个新的线程来播放音频，这样主程序就不会被阻塞
+            self.stop_event.clear()  # 清除停止事件，准备播放新音频
+            self.audio_thread = threading.Thread(
+                target=self.play_audio, args=(audio_data,)
+            )
+            self.audio_thread.start()
+
+            logger.debug("主程序继续执行，音频正在播放...")
+
+        except Exception as e:
+            logger.error(f"发生错误: {e}")
+
+    def vits_play_audio_data(self, audio_data):
+        """输入文本，生成并播放音频"""
+        try:
             if audio_data is None:
                 logger.error("生成音频失败，无法播放。")
                 return

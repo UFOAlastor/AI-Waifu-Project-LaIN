@@ -3,12 +3,12 @@
 import sys
 from PyQt5.QtCore import QThread
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton
-from asr_module import SpeechRecognition
-from vits_module import vitsSpeaker
 import logging
 
 # 获取根记录器
 logger = logging.getLogger("micButton_module")
+
+from asr_module import SpeechRecognition
 
 
 class RecognitionThread(QThread):
@@ -31,8 +31,6 @@ class MicButton(QWidget):
 
         # 初始化语音识别器
         self.recognizer = SpeechRecognition(main_settings)
-        # 初始化vitsSpeaker
-        self.vits_speaker = vitsSpeaker(main_settings)
 
         # 创建按钮
         self.mic_button = QPushButton("🎤", self)  # 使用麦克风图标作为按钮文字
@@ -94,7 +92,7 @@ class MicButton(QWidget):
         """
         if flag:
             self.set_button_color("green")
-            self.vits_speaker.vits_stop_audio()
+            self.recognizer.vits_speaker.vits_stop_audio()
         else:
             self.set_button_color("gray")
 

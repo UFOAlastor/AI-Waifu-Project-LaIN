@@ -49,19 +49,27 @@ class openaiTypeModel:
 
     def __init__(self, main_settings):
         # 初始化客户端
-        _API_KEY_NAME = gcww(main_settings, "openai_type_API_KEY_NAME", "OPENAI_API_KEY", logger)
+        _API_KEY_NAME = gcww(
+            main_settings, "openai_type_API_KEY_NAME", "OPENAI_API_KEY", logger
+        )
         _api_key = os.environ.get(_API_KEY_NAME)  # 获取环境变量的API Key
-        _BASEURL = gcww(main_settings, "openai_type_BASEURL", "https://api.openai.com", logger)
+        _BASEURL = gcww(
+            main_settings, "openai_type_BASEURL", "https://api.openai.com", logger
+        )
         if not _api_key:
-            logger.error("未检测到API_KEY_NAME环境变量, 请在环境中设置该变量以继续.")
-            raise ValueError("API_KEY_NAME未找到, 请配置环境变量.")
+            logger.error(
+                f"未检测到{_API_KEY_NAME}环境变量, 请在环境中设置该变量以继续."
+            )
+            raise ValueError(f"{_API_KEY_NAME}未找到, 请配置环境变量.")
         self.client = OpenAI(
             api_key=_api_key,
             base_url=_BASEURL,
         )
         self.bot_name = gcww(main_settings, "dialog_label", "assistant", logger)
         self.model = gcww(main_settings, "openai_type_model", "deepseek-chat", logger)
-        self.temperature = gcww(main_settings, "openai_type_model_temperature", 0, logger)
+        self.temperature = gcww(
+            main_settings, "openai_type_model_temperature", 0, logger
+        )
         self.messages = [{"role": "system", "content": self.SYSTEMPROMPT}]
         # 初始化时间工具
         self.formatted_dt = DateTime()

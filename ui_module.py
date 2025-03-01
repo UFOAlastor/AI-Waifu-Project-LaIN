@@ -21,7 +21,6 @@ logger = logging.getLogger("ui_module")
 
 from micButton_module import MicButton
 from live2d_module import Live2DWidget
-from vpr_module import VoicePrintRecognition
 
 
 # 在 UIDisplay 类中设置事件过滤器
@@ -195,9 +194,6 @@ class UIDisplay(QMainWindow, MicButton):
 
         self._UI_init(main_settings)
 
-        # 初始化声纹管理器
-        self.vpr_manager = VoicePrintRecognition(main_settings)
-
         # 绑定语音识别信号量给对话框更新
         self.recognizer.update_text_signal.connect(self.whisper_stream_update)
         self.recognizer.recording_ended_signal.connect(self.send_text)
@@ -215,7 +211,7 @@ class UIDisplay(QMainWindow, MicButton):
             tuple_data (tuple): 语音识别二元对, 包含音频序列与识别文本
         """
         audio_frames, text = tuple_data
-        self.user_name = self.vpr_manager.match_voiceprint(audio_frames)
+        self.user_name = self.recognizer.vpr_manager.match_voiceprint(audio_frames)
         if not self.recognizer_is_updating:
             logger.debug(f"触发文本显示: {self.user_name}, {text}")
             self.recognizer_is_updating = True
@@ -449,7 +445,7 @@ class UIDisplay(QMainWindow, MicButton):
     def closeEvent(self, event: QEvent):
         if self.recognizer._is_running:
             self.recognition_thread.stop()  # 如果语音识别正在进行，停止线程
-        self.vits_speaker.vits_stop_audio()  # 停止音频播放
+        self.recognizer.vits_speaker.vits_stop_audio()  # 停止音频播放
         event.accept()  # 正常关闭窗口
 
 

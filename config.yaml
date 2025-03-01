@@ -77,8 +77,8 @@ ollama_max_tokens: 131072 # 请根据选取的模型说明进行设定
 # openai类模型的API以及baseurl设置 (API KEY请配置在环境变量[API_KEY_NAME]中)
 openai_type_model: "gpt-4o-mini" # 根据选取的模型平台配置
 openai_type_model_temperature: 0.74 # 模型温度
-openai_type_API_KEY_NAME: "GPTPLUS5_API_KEY" # API_KEY的环境变量名称, 配置到环境变量即可
-openai_type_BASEURL: "https://az.gptplus5.com/v1" # API请求的baseurl
+openai_type_API_KEY_NAME: "O3FAN_API_KEY" # API_KEY的环境变量名称, 配置到环境变量即可
+openai_type_BASEURL: "https://api.o3.fan/v1" # API请求的baseurl
 
 # 历史消息数据库 (配合ollama或deepseek官方API时使用, letta已经集成了)
 history_max_num: 100 # 最大保存记录数 (不用过大, 毕竟模型输入上下文窗口大小有限)
@@ -95,9 +95,8 @@ vits_clean_text: true # 是否开启文本清洗 (去除难以发音的部分, �
 
 # 语音识别设置
 asr_model_dir: "./SenseVoiceSmall" # SenseVoiceSmall模型权重文件位置
-asr_auto_send_silence_time: 1.8 # 持续静音asr_auto_send_silence_time时间后自动发送 (设置为-1则不自动发送)
+asr_auto_send_silence_time: 1.6 # 持续静音asr_auto_send_silence_time时间后自动发送 (设置为-1则不自动发送)
 
 # 声纹检测
-vpr_match_only: ["Tor"] # 对特定群体声纹开启语音识别 (需要关闭可以将List留空或填None, 关闭后匹配所有用户-->会导致无法打断语音, 因为还没实现回声消除XD)
 vpr_model: "damo/speech_campplus_sv_zh-cn_16k-common" # 使用的声纹识别模型路径 (不用修改, 会自动下载)
 vpr_similarity_threshold: 0.7 # 认可声纹匹配的精确度阈值
