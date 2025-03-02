@@ -2,7 +2,6 @@
 
 import yaml
 import json
-from typing import Dict, Any, List
 import logging
 from logging_config import gcww
 
@@ -21,8 +20,6 @@ class FunctioncallManager:
     def __init__(self, main_settings):
         """初始化FunctioncallManager类"""
 
-        # 加载自定义函数描述和实现
-        func_descriptions, func_implementations = load_custom_functions()
         # 获取模型框架类型
         self.model_frame_type = gcww(
             main_settings, "model_frame_type", "openaiType", logger
@@ -39,31 +36,39 @@ class FunctioncallManager:
             )
 
         # 初始化函数映射
-        self.functions = func_descriptions
-        self.function_map = self.register_function(func_implementations)
+        self.functions = []
+        self.function_map = {}
 
-        for func_name, _ in func_implementations.items():
-            logger.debug(f"加载函数: {func_name}")
+        # 加载自定义函数描述和实现
+        func_descriptions, func_implementations = load_custom_functions()
+        self.register_func_desc(func_descriptions)
+        self.register_func_impl(func_implementations)
 
-    def register_function(self, name, func=None):
+    def register_func_desc(self, func_desc):
+        if isinstance(func_desc, list):
+            self.functions += func_desc
+        else:
+            self.functions.append(func_desc)
+
+    def register_func_impl(self, name, func_impl=None):
         """
         支持三种调用方式：
         1. 注册单个函数：register_function("func_name", func_impl)
         2. 批量注册字典：register_function({"func1": func1, "func2": func2})
         3. 批量注册列表：register_function([("func1", func1), ("func2", func2)])
         """
-        _function_map = {}
-        if isinstance(name, dict) and func is None:
-            _function_map.update(name)
-        elif isinstance(name, (list, tuple)) and func is None:
+        if isinstance(name, dict) and func_impl is None:
+            self.function_map.update(name)
+        elif isinstance(name, (list, tuple)) and func_impl is None:
             for n, f in name:
-                _function_map[n] = f
-        elif isinstance(name, str) and func is not None:
-            _function_map[name] = func
+                self.function_map[n] = f
+        elif isinstance(name, str) and func_impl is not None:
+            self.function_map[name] = func_impl
         else:
             raise TypeError("支持格式：1) (str, func) 2) {str:func} 3) [(str,func)]")
 
-        return _function_map
+        for func_name, _ in self.function_map.items():
+            logger.debug(f"加载函数: {func_name}")
 
     def get_response(self, user_name: str, user_input: str) -> str:
         # 先发送用户消息给LLM

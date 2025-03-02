@@ -72,6 +72,30 @@ def load_settings(file_path="./config.yaml"):
 
 
 class MainApp:
+    # 系统函数
+    def register_voiceprint(self, user_name):
+        logger.debug(f"进行用户{user_name}的声纹注册")
+        self.window.recognizer.vpr_manager.register_voiceprint(
+            self._tmp_audio_frames, user_name
+        )
+
+    SYSTEM_FUNC_DESC = [
+        {
+            "name": "register_voiceprint",
+            "description": "注册当前对话者的声纹样本",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "user_name": {
+                        "type": "string",
+                        "description": "注册用户名称",
+                    },
+                },
+                "required": ["user_name"],
+            },
+        }
+    ]
+
     def __init__(self):
         # 加载配置文件
         self.settings = load_settings()  # 默认加载路径为 "./config.yaml"
@@ -86,6 +110,10 @@ class MainApp:
         elif self.model_frame_type == "ollama" or self.model_frame_type == "openaiType":
             # 使用FunctioncallManager实现函数调用
             self.chat_model = FunctioncallManager(self.settings)
+            # 设置用户音频缓存
+            self._tmp_audio_frames = []
+            # 注册系统函数
+            self.register_system_funcall()
         # 记忆框架初始化
         self.mem_module_open = gcww(self.settings, "mem0_switch", True, logger)
         if self.mem_module_open:  # 仅当开启mem0模块时才创建该对象
@@ -147,6 +175,14 @@ class MainApp:
                 ),
             )
 
+    def register_system_funcall(self):
+        """注册系统函数调用"""
+
+        self.chat_model.register_func_desc(self.SYSTEM_FUNC_DESC)
+        self.chat_model.register_func_impl(
+            "register_voiceprint", self.register_voiceprint
+        )
+
     def start_voice_rec(self):
         """继续开启语音识别"""
         if self.window.mic_button_pressed_state:
@@ -162,10 +198,23 @@ class MainApp:
         Args:
             tuple_data (tuple): 输入给模型的二元对, 内容为(user_name, input_text)
         """
-        user_name, input_text = tuple_data
+        self._tmp_audio_frames, input_text = tuple_data
+        user_name = self.window.recognizer.vpr_manager.match_voiceprint(
+            self._tmp_audio_frames
+        )
+
         if input_text:
             # 显示动态省略号动画
             self.start_typing_animation()
+
+            # 实现自然的声纹注册
+            if user_name == "Unknown":
+                logger.debug("声纹未匹配到用户: Unknown")
+                input_text = (
+                    "[用户声纹未注册,请引导用户说出身份以完成注册; 如果用户已经表明身份, 请提取出用户名称, 并调用register_voiceprint函数进行注册]\n\n"
+                    + input_text
+                )
+
             # 启动后台线程调用模型
             if self.mem_module_open:
                 self.worker = ChatModelWorker(

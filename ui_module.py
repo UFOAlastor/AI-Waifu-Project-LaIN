@@ -1,6 +1,7 @@
 # ui_module.py
 
 import sys
+import copy
 from PyQt5.QtCore import Qt, QEvent, pyqtSignal, QTimer, QUrl
 from PyQt5.QtGui import QImage, QPixmap, QIcon, QDesktopServices
 from PyQt5.QtWidgets import (
@@ -200,13 +201,18 @@ class UIDisplay(QMainWindow, MicButton):
 
         # 用户名称, 默认未知
         self.user_name = "Unknown"
+        # 用户语音输入, 默认为空
+        self.audio_frames = []
 
         # 打字机效果显示采用计时器实现
         self.typing_timer = QTimer(self)
 
     def update_label_text(self, user_name):
-        """更新标签文本并添加显示用户名很"""
-        _label_text = self.label_text + "\t[" + user_name + "]"  # 改变标签文本
+        """更新标签文本并添加显示用户名"""
+        if user_name != "":
+            _label_text = self.label_text + "\t[" + user_name + "]"  # 改变标签文本
+        else:
+            _label_text = self.label_text
         if self.dialog_label:  # 检查dialog_label是否存在
             self.dialog_label.setText(_label_text)  # 更新标签显示
 
@@ -216,8 +222,9 @@ class UIDisplay(QMainWindow, MicButton):
         Args:
             tuple_data (tuple): 语音识别二元对, 包含音频序列与识别文本
         """
-        audio_frames, text = tuple_data
-        self.user_name = self.recognizer.vpr_manager.match_voiceprint(audio_frames)
+        _tmp_audio_frames, text = tuple_data
+        self.audio_frames = self.audio_frames + _tmp_audio_frames  # 累积用户有语音数据
+        self.user_name = self.recognizer.vpr_manager.match_voiceprint(self.audio_frames)
         self.update_label_text(self.user_name)
         if not self.recognizer_is_updating:
             self.recognizer_is_updating = True
@@ -332,10 +339,12 @@ class UIDisplay(QMainWindow, MicButton):
         text = self.dialog_text.toPlainText().replace("\n", "\\n ").strip()
         if text:
             logger.debug(f"发送的文本: {text}")
-            self.text_sent_signal.emit(
-                (self.user_name, text)
-            )  # 发射信号，将文本发送出去
+            # 发射信号，将用户语音数据与文本发送出去
+            copied_frames = copy.deepcopy(self.audio_frames)  # 使用深拷贝传递数据
+            self.text_sent_signal.emit((copied_frames, text))
             self.dialog_text.clear()  # 清空文本框内容
+            self.audio_frames.clear()  # 清空音频帧数据
+            self.update_label_text("")  # 重置标签显示
 
     def display_text(self, content, is_non_user_input=False):
         """对话框显示文本内容，is_non_user_input 为 True 时表示启动提示或模型返回内容
