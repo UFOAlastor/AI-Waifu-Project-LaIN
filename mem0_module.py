@@ -96,7 +96,7 @@ class memModule(Mem0Client):
         weekday = weekdays_cn[dt.weekday()]
         return dt.strftime("%Y年%m月%d日 %H时%M分%S秒 ") + weekday
 
-    def _format_memory_entry(self, data: dict, accuracy: float = None) -> str:
+    def _format_memory_entry(self, data: dict, accuracy: float = 0) -> str:
         """将记忆数据结构转换为自然语言格式
 
         Args:
@@ -107,7 +107,6 @@ class memModule(Mem0Client):
                 - updated_at: 更新时间（可选）
                 - user_id: 用户ID（可选）
             accuracy: 精确度阈值, 范围[0,1], 用于过滤置信度分数低于该阈值的记忆数据
-                - 如果accuracy为None, 则不进行置信度分数过滤.
 
         Returns:
             str: 自然语言格式的文本描述
@@ -142,13 +141,13 @@ class memModule(Mem0Client):
             f"({', '.join(details)})" if details else ""
         )
 
-    def recall_mem(self, user_name: str, input_text: str, accuracy: float = None):
+    def recall_mem(self, user_name: str, input_text: str, accuracy: float = 0.6):
         """召回与用户话题相关记忆
 
         Args:
             user_name (str): 用户名称
             input_text (str): 用户输入
-            accuracy (float): 精确度阈值, 范围[0,1] (默认为None, 表示不进行精确度过滤)
+            accuracy (float): 精确度阈值(默认0.5), 范围[0,1]
 
         Returns:
             str: 与用户话题相关的记忆信息
@@ -157,10 +156,19 @@ class memModule(Mem0Client):
             logger.warning("记忆召回异常, input_text为空!")
             return ""
         self.pre_user_name, self.pre_user_content = user_name, input_text
-        mem_list = self.search_mem(input_text, user_name)
+        mem_list = self.search_mem(input_text, user_name).get("results")
+
+        # 添加调试日志，检查 mem_list 的内容和类型
+        logger.debug(f"mem_list内容: {mem_list}")
+        for idx, mem in enumerate(mem_list):
+            logger.debug(f"mem_list[{idx}] 类型: {type(mem)}, 内容: {mem}")
+
         mem_prompt = "以下是可能与用户和话题相关的记忆:"
         mem_entrys = ""
         for mem_dict in mem_list:
+            if not isinstance(mem_dict, dict):
+                logger.warning(f"mem_dict格式错误: {type(mem_dict)}")
+                continue
             _temp = self._format_memory_entry(mem_dict, accuracy)
             if _temp != None:
                 mem_entrys += "\n" + _temp
@@ -204,4 +212,4 @@ if __name__ == "__main__":
 
     print(f"\n全部记忆召回: \n{client.get_all_mem('Tor')}\n")
 
-    print(f"\n特定记忆召回: \n{client.recall_mem('Tor', '今天应该吃什么水果', 0.5)}\n")
+    print(f"\n特定记忆召回: \n{client.recall_mem('Tor', '喜欢吃什么水果')}\n")

@@ -211,7 +211,7 @@ class MainApp:
             if user_name == "Unknown":
                 logger.debug("声纹未匹配到用户: Unknown")
                 input_text = (
-                    "[用户声纹未注册,请引导用户说出身份以完成注册; 如果用户已经表明身份, 请提取出用户名称, 并调用register_voiceprint函数进行注册]\n\n"
+                    "[用户声纹未注册, 如果用户没有表明身份, 请引导用户说出身份以完成注册; 如果用户已经表明身份, 应该立刻提取出用户名称并调用register_voiceprint函数进行注册, 无需和用户进行确认]\n\n"
                     + input_text
                 )
 

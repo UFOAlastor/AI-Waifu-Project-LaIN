@@ -12,11 +12,15 @@ pyqt5
 pyyaml
 requests
 silero_vad
-mem0ai
 letta
 letta_client
 ollama
+mem0ai
 torch
 wavio
 sounddevice
 duckduckgo_search
+addict
+simplejson
+sortedcontainers
+datasets
