@@ -1,0 +1,81 @@
+LaIN AI Waifu Project  LICENSE
+================================================================================
+
+LaIN AI Waifu Project
+Copyright (C) 2024 [Your Name/Organization]
+
+本程序是自由软件：您可以依据自由软件基金会发布的GNU Affero通用公共许可证条款
+（即AGPL-3.0或更新版本）重新发布和/或修改此程序。
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+附加条款 - Additional Terms
+--------------------------------------------------------------------------------
+
+一. 商业使用限制 (Commercial Use Restrictions)
+1. 本项目的完整副本（包括但不限于代码、数据、模型）仅可用于非商业用途。商业用途包括但不限于：
+   - 直接销售本软件或修改版本
+   - 作为商业产品/服务的技术组件
+   - 用于产生收入的运营场景
+   - 企业内超过50名员工的使用场景
+2. 二次开发限制：
+   - 任何基于本项目的修改版本必须保持相同的AGPL-3.0协议
+   - 禁止通过技术手段规避商业使用限制
+3. 动漫形象数据特别条款：
+   - 本项目包含的动漫角色形象相关数据仅用于技术演示
+   - 禁止将这些数据用于任何商业目的
+   - 如需商业使用请自行获取官方授权
+
+二. 贡献者协议 (Contributor Agreement)
+1. 所有贡献者默认同意其提交的代码将遵循AGPL-3.0协议
+2. 贡献者应确保提交内容不包含任何第三方版权材料
+3. 本项目不接受包含商业授权条款的代码贡献
+
+三. 免责声明 (Disclaimer)
+1. 使用者需自行承担因使用本软件导致的任何法律风险
+2. 开发者不对数据版权问题提供任何担保
+3. 禁止将本项目用于任何违法用途
+
+完整协议文本详见：https://www.gnu.org/licenses/agpl-3.0.html
+
+================================================================================
+
+LaIN AI Waifu Project
+Copyright (C) 2024 [Your Name/Organization]
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Additional Terms
+--------------------------------------------------------------------------------
+
+I. Commercial Use Restrictions
+1. The complete copy of this project (including code, data, models) may only be used for non-commercial purposes. Commercial use includes but not limited to:
+   - Direct sale of the software or modified versions
+   - Use as technical components in commercial products/services
+   - Operational scenarios generating revenue
+   - Enterprise usage exceeding 50 employees
+2. Derivative Works Requirements:
+   - Any modified versions must retain the same AGPL-3.0 license
+   - Technical circumvention of commercial restrictions is prohibited
+3. Anime Data Special Terms:
+   - Anime character-related data included is for technical demonstration only
+   - Commercial use of these data is strictly prohibited
+   - Obtain official authorization for any commercial usage
+
+II. Contributor Agreement
+1. Contributors automatically agree their code submissions will follow AGPL-3.0
+2. Contributors must ensure submissions contain no third-party copyrighted material
+3. This project does not accept code contributions with commercial licensing terms
+
+III. Disclaimer
+1. Users assume all legal risks associated with software usage
+2. No warranties provided regarding data copyright compliance
+3. Any illegal usage is strictly prohibited
+
+The complete license text is available at: https://www.gnu.org/licenses/agpl-3.0.html

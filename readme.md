@@ -6,7 +6,7 @@
 
 ![1737281226243](image/readme/1737281226243.png)
 
-## 功能介绍
+## 🌟功能介绍
 
 - 长期记忆
   - 可选letta框架, 上手简单, 部署容易
@@ -35,7 +35,7 @@
 - 本地历史记录
   - 支持本地的历史记录保存, 可在配置文件中进行具体设置
 
-## 使用说明
+## 🖥️使用说明
 
 注意: **本项目的表情切换依赖prompt配置实现, 请务必关注prompt示例内容!**
 
@@ -66,7 +66,7 @@
    4. 执行 `main.py`主程序 (初次加载模型可能会有较长耗时, 请耐心等待)
    5. 开始对话~
 
-## 参考项目
+## 🤝参考项目
 
 - [letta-ai/letta: Letta (formerly MemGPT) is a framework for creating LLM services with memory.](https://github.com/letta-ai/letta)
 - [FunAudioLLM/SenseVoice: Multilingual Voice Understanding Model](https://github.com/FunAudioLLM/SenseVoice)
@@ -76,3 +76,7 @@
 - [ABexit/ASR-LLM-TTS: This is a speech interaction system built on an open-source model, integrating ASR, LLM, and TTS in sequence. The ASR model is SenceVoice, the LLM models are QWen2.5-0.5B/1.5B, and there are three TTS models: CosyVoice, Edge-TTS, and pyttsx3](https://github.com/ABexit/ASR-LLM-TTS)
 - [hiyouga/ChatNVL-Towards-Visual-Novel-ChatBot](https://github.com/hiyouga/ChatNVL-Towards-Visual-Novel-ChatBot)
 - [Zao-chen/ZcChat: 一个有长期记忆、表情动作立绘显示、立绘动画、语音合成、语音唤醒、直接对话和打断的ai桌宠](https://github.com/Zao-chen/ZcChat?tab=readme-ov-file)
+
+# 📃LICENSE
+
+[LICENSE]()
