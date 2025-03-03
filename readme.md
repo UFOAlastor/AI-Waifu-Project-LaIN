@@ -1,40 +1,39 @@
 # AI Waifu Project: LaIN
 
-一个支持长期记忆, 表情动作, 语音识别, 语音输出, 声纹识别, 打断功能的AI Waifu客户端.
+一个拥有长期记忆, 表情动作, 语音对话/打断/声纹识别, FunctionCall, 多模型支持的AI Waifu客户端.
 
-本项目本质上只是一个demo实现, 仅供学习交流使用, 分享实现与优化的方案~
-
-欢迎提出Issue与Discussion.
+本项目仅供学习交流使用, 欢迎提出Issue与Discussion. Ciallo～(∠・ω< )⌒☆
 
 ![1737281226243](image/readme/1737281226243.png)
 
 ## 功能介绍
 
-- 拥有长期记忆
-
+- 长期记忆
   - 可选letta框架, 上手简单, 部署容易
   - 可选mem0框架, 更高灵活度, 部署较复杂
-- 表情动作显示
-
+- 表情动作
   - 立绘显示方案: 支持自动表情切换
   - live2d模型显示方案: 支持自动表情与动作切换, 口型同步
 - 语音识别输入
-
   - 说话人情感识别(😊高兴, 😡生气/兴奋, 😔悲伤)
   - 背景环境音识别(😀笑声, 🎼音乐, 👏掌声, 🤧咳嗽&喷嚏, 😭哭声)
 - 语音合成输出
-
-  - 角色显示选择live2d模型支持口型同步
+  - 采用vits-simple方案, 可以轻松更换定制角色语音
+- Live2d口型同步
+  - 角色显示方式选择live2d模型以启用口型同步
+- FunctionCall(函数调用)
+  - 支持本地函数调用能力, 允许用户实现自定义函数功能
+- 联网搜索
+  - 对话过程中机器人会自主判断是否需要联网搜索相关信息
 - 声纹识别
-
-  - 可配置限定用户群体语音识别
-  - 说话人身份识别功能 (ps: 可配置模型prompt以登记主人身份)
+  - 说话人身份识别功能 (ps: 可通过配置模型prompt登记主人身份)
+  - 自然主动的声纹注册 (识别到未注册用户, 机器人会主动询问对话人身份, 并自动完成声纹注册)
 - 多种LLM支持
-
-  - 可选基于letta框架, letta框架原生支持多种LLM
-  - 可选基于ollama框架, ollama允许用户简易地自行部署多种LLM
-  - 可选DeepSeek官方API
+  - 可选letta框架, letta框架原生支持多种LLM
+  - 可选ollama框架, ollama允许用户简易地自行部署多种LLM
+  - 可选openaiType接口平台框架 (支持openai, DeepSeek, 第三方openai接口平台等)
 - 本地历史记录
+  - 支持本地的历史记录保存, 可在配置文件中进行具体设置
 
 ## 使用说明
 
@@ -55,10 +54,13 @@
    1. [vits-simple-api](https://github.com/Artrajz/vits-simple-api/blob/main/README_zh.md), 请参考vits-simple官方指引进行配置 (支持docker部署)
    2. 丛雨音色模型: https://github.com/YuzhidaOfficial/yuzhidaofficial.github.io/releases/download/Murasame/Murasame.Vits.zip
 6. 声纹注册:
-   1. 建议开启声纹识别, 因为目前纯python没有开箱即用的AEC回声消除方案, 所以这里取巧用了声纹识别来清除回声, 当然不开启我也做了相应兼容, 缺点就是会关闭语音打断功能
-   2. 运行 `vpr_module.py`, 根据指示注册你的声纹 (记得修改config.yaml配置文件内容)
-7. 运行程序:
-   1. 运行letta服务
+   1. 自动方式: 语音对话中识别到未注册用户, 机器人会主动询问对话人身份, 并自动完成声纹注册
+   2. 手动方式: 修改main函数中预留的注册代码的用户名称部分, 然后运行 `vpr_module.py` 根据提示完成注册
+7. FunctionCall:
+   1. 进入文件夹"./functioncall"路径下, 观察"internet_search.py"示例文件
+   2. 新建你的".py"格式函数文件, 仿照示例文件格式编写"定义函数描述"与"定义函数实现"即可, 主程序启动后会自动加载函数
+8. 运行程序:
+   1. 运行letta服务 (可换成openaiType或ollama服务)
    2. 运行vits-simple服务
    3. 运行qdrant服务 (如果启用了mem0记忆框架)
    4. 执行 `main.py`主程序 (初次加载模型可能会有较长耗时, 请耐心等待)

@@ -15,7 +15,10 @@ functions = [
                     "type": "string",
                     "description": "搜索类型('text' or 'news'), 默认test",
                 },
-                "max_results": {"type": "integer", "description": "最大返回结果数, 默认10个结果"},
+                "max_results": {
+                    "type": "integer",
+                    "description": "最大返回结果数, 默认10个结果",
+                },
             },
             "required": ["query"],
         },
@@ -69,6 +72,7 @@ def internet_search(
     return results
 
 
+# main函数仅用于单独测试使用, 如仅需实现functioncall无需编写main函数
 if __name__ == "__main__":
     query = input("Enter your search query: ")
     region = "zh-cn"

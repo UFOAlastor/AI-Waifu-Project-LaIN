@@ -14,4 +14,9 @@ requests
 silero_vad
 mem0ai
 letta
+letta_client
 ollama
+torch
+wavio
+sounddevice
+duckduckgo_search
