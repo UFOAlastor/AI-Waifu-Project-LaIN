@@ -66,6 +66,12 @@
    4. 执行 `main.py`主程序 (初次加载模型可能会有较长耗时, 请耐心等待)
    5. 开始对话~
 
+## 📝TODO
+
+- [ ] 客户端编译
+- [ ] 语音识别提供可选方案
+- [ ] 实现一种基于记忆框架召回相关角色语料以实现角色语言风格能力的方案 (进度: 新建文件夹ing)
+
 ## 🤝参考项目
 
 - [letta-ai/letta: Letta (formerly MemGPT) is a framework for creating LLM services with memory.](https://github.com/letta-ai/letta)
