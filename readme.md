@@ -79,4 +79,4 @@
 
 # 📃LICENSE
 
-[LICENSE]()
+[LICENSE](https://github.com/UFOAlastor/AI-Waifu-Project-LaIN/blob/main/LICENSE)
