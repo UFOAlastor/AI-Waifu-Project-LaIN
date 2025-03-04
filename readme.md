@@ -41,6 +41,8 @@
 
 (prompt配置请参考prompt_sample.md文件)
 
+测试环境版本为python3.10
+
 1. 在仓库根目录下执行 `pip install -r requirements.txt`指令以安装依赖库
 2. 执行仓库根目录下脚本 `setup.bat`安装所需的模型以及live2d-py等依赖
 3. 查看config.yaml配置文件, 并根据注释说明进行自定义配置

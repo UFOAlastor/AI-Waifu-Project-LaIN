@@ -3,8 +3,8 @@ window_width: 600
 window_height: 800
 window_always_on_top: true # 设置窗口始终保持顶置
 
-# 数据库路径
-database_dir: "./database" # 数据库路径
+# 数据库路径配置
+database_dir: "./database" # 数据库路径 (用于存储对话记录以及声纹数据)
 
 # 对话框(dialog)位置和大小设置 (直接留空会根据window尺寸自动设置)
 dialog_x: 0 # 对话框左上角X轴位置 (原点位于窗口左上角, X轴向右, Y轴向下)
@@ -59,10 +59,10 @@ tachie_default: "微笑" # 默认立绘
 tachie_opening: "高兴" # 开场时临时展现的表情
 tachie_suffix: "png" # 立绘图片格式 (后缀名)
 
-# 模型框架方案选取, 可选项: ["letta", "openaiType", "ollama"] (其中letta也是支持ollama的, 具体的区别请自行查询)
-# 这里单独拎出来一个ollama框架, 是因为后期想要拓展对mem0以及框架的接入; letta框架比较封闭了, 很难做优化
-# 这里又单独拎出来一个openaiType, 可以自行配置支持openai协议格式的模型平台
-model_frame_type: "openaiType"
+# 模型框架方案选取, 可选项: ["letta", "openaiType", "ollama"] (其中letta也是支持ollama的, 具体的区别请查看letta官方文档)
+# 可选ollama框架: 是因为后期想要拓展对mem0以及框架的接入; letta框架比较封闭了, 很难做优化
+# 可选openaiType框架: 可以自行配置支持openai协议格式的模型平台 (包括openai, DeepSeek, 第三方接口平台等)
+model_frame_type: "letta"
 
 # letta框架的agent_id设置
 letta_agent_id: "agent-5ac02c04-dd4f-4cf9-a1b3-6b576b8bbf0d" # 填入你自己的agent_id, 详情参考letta文档: https://docs.letta.com/quickstart
@@ -77,8 +77,8 @@ ollama_max_tokens: 131072 # 请根据选取的模型说明进行设定
 # openai类模型的API以及baseurl设置 (API KEY请配置在环境变量[API_KEY_NAME]中)
 openai_type_model: "gpt-4o-mini" # 根据选取的模型平台配置
 openai_type_model_temperature: 0.74 # 模型温度
-openai_type_API_KEY_NAME: "O3FAN_API_KEY" # API_KEY的环境变量名称, 配置到环境变量即可
-openai_type_BASEURL: "https://api.o3.fan/v1" # API请求的baseurl
+openai_type_API_KEY_NAME: "O3FAN_API_KEY" # API_KEY的环境变量名称, 需要配置到环境变量
+openai_type_BASEURL: "https://api.o3.fan/v1" # API请求的baseurl (请根据自己的接口平台修改)
 
 # 历史消息数据库 (配合ollama或deepseek官方API时使用, letta已经集成了)
 history_max_num: 100 # 最大保存记录数 (不用过大, 毕竟模型输入上下文窗口大小有限)

@@ -21,3 +21,7 @@ tempCodeRunnerFile.python
 /.vscode
 /functioncall/__pycache__
 /.venv
+/upx-5.0.0-win64
+/build/LaIN
+/LaIN.spec
+/LaIN.exe
