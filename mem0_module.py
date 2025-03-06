@@ -1,6 +1,7 @@
 # mem0_module.py
 
 import os
+import requests
 from mem0 import Memory
 from datetime import datetime
 import logging
@@ -18,7 +19,7 @@ class Mem0Client:
             "provider": "ollama",
             "config": {
                 "model": "qwen2.5:7b",
-                "temperature": 0,
+                "temperature": 0.7,
                 "max_tokens": 131072,
                 "ollama_base_url": "http://localhost:11434",  # Ensure this URL is correct
             },
@@ -42,27 +43,27 @@ class Mem0Client:
             _llm_provider = _deepseep_provider
         else:
             _llm_provider = {}
-        config = {
+        self.config = {
             "vector_store": {
                 "provider": "qdrant",
                 "config": {
                     "collection_name": "memory",
                     "host": "localhost",
                     "port": 6333,
-                    "embedding_model_dims": 768,  # Change this according to your embedder's dimensions
+                    "embedding_model_dims": 1024,  # Change this according to your embedder's dimensions
                 },
             },
             "llm": _llm_provider,
             "embedder": {
                 "provider": "ollama",
                 "config": {
-                    "model": "shaw/dmeta-embedding-zh",
-                    # Alternatively, you can use "snowflake-arctic-embed:latest"
+                    "model": "bge-m3",
+                    "embedding_dims": 1024,
                     "ollama_base_url": "http://localhost:11434",
                 },
             },
         }
-        self.memory_client = Memory.from_config(config)
+        self.memory_client = Memory.from_config(self.config)
 
     def add_mem(self, user_text: str, bot_text: str, user_id: str = "Unknown"):
         messages = [
@@ -141,7 +142,7 @@ class memModule(Mem0Client):
             f"({', '.join(details)})" if details else ""
         )
 
-    def recall_mem(self, user_name: str, input_text: str, accuracy: float = 0.6):
+    def recall_mem(self, user_name: str, input_text: str, accuracy: float = 0.7):
         """召回与用户话题相关记忆
 
         Args:
@@ -152,33 +153,37 @@ class memModule(Mem0Client):
         Returns:
             str: 与用户话题相关的记忆信息
         """
-        if input_text == "":
-            logger.warning("记忆召回异常, input_text为空!")
+        try:
+            if input_text == "":
+                logger.warning("记忆召回异常, input_text为空!")
+                return ""
+            self.pre_user_name, self.pre_user_content = user_name, input_text
+            mem_list = self.search_mem(input_text, user_name).get("results")
+
+            # 添加调试日志，检查 mem_list 的内容和类型
+            logger.debug(f"mem_list内容: {mem_list}")
+            for idx, mem in enumerate(mem_list):
+                logger.debug(f"mem_list[{idx}] 类型: {type(mem)}, 内容: {mem}")
+
+            mem_prompt = "以下是可能与用户和话题相关的记忆:"
+            mem_entrys = ""
+            for mem_dict in mem_list:
+                if not isinstance(mem_dict, dict):
+                    logger.warning(f"mem_dict格式错误: {type(mem_dict)}")
+                    continue
+                _temp = self._format_memory_entry(mem_dict, accuracy)
+                if _temp != None:
+                    mem_entrys += "\n" + _temp
+            if mem_entrys == "":
+                result = ""
+                logger.debug("无召回记忆")
+            else:
+                result = mem_prompt + mem_entrys + "\n\n"
+                logger.debug(f"召回记忆: {result}")
+            return result
+        except Exception as e:
+            logger.error(f"Error in recall_mem: {e}")
             return ""
-        self.pre_user_name, self.pre_user_content = user_name, input_text
-        mem_list = self.search_mem(input_text, user_name).get("results")
-
-        # 添加调试日志，检查 mem_list 的内容和类型
-        logger.debug(f"mem_list内容: {mem_list}")
-        for idx, mem in enumerate(mem_list):
-            logger.debug(f"mem_list[{idx}] 类型: {type(mem)}, 内容: {mem}")
-
-        mem_prompt = "以下是可能与用户和话题相关的记忆:"
-        mem_entrys = ""
-        for mem_dict in mem_list:
-            if not isinstance(mem_dict, dict):
-                logger.warning(f"mem_dict格式错误: {type(mem_dict)}")
-                continue
-            _temp = self._format_memory_entry(mem_dict, accuracy)
-            if _temp != None:
-                mem_entrys += "\n" + _temp
-        if mem_entrys == "":
-            result = ""
-            logger.debug("无召回记忆")
-        else:
-            result = mem_prompt + mem_entrys + "\n\n"
-            logger.debug(f"召回记忆: {result}")
-        return result
 
     def record_mem(self, bot_rsp_text: str):
         """记录用户话题相关记忆
@@ -210,6 +215,6 @@ if __name__ == "__main__":
     # client.add_mem("喜欢喝牛奶", "牛奶是一种饮料，对身体有益。", "Tor")
     # client.add_mem("喜欢看动漫", "动漫是一种娱乐方式，可以放松心情。", "Tor")
 
-    print(f"\n全部记忆召回: \n{client.get_all_mem('Tor')}\n")
+    logger.debug(f"\n全部记忆召回: \n{client.get_all_mem('Tor')}\n")
 
-    print(f"\n特定记忆召回: \n{client.recall_mem('Tor', '喜欢吃什么水果')}\n")
+    logger.debug(f"\n特定记忆召回: \n{client.recall_mem('Tor', '喜欢吃什么水果')}\n")

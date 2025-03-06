@@ -17,16 +17,22 @@ def replyParser(reply: str, delimiter: str = "|||"):
     Returns:
         json: 解析后数据
     """
+
     # 1. 检查 reply 是否为字符串类型
     if not isinstance(reply, str):
-        return {"status": 400, "message": "回复内容非字符串类型"}
+        if isinstance(reply, dict):
+            logger.debug(f"reply is a dict: {reply}")
+            if "error" in reply:
+                logger.error(f"reply has error: {reply}")
+                return {"status": 400, "message": f"解析内容报错: {reply.get('error')}"}
+        return {"status": 400, "message": f"解析内容异常: {reply}"}
 
     # 2. 去掉首尾空格、换行符等无效字符
     reply = reply.strip()
 
     # 3. 检查是否为空字符串
     if not reply:
-        return {"status": 400, "message": "回复内容为空"}
+        return {"status": 400, "message": "解析内容为空"}
 
     # 4. 替换掉可能冲突的分隔符（如多余的空格）
     reply = re.sub(r"\s+", " ", reply)
@@ -47,7 +53,7 @@ def replyParser(reply: str, delimiter: str = "|||"):
     if not match:
         return {
             "status": 400,
-            "message": "回复内容格式不正确，应为 {表情}|||{中文}|||{日语}",
+            "message": "解析内容格式不正确，应为 {表情}|||{中文}|||{日语}",
         }
 
     # 9. 提取结果
