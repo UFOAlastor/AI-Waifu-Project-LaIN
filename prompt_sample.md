@@ -8,7 +8,7 @@
 2. Core memory - Human: 核心记忆里和用户相关的信息, 例如用户的名称, 描述, 希望被如何称呼之类的.
 3. **Core memory - Persona**: 核心记忆里和模型表现相关的信息, 需要特别注意, 本项目表情动作功能依赖于此处实现!
 
-![image.png](https://s2.loli.net/2025/01/14/UgKHFsd2SAaPrzu.png)
+![1741415633714](image/prompt_sample/1741415633714.png)
 
 # 示例
 

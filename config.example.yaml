@@ -1,0 +1,106 @@
+# 数据库路径配置
+database_dir: "./database" # 数据库路径 (用于存储对话记录以及声纹数据)
+
+# 模型框架方案选取, 可选项: ["letta", "openaiType", "ollama"] (其中letta也是支持ollama的, 具体的区别请查看letta官方文档)
+# 可选ollama框架: 是因为后期想要拓展对mem0以及框架的接入; letta框架比较封闭了, 很难做优化
+# 可选openaiType框架: 可以自行配置支持openai协议格式的模型平台 (包括openai, DeepSeek, 第三方接口平台等)
+model_frame_type: "letta"
+
+# letta框架的agent_id设置
+letta_agent_id: "agent-xxx" # 填入你自己的agent_id, 详情参考letta文档: https://docs.letta.com/quickstart
+letta_server_ip: "localhost" # letta服务部署的地址 (默认本地地址, 可自行选配远程服务)
+
+# # ollama模型设置
+# ollama_base_url: "http://localhost:11434" # ollama服务地址 (默认本地地址)
+# ollama_model_name: "qwen2.5:7b"
+# ollama_temperature: 0.74
+# ollama_max_tokens: 131072 # 请根据选取的模型说明进行设定
+
+# # openaiType模型的API以及baseurl设置 (API KEY请配置在环境变量[API_KEY_NAME]中)
+# openai_type_model: "gpt-4o-mini" # 根据选取的模型平台配置
+# openai_type_model_temperature: 0.74 # 模型温度
+# openai_type_API_KEY_NAME: "OPENAI_API_KEY" # API_KEY的环境变量名称, 需要配置到环境变量
+# openai_type_BASEURL: "https://api.openai.com/v1" # API请求的baseurl (请根据自己的接口平台修改, 支持第三方接口平台)
+
+
+# 历史消息数据库 (配合ollama或deepseek官方API时使用, letta已经集成了)
+history_max_num: 100 # 最大保存记录数 (不用过大, 毕竟模型输入上下文窗口大小有限)
+
+# mem0记忆系统 (letta框架实现的记忆操作依赖于模型主动调用, 灵活性不足, 所以额外引入mem0进行效果实验)
+mem0_switch: false # 是否开启mem0记忆框架 (mem0会引入额外的推理开销, 但是比letta更加灵活, 并可与letta同时启用)
+mem0_llm_provider: "ollama" # 本项目仅实现deepseek官方API和ollama本地部署两种, 仅供参考, 更多配置方案请参考mem0官方文档: https://docs.mem0.ai/components/llms/overview
+# mem0ai具体的配置信息较为复杂, 请自行修改./mem0_module.py文件中Mem0Client类的__init__部分
+
+
+# vits语音生成设置
+vits_api_url: "http://localhost:23456/voice/vits" # vits模型API路径 (默认本地接口, 可自行选配远程服务)
+vits_speaker_id: "4" # 采用的vits模型
+vits_clean_text: true # 是否开启文本清洗 (去除难以发音的部分, 例如网页链接等)
+
+# 语音识别设置
+asr_model_dir: "./SenseVoiceSmall" # SenseVoiceSmall模型权重文件位置
+asr_auto_send_silence_time: 1.8 # 持续静音asr_auto_send_silence_time时间后自动发送 (设置为-1则不自动发送)
+
+# 声纹检测
+vpr_model: "damo/speech_campplus_sv_zh-cn_16k-common" # 使用的声纹识别模型路径 (不用修改, 会自动下载)
+vpr_similarity_threshold: 0.7 # 认可声纹匹配的精确度阈值
+
+
+# 主程序窗口大小设置 (立绘默认自适应窗口大小)
+window_width: 600
+window_height: 800
+window_always_on_top: true # 设置窗口始终保持顶置
+
+# 对话框(dialog)位置和大小设置 (直接留空会根据window尺寸自动设置)
+dialog_x: 0 # 对话框左上角X轴位置 (原点位于窗口左上角, X轴向右, Y轴向下)
+dialog_y: 400 # 对话框Y轴位置
+dialog_width: 600 # 对话框宽度
+dialog_height: 240 # 对话框长度
+# 对话框(dialog)杂项
+dialog_label: "绫 Lin" # 对话框标签名称 (作为机器人名称)
+dialog_opacity: 0.8 # 对话框透明度设置 (0.0-1.0]
+
+
+# 显示角色模式选择 (tachie or live2d)
+character_display_mode: "live2d" # 可选项: [tachie|live2d]
+
+# live2d
+live2d_model_path: "./live2d/MuraSame/Murasame.model3.json"
+live2d_lipSyncN: 4.3 # 嘴型同步系数 (更换模型需自行配置此处)
+# 请注意: 模型动作和表情的名称不能相同, 否则默认播放同名动作; 对于prompt可以统一写入emotion里交给LLM自行判断
+live2d_motion_list: # live2d模型的动作清单 (更换模型需自行配置此处)
+  [
+    "Idle",
+    "自豪地显摆",
+    "好奇地探身",
+    "高兴wink",
+    "害羞地认同",
+    "温柔wink",
+    "害羞地偷瞄",
+    "严肃地否认或拒绝",
+    "阴郁地躲闪",
+    "火冒三丈",
+    "娇媚地靠近",
+    "温柔地否认或拒绝",
+  ]
+live2d_expression_list: # live2d模型的表情清单 (更换模型需自行配置此处)
+  [
+    "正常脸",
+    "微笑脸",
+    "悲伤脸",
+    "阴沉脸",
+    "生气脸",
+    "暴怒脸",
+    "害羞脸",
+    "羞愧脸",
+  ]
+live2d_default_expression: "正常脸" # live2d的默认表情
+live2d_default_motion: "Idle" # live2d的默认动作
+live2d_opening_expression: "害羞脸" # live2d的开场表情
+live2d_opening_motion: "高兴wink" # live2d的开场动画
+
+# 立绘(tachie)设置
+tachie_path: "./tachie/Murasame/" # 立绘文件夹路径
+tachie_default: "微笑" # 默认立绘
+tachie_opening: "高兴" # 开场时临时展现的表情
+tachie_suffix: "png" # 立绘图片格式 (后缀名)
