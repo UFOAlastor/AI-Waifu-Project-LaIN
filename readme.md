@@ -98,7 +98,7 @@ pip install -r requirements.txt
 
    支持DeepSeek官方API, 请参考[官方指引](https://api-docs.deepseek.com/zh-cn/)创建API KEY, 然后配置环境变量 `DEEPSEEK_API_KEY`
 
-   支持第三方接口平台(需要支持openai接口协议), 需要配置 `config.yaml`中 `openai_type_BASEURL`与 `openai_type_API_KEY_NAME`, 详情见下方第4步配置`config.yaml`.
+   支持第三方接口平台(需要支持openai接口协议), 需要配置 `config.yaml`中 `openai_type_BASEURL`与 `openai_type_API_KEY_NAME`, 详情见下方第4步配置 `config.yaml`.
 3. mem0记忆框架部署 (可选)
 
    如果选用letta框架方案, 可以无需部署mem0记忆框架, mem0框架方案用于解决ollama与openaiType方案的记忆问题
@@ -130,36 +130,41 @@ pip install -r requirements.txt
    mem0_llm_provider: "ollama"
    ```
 
-    **openaiType方案配置**:
+   **openaiType方案配置**:
 
-    支持第三方接口平台(需要支持openai接口协议), 支持openai, DeepSeek, Kimi, 豆包等等平台.
+   支持第三方接口平台(需要支持openai接口协议), 支持openai, DeepSeek, Kimi, 豆包等等平台.
+   *注: DeepSeek-R1模型[不支持FunctionCall功能](https://api-docs.deepseek.com/zh-cn/guides/reasoning_model).*
 
-    1. 配置接口平台的BASEURL, 以openai官方接口为例:
-    ```yaml
-    openai_type_API_KEY_NAME: "OPENAI_API_KEY" # API_KEY的环境变量名称, 需要配置到环境变量
-    openai_type_BASEURL: "https://api.openai.com/v1" # API请求的baseurl (请根据自己的接口平台修改, 支持第三方接口平台)
-    ```
-    配置好了`openai_type_API_KEY_NAME`, 需要在环境变量中配置你的API_KEY密钥:
-    ```bash
-    export OPENAI_API_KEY=sk-xxx
-    ```
+   1. 配置接口平台的BASEURL, 以openai官方接口为例:
 
-    2. 配置平台支持的模型:
-    ```yaml
-    openai_type_model: "gpt-4o-mini"
-    openai_type_model_temperature: 0.74 # 模型温度
-    ```
+   ```yaml
+   openai_type_API_KEY_NAME: "OPENAI_API_KEY" # API_KEY的环境变量名称, 需要配置到环境变量
+   openai_type_BASEURL: "https://api.openai.com/v1" # API请求的baseurl (请根据自己的接口平台修改, 支持第三方接口平台)
+   ```
 
-    **ollama方案配置**:
+   配置好了 `openai_type_API_KEY_NAME`, 需要在环境变量中配置你的API_KEY密钥:
 
-    确保你完成了ollama服务的部署, 在config文件中添加ollama相关配置:
+   ```bash
+   export OPENAI_API_KEY=sk-xxx
+   ```
 
-    ```yaml
-    ollama_base_url: "http://localhost:11434" # ollama服务地址 (默认本地地址)
-    ollama_model_name: "qwen2.5:7b" # 选取的对话模型
-    ollama_temperature: 0.74 # 模型温度
-    ollama_max_tokens: 131072 # 请根据选取的模型进行设定最大输入token长度
-    ```
+   2. 配置平台支持的模型:
+
+   ```yaml
+   openai_type_model: "gpt-4o-mini"
+   openai_type_model_temperature: 0.74 # 模型温度
+   ```
+
+   **ollama方案配置**:
+
+   确保你完成了ollama服务的部署, 在config文件中添加ollama相关配置:
+
+   ```yaml
+   ollama_base_url: "http://localhost:11434" # ollama服务地址 (默认本地地址)
+   ollama_model_name: "qwen2.5:7b" # 选取的对话模型
+   ollama_temperature: 0.74 # 模型温度
+   ollama_max_tokens: 131072 # 请根据选取的模型进行设定最大输入token长度
+   ```
 
    其余配置部分一般默认无需更改, 可以查考 `config.example.yaml`文件注释自行选择配置.
 5. 语音生成服务部署
@@ -209,6 +214,8 @@ pip install -r requirements.txt
 ## 📝TODO
 
 - [ ] 客户端编译
+- [ ] 实现效果良好可用的AEC回声消除
+- [ ] 日文回复的翻译独立化, 优化使用小模型格式难以对齐的问题
 - [ ] 语音识别提供可选方案
 - [ ] 实现一种基于记忆框架召回相关角色语料以实现角色语言风格能力的方案 (进度: 新建文件夹ing)
 

@@ -1,6 +1,6 @@
 # ollamaModel_module.py
 
-import requests
+import ollama
 import json, re
 from typing import Generator
 import logging
@@ -29,8 +29,8 @@ class ollamaModel:
     用户身份判断：
     你可以通过用户每条消息开头的输入格式"[Speaker:<user_name>]"来识别对话的用户. 这使你能够识别正在与谁交谈, 并相应地调整你的回答. 有时"user_name"可能是"Unknown", 这意味着你无法确定说话者的身份. 在这种情况下, 你应该礼貌地询问说话者的身份, 同时保持基本的社交礼仪. 即使说话者选择不透露自己的身份, 你也应该优雅地继续对话. 但是请注意, 你的回复中不能带有这种格式!
 
-    FunctionCall能力:
-    你拥有FunctionCall(函数调用)能力, 如果判断用户的需求可以使用函数实现, 无需和用户进行确认, 请直接调用函数, 然后将结论返回给用户.
+    ToolCall能力:
+    你拥有ToolCall(工具调用)能力, 如果判断用户的需求可以使用工具实现, 无需和用户进行确认, 请直接调用函数, 然后将结论返回给用户.
 
     以下是初始角色设置, 可以根据需求或角色的发展进行改变：
     可能有多个用户和你说话, 但只有Tor是你的主人.
@@ -52,7 +52,7 @@ class ollamaModel:
     """
 
     def __init__(self, main_settings):
-        self.model_name = gcww(main_settings, "ollama_model_name", "", logger)
+        self.model = gcww(main_settings, "ollama_model_name", "", logger)
         self.base_url = gcww(
             main_settings, "ollama_base_url", "http://localhost:11434", logger
         )
@@ -84,54 +84,30 @@ class ollamaModel:
     def get_response_straming(
         self, user_name: str, user_input: str
     ) -> Generator[str, None, None]:
-        """获取ollama模型回复 (流式)
-
-        Args:
-            user_name (str): 用户名称
-            user_input (str): 用户输入
-
-        Yields:
-            Generator[str, None, None]: 流式回复结果
-        """
         self.add_message("user", user_name, user_input)
         full_response = ""
 
         try:
-            data = {
-                "model": self.model_name,
-                "messages": self.messages,
-                "options": {
+            response = ollama.chat(
+                model=self.model,
+                messages=self.messages,
+                options={
                     "temperature": self.temperature,
-                    "num_predict": self.max_tokens,
+                    "max_tokens": self.max_tokens,
                 },
-                "stream": True,
-            }
+                stream=True  # 启用流式响应
+            )
 
-            with requests.post(
-                f"{self.base_url}/api/chat",
-                headers={"Content-Type": "application/json"},
-                data=json.dumps(data),
-                stream=True,
-            ) as response:
-                response.raise_for_status()
+            for chunk in response:
+                content = chunk.get("message", {}).get("content", "")
+                if content:
+                    full_response += content
+                    yield content
 
-                for line in response.iter_lines():
-                    if line:
-                        chunk = json.loads(line.decode("utf-8"))
-                        content = chunk.get("message", {}).get("content", "")
-                        if content:
-                            full_response += content
-                            yield content
+            self.add_message("assistant", self.bot_name, full_response)
 
-                # 将完整回复添加到上下文
-                self.add_message("assistant", self.bot_name, full_response)
-
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
             yield f"API请求错误: {str(e)}"
-        except KeyError:
-            yield "响应解析失败"
-        except json.JSONDecodeError:
-            yield "响应解析失败"
 
     def remove_think_tags(self, text):
         # 匹配 <think> 标签及其前后可能的空格/换行，并清除内容
@@ -141,51 +117,26 @@ class ollamaModel:
         return cleaned_text.strip()
 
     def get_response(self, user_name: str, user_input: str) -> str:
-        """获取ollama模型回复 (非流式)
-
-        Args:
-            user_name (str): 用户名称
-            user_input (str): 用户输入
-
-        Returns:
-            str: 完整回复内容
-        """
         self.add_message("user", user_name, user_input)
         full_response = ""
 
         try:
-            data = {
-                "model": self.model_name,
-                "messages": self.messages,
-                "options": {
+            response = ollama.chat(
+                model=self.model,
+                messages=self.messages,
+                options={
                     "temperature": self.temperature,
-                    "num_predict": self.max_tokens,
+                    "max_tokens": self.max_tokens,
                 },
-                "stream": False,  # 非流式
-            }
-
-            response = requests.post(
-                f"{self.base_url}/api/chat",
-                headers={"Content-Type": "application/json"},
-                data=json.dumps(data),
+                stream=False  # 启用流式响应
             )
-            response.raise_for_status()
 
-            # 解析完整响应
-            response_data = response.json()
-            full_response = response_data.get("message", {}).get("content", "")
-
-            # 将完整回复添加到上下文
+            full_response = response.get("message", {}).get("content", "")
             self.add_message("assistant", self.bot_name, full_response)
-            # 对于非流式, 为了接入原本的系统, 将<think>部分剔除
             return self.remove_think_tags(full_response)
 
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
             return f"API请求错误: {str(e)}"
-        except KeyError:
-            return "响应解析失败"
-        except json.JSONDecodeError:
-            return "响应解析失败"
 
     def reset_context(self, system_prompt: str = None):
         if system_prompt:

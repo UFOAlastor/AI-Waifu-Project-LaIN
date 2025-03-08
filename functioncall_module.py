@@ -1,7 +1,8 @@
 # functioncall_module.py
 
-import yaml
-import json
+import ollama
+import yaml, json, uuid
+from typing import Generator
 import logging
 from logging_config import gcww
 
@@ -67,6 +68,7 @@ class FunctioncallManager:
         else:
             raise TypeError("支持格式：1) (str, func) 2) {str:func} 3) [(str,func)]")
 
+    def show_registered_functions(self):
         for func_name, _ in self.function_map.items():
             logger.debug(f"加载函数: {func_name}")
 
@@ -74,134 +76,153 @@ class FunctioncallManager:
         # 先发送用户消息给LLM
         self.chat_model.add_message("user", user_name, user_input)
 
-        response = self.chat_model.client.chat.completions.create(
-            model=self.chat_model.model,
-            messages=self.chat_model.messages,
-            functions=self.functions,
-            function_call="auto",
-        )
+        if self.model_frame_type == "openaiType":
+            response = self.chat_model.client.chat.completions.create(
+                model=self.chat_model.model,
+                messages=self.chat_model.messages,
+                functions=self.functions,
+                function_call="auto",
+                stream=False,
+            )
+            message = response.choices[0].message
 
-        message = response.choices[0].message
+            if message.function_call:
+                # 如果LLM进行函数调用，执行相应的函数
+                function_name = message.function_call.name
+                function_args = json.loads(message.function_call.arguments)
 
-        if message.function_call:
-            # 如果LLM进行函数调用，执行相应的函数
-            function_name = message.function_call.name
-            function_args = json.loads(message.function_call.arguments)
-
-            if function_name in self.function_map:
-                # 执行函数调用
-                logger.debug(
-                    f"FunctionCall模块执行函数调用: {function_name}: {function_args}"
-                )
-
-                function_response = self.function_map[function_name](**function_args)
-
-                self.chat_model.messages.append(
-                    {
-                        "role": "assistant",
-                        "content": "",
-                        "function_call": {
+                if function_name in self.function_map:
+                    # 执行函数调用
+                    logger.debug(
+                        f"FunctionCall模块执行函数调用: {function_name}: {function_args}"
+                    )
+                    function_response = self.function_map[function_name](
+                        **function_args
+                    )
+                    self.chat_model.messages.append(
+                        {
+                            "role": "assistant",
+                            "content": "",
+                            "function_call": {
+                                "name": function_name,
+                                "arguments": message.function_call.arguments,
+                            },
+                        }
+                    )
+                    self.chat_model.messages.append(
+                        {
+                            "role": "function",
                             "name": function_name,
-                            "arguments": message.function_call.arguments,
-                        },
-                    }
-                )
+                            "content": str(function_response),
+                        }
+                    )
+                    second_response = self.chat_model.client.chat.completions.create(
+                        model=self.chat_model.model,
+                        messages=self.chat_model.messages,
+                        stream=False,
+                    )
+                    final_response = second_response.choices[0].message.content
+                    self.chat_model.add_message(
+                        "assistant", self.chat_model.bot_name, final_response
+                    )
+                    return final_response
+            else:
+                response_content = message.content
 
-                self.chat_model.messages.append(
+        elif self.model_frame_type == "ollama":
+            _tools = []
+            for _func in self.functions:
+                _tools.append(
                     {
-                        "role": "function",
-                        "name": function_name,
-                        "content": str(function_response),
+                        "type": "function",
+                        "function": _func,
                     }
                 )
 
-                second_response = self.chat_model.client.chat.completions.create(
-                    model=self.chat_model.model, messages=self.chat_model.messages
+            try:
+                response = ollama.chat(
+                    model=self.chat_model.model,
+                    messages=self.chat_model.messages,
+                    options={
+                        "temperature": self.chat_model.temperature,
+                        "max_tokens": self.chat_model.max_tokens,
+                    },
+                    tools=_tools,
                 )
+                message = response.get("message", {})
+                logger.debug(f"response: {message}")
+            except Exception as e:
+                return f"API请求错误: {str(e)}"
 
-                final_response = second_response.choices[0].message.content
+            if "tool_calls" in message:
+                for tool_call in message["tool_calls"]:
+                    function_name = tool_call["function"]["name"]
+                    function_args = tool_call["function"]["arguments"]
+                    print(f"函数名称: {function_name}")
+                    print(f"参数: {function_args}")
+
+                    if function_name in self.function_map:
+                        # 执行函数调用
+                        logger.debug(
+                            f"FunctionCall模块执行函数调用: {function_name}: {function_args}"
+                        )
+                        function_response = self.function_map[function_name](
+                            **function_args
+                        )
+                        # 生成唯一调用ID
+                        call_id = str(uuid.uuid4())
+                        # 助手消息
+                        self.chat_model.messages.append(
+                            {
+                                "role": "assistant",
+                                "content": "",
+                                "tool_calls": [
+                                    {
+                                        "id": call_id,
+                                        "type": "function",
+                                        "function": {
+                                            "name": function_name,
+                                            "arguments": function_args,
+                                        },
+                                    }
+                                ],
+                            }
+                        )
+                        # 工具响应消息
+                        self.chat_model.messages.append(
+                            {
+                                "role": "tool",
+                                "content": json.dumps(
+                                    {
+                                        "status": "success",
+                                        "data": function_response,
+                                    },
+                                    ensure_ascii=False,
+                                ),
+                                "tool_call_id": call_id,
+                            }
+                        )
+
+                second_response = ollama.chat(
+                    model=self.chat_model.model,
+                    messages=self.chat_model.messages,
+                    options={
+                        "temperature": self.chat_model.temperature,
+                        "max_tokens": self.chat_model.max_tokens,
+                    },
+                )
+                final_response = second_response.get("message", {}).get("content", "")
                 self.chat_model.add_message(
                     "assistant", self.chat_model.bot_name, final_response
                 )
                 return final_response
+            else:
+                response_content = message.get("content", "")
 
-        response_content = message.content
         self.chat_model.add_message(
             "assistant", self.chat_model.bot_name, response_content
         )
         return response_content
-
-    def get_response_streaming(self, user_name: str, user_input: str):
-        self.chat_model.add_message("user", user_name, user_input)
-
-        response = self.chat_model.client.chat.completions.create(
-            model=self.chat_model.model,
-            messages=self.chat_model.messages,
-            functions=self.functions,
-            function_call="auto",
-            stream=True,
-        )
-
-        full_message = {"content": "", "function_call": None}
-
-        # 第一部分流式响应处理
-        for chunk in response:
-            delta = chunk.choices[0].delta
-
-            if "content" in delta:
-                content_part = delta.content
-                full_message["content"] += content_part
-                yield content_part  # 实时返回流式内容
-
-            if "function_call" in delta:
-                if full_message["function_call"] is None:
-                    full_message["function_call"] = {}
-                for key in delta.function_call:
-                    full_message["function_call"][key] = delta.function_call[key]
-
-        # 函数调用处理（如果有的话）
-        if full_message.get("function_call"):
-            function_name = full_message["function_call"]["name"]
-            function_args = json.loads(full_message["function_call"]["arguments"])
-
-            # 执行函数并添加到消息历史
-            function_response = self.function_map[function_name](**function_args)
-            self.chat_model.messages.append(
-                {
-                    "role": "assistant",
-                    "content": None,
-                    "function_call": full_message["function_call"],
-                }
-            )
-            self.chat_model.messages.append(
-                {
-                    "role": "function",
-                    "name": function_name,
-                    "content": str(function_response),
-                }
-            )
-
-            # 发送后续请求并流式返回结果
-            second_response = self.chat_model.client.chat.completions.create(
-                model=self.chat_model.model,
-                messages=self.chat_model.messages,
-                stream=True,  # 关键：开启流式模式
-            )
-
-            # 处理第二部分流式响应
-            for chunk in second_response:
-                delta = chunk.choices[0].delta
-                if "content" in delta:
-                    content_part = delta.content
-                    yield content_part  # 继续流式返回后续内容
-
-            final_response = full_message["content"] + content_part  # 可能需要合并
-        else:
-            final_response = full_message["content"]
-
-        self.chat_model.add_message(
-            "assistant", self.chat_model.bot_name, final_response
-        )
 
 
 if __name__ == "__main__":
@@ -218,25 +239,11 @@ if __name__ == "__main__":
     chat_model = FunctioncallManager(settings)
 
     while True:
-        # try:
-        #     user_input = input("用户: ")
-        #     if user_input.lower() == "exit":
-        #         break
-
-        #     # 正确处理生成器并实时打印流式内容
-        #     for chunk in chat_model.get_response_streaming("Unknown", user_input):
-        #         logger.debug(f"AI助手: {chunk}")
-        #         print(f"AI助手: {chunk}", end="", flush=True)  # 实时显示
-
-        # except KeyboardInterrupt:
-        #     break
         try:
             user_input = input("用户: ")
             if user_input.lower() == "exit":
                 break
-            logger.debug(
-                f"AI助手: {chat_model.get_response_streaming('Unknown', user_input)}"
-            )
+            logger.debug(f"AI助手: {chat_model.get_response('Unknown', user_input)}")
         except KeyboardInterrupt:
             break
 

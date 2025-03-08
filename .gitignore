@@ -41,3 +41,6 @@
 
 # Configuration Files
 /config.yaml
+
+# testfiles
+/mytest

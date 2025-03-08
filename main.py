@@ -182,6 +182,7 @@ class MainApp:
         self.chat_model.register_func_impl(
             "register_voiceprint", self.register_voiceprint
         )
+        self.chat_model.show_registered_functions()
 
     def start_voice_rec(self):
         """继续开启语音识别"""
