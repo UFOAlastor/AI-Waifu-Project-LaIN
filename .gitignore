@@ -1,28 +1,43 @@
+# Logs and Temporary Files
 /logs
+/tempCodeRunnerFile.python
+
+# Caches and Compiled Files
+/functioncall/__pycache__
 /__pycache__
+/.vscode
+/.venv
+
+# History and Metadata
 /.history
+
+# Model Files
 /vosk-model-small-cn-0.22
 /vosk-model-cn-0.22
-/build/main
-/main.spec
-/dist
-/upx-4.2.4-win64
-/main.exe
-tempCodeRunnerFile.python
 /SenseVoiceSmall
 /speexdsp
-/savePath
-/voice_samples
-/voice_print_db
+
+# Build and Distribution Artifacts
+/build/main
+/build/LaIN
+/main.spec
+/LaIN.spec
+/dist
+/upx-4.2.4-win64
+/upx-5.0.0-win64
+/main.exe
+/LaIN.exe
+
+# Database and Data Files
 /dialog_history.db
 /database
-/process_req.py
+/voice_samples
+/voice_print_db
+/savePath
 /memory
-/.vscode
-/functioncall/__pycache__
-/.venv
-/upx-5.0.0-win64
-/build/LaIN
-/LaIN.spec
-/LaIN.exe
+
+# Source Files
+/process_req.py
+
+# Configuration Files
 /config.yaml
