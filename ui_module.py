@@ -179,15 +179,12 @@ class UIDisplay(QMainWindow, MicButton):
         self.dialog_text.mousePressEvent = self.on_mouse_press  # 手动重写鼠标点击事件
 
         # 录音按钮位置调整
-        self.mic_button.setGeometry(
-            10,
-            int(self.dialog_y) - 30,
-            30,
-            30,
-        )
-
-        # 提升录音按钮层次, 避免遮挡
+        self.mic_button.setGeometry(10, int(self.dialog_y) - 30, 30, 30)
+        # vpr按钮位置调整
+        self.vpr_button.setGeometry(45, int(self.dialog_y) - 30, 30, 30)
+        # 提升按钮层次, 避免遮挡
         self.mic_button.raise_()
+        self.vpr_button.raise_()
 
     def __init__(self, main_settings):
         super().__init__(main_settings)  # python的继承按 MRO 顺序传递参数
@@ -484,7 +481,8 @@ if __name__ == "__main__":
     window.show()
 
     def test_response(tuple_data):
-        user_name, text = tuple_data
+        _tmp_audio_frames, text = tuple_data
+        user_name = window.recognizer.vpr_manager.match_voiceprint(_tmp_audio_frames)
         window.display_text(
             f"""测试回复: 用户{user_name}发送了{text}""",
             is_non_user_input=True,

@@ -77,8 +77,10 @@ ollama_max_tokens: 131072 # 请根据选取的模型说明进行设定
 # openai类模型的API以及baseurl设置 (API KEY请配置在环境变量[API_KEY_NAME]中)
 openai_type_model: "gpt-4o-mini" # 根据选取的模型平台配置
 openai_type_model_temperature: 0.74 # 模型温度
-openai_type_API_KEY_NAME: "O3FAN_API_KEY" # API_KEY的环境变量名称, 需要配置到环境变量
-openai_type_BASEURL: "https://api.o3.fan/v1" # API请求的baseurl (请根据自己的接口平台修改)
+openai_type_API_KEY_NAME: "GPTPLUS5_API_KEY" # API_KEY的环境变量名称, 需要配置到环境变量
+openai_type_BASEURL: "https://az.gptplus5.com/v1" # API请求的baseurl (请根据自己的接口平台修改)
+# openai_type_API_KEY_NAME: "O3FAN_API_KEY" # API_KEY的环境变量名称, 需要配置到环境变量
+# openai_type_BASEURL: "https://api.o3.fan/v1" # API请求的baseurl (请根据自己的接口平台修改)
 
 # 历史消息数据库 (配合ollama或deepseek官方API时使用, letta已经集成了)
 history_max_num: 100 # 最大保存记录数 (不用过大, 毕竟模型输入上下文窗口大小有限)

@@ -131,6 +131,78 @@ class FunctioncallManager:
         )
         return response_content
 
+    def get_response_streaming(self, user_name: str, user_input: str):
+        self.chat_model.add_message("user", user_name, user_input)
+
+        response = self.chat_model.client.chat.completions.create(
+            model=self.chat_model.model,
+            messages=self.chat_model.messages,
+            functions=self.functions,
+            function_call="auto",
+            stream=True,
+        )
+
+        full_message = {"content": "", "function_call": None}
+
+        # 第一部分流式响应处理
+        for chunk in response:
+            delta = chunk.choices[0].delta
+
+            if "content" in delta:
+                content_part = delta.content
+                full_message["content"] += content_part
+                yield content_part  # 实时返回流式内容
+
+            if "function_call" in delta:
+                if full_message["function_call"] is None:
+                    full_message["function_call"] = {}
+                for key in delta.function_call:
+                    full_message["function_call"][key] = delta.function_call[key]
+
+        # 函数调用处理（如果有的话）
+        if full_message.get("function_call"):
+            function_name = full_message["function_call"]["name"]
+            function_args = json.loads(full_message["function_call"]["arguments"])
+
+            # 执行函数并添加到消息历史
+            function_response = self.function_map[function_name](**function_args)
+            self.chat_model.messages.append(
+                {
+                    "role": "assistant",
+                    "content": None,
+                    "function_call": full_message["function_call"],
+                }
+            )
+            self.chat_model.messages.append(
+                {
+                    "role": "function",
+                    "name": function_name,
+                    "content": str(function_response),
+                }
+            )
+
+            # 发送后续请求并流式返回结果
+            second_response = self.chat_model.client.chat.completions.create(
+                model=self.chat_model.model,
+                messages=self.chat_model.messages,
+                stream=True,  # 关键：开启流式模式
+            )
+
+            # 处理第二部分流式响应
+            for chunk in second_response:
+                delta = chunk.choices[0].delta
+                if "content" in delta:
+                    content_part = delta.content
+                    yield content_part  # 继续流式返回后续内容
+
+            final_response = full_message["content"] + content_part  # 可能需要合并
+        else:
+            final_response = full_message["content"]
+
+        self.chat_model.add_message(
+            "assistant", self.chat_model.bot_name, final_response
+        )
+
 
 if __name__ == "__main__":
     import yaml
@@ -146,11 +218,25 @@ if __name__ == "__main__":
     chat_model = FunctioncallManager(settings)
 
     while True:
+        # try:
+        #     user_input = input("用户: ")
+        #     if user_input.lower() == "exit":
+        #         break
+
+        #     # 正确处理生成器并实时打印流式内容
+        #     for chunk in chat_model.get_response_streaming("Unknown", user_input):
+        #         logger.debug(f"AI助手: {chunk}")
+        #         print(f"AI助手: {chunk}", end="", flush=True)  # 实时显示
+
+        # except KeyboardInterrupt:
+        #     break
         try:
             user_input = input("用户: ")
             if user_input.lower() == "exit":
                 break
-            logger.debug(f"AI助手: {chat_model.get_response('Unknown', user_input)}")
+            logger.debug(
+                f"AI助手: {chat_model.get_response_streaming('Unknown', user_input)}"
+            )
         except KeyboardInterrupt:
             break
 

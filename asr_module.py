@@ -23,6 +23,8 @@ class SpeechRecognition(QObject):
     update_text_signal = pyqtSignal(tuple)  # 用于传递二元组 (音频序列, 文本)
     recording_ended_signal = pyqtSignal()  # 用于通知录音结束
     detect_speech_signal = pyqtSignal(bool)  # 用于通知检测到人声
+    # 定义声纹识别流程信号
+    open_vp_register_signal = pyqtSignal(bool)  # 用于控制是否开启声纹识别注册
 
     def __init__(self, main_settings):
         """语音识别类初始化
@@ -70,6 +72,13 @@ class SpeechRecognition(QObject):
         # 初始化音频队列
         self.audio_queue = queue.Queue()
         self.audio_lock = threading.Lock()
+
+        # 是否开启仅注册用户语音识别
+        self.only_asr_register_user = True
+        self.open_vp_register_signal.connect(self.set_only_register_user)
+
+    def set_only_register_user(self, value):
+        self.only_asr_register_user = value
 
     def on_audio_start_play(self):
         self.audio_buffer_startup = False
@@ -187,9 +196,19 @@ class SpeechRecognition(QObject):
                         ) / 1000.0  # 转为秒
                         # logger.debug(f"silence_timer: {silence_timer}")
                         if audio_buffer:
-                            # 只要检测到人声就进行语音识别
+                            # 检测到人声
                             if self.detect_speech(np.concatenate(audio_buffer)):
-                                self.audio_transcribe(audio_buffer)
+                                should_transcribe = True
+                                if self.only_asr_register_user:
+                                    user_name = self.vpr_manager.match_voiceprint(
+                                        audio_buffer
+                                    )
+                                    should_transcribe = user_name != "Unknown"
+                                    logger.debug(
+                                        f"人声是否属于注册用户: {should_transcribe}"
+                                    )
+                                if should_transcribe:
+                                    self.audio_transcribe(audio_buffer)
                                 audio_buffer.clear()
                             else:
                                 audio_buffer.pop(0)  # 移除最旧的帧
@@ -201,7 +220,7 @@ class SpeechRecognition(QObject):
                             logger.info("静默时间超限，触发结果发送")
                             self.recording_ended_signal.emit()
                             self.transcribe_but_not_send = False  # 重置未发送标志
-                            # self._is_running = False  # 结束循环
+                            # self._is_running = False  # 停止录音
             except queue.Empty:
                 continue
             except Exception as e:
