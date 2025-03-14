@@ -30,7 +30,6 @@ class VoicePrintRecognition:
         self.sv_pipeline = pipeline(
             task="speaker-verification",
             model=self.vpr_model,
-            model_revision="v1.0.0",
         )
 
         # 初始化样本数据库，加载现有数据
@@ -243,7 +242,7 @@ if __name__ == "__main__":
     # voice_manager.list_voiceprint()
 
     # 注册新的声纹样本
-    person_name = "Tor"  # 改成你自己的名称, 记得要和prompt对齐, 这样模型才能识别是你
+    person_name = "小约翰可汗"  # 改成你自己的名称, 记得要和prompt对齐, 这样模型才能识别是你
     voice_id = voice_manager.register_voiceprint(temp_frames, person_name)
     print(f"注册成功，声纹ID: {voice_id}")
 

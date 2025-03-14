@@ -18,15 +18,16 @@
 /speexdsp
 
 # Build and Distribution Artifacts
-/build/main
-/build/LaIN
+/build
 /main.spec
 /LaIN.spec
+/main.dist
 /dist
 /upx-4.2.4-win64
 /upx-5.0.0-win64
 /main.exe
 /LaIN.exe
+/out
 
 # Database and Data Files
 /dialog_history.db
@@ -44,3 +45,9 @@
 
 # testfiles
 /mytest
+
+# pycharm
+/.idea
+
+# nuitka
+/nuitka.cmd

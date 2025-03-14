@@ -27,9 +27,9 @@ letta_server_ip: "localhost" # letta服务部署的地址 (默认本地地址, �
 history_max_num: 100 # 最大保存记录数 (不用过大, 毕竟模型输入上下文窗口大小有限)
 
 # mem0记忆系统 (letta框架实现的记忆操作依赖于模型主动调用, 灵活性不足, 所以额外引入mem0进行效果实验)
+# mem0ai具体的配置信息较为复杂, 请自行修改./mem0_module.py文件中Mem0Client类的__init__部分
 mem0_switch: false # 是否开启mem0记忆框架 (mem0会引入额外的推理开销, 但是比letta更加灵活, 并可与letta同时启用)
 mem0_llm_provider: "ollama" # 本项目仅实现deepseek官方API和ollama本地部署两种, 仅供参考, 更多配置方案请参考mem0官方文档: https://docs.mem0.ai/components/llms/overview
-# mem0ai具体的配置信息较为复杂, 请自行修改./mem0_module.py文件中Mem0Client类的__init__部分
 
 
 # vits语音生成设置
@@ -42,7 +42,7 @@ asr_model_dir: "./SenseVoiceSmall" # SenseVoiceSmall模型权重文件位置
 asr_auto_send_silence_time: 1.8 # 持续静音asr_auto_send_silence_time时间后自动发送 (设置为-1则不自动发送)
 
 # 声纹检测
-vpr_model: "damo/speech_campplus_sv_zh-cn_16k-common" # 使用的声纹识别模型路径 (不用修改, 会自动下载)
+vpr_model: "damo/speech_eres2netv2_sv_zh-cn_16k-common" # 使用的声纹识别模型路径 (不用修改, 会自动下载)
 vpr_similarity_threshold: 0.7 # 认可声纹匹配的精确度阈值
 
 
