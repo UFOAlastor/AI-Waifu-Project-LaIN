@@ -15,7 +15,6 @@ silero_vad
 letta
 letta_client
 ollama
-mem0ai
 torch
 wavio
 sounddevice
@@ -23,4 +22,5 @@ duckduckgo_search
 addict
 simplejson
 sortedcontainers
-datasets
+datasets<3
+mem0ai

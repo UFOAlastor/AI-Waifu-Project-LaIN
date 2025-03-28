@@ -51,3 +51,5 @@
 
 # nuitka
 /nuitka.cmd
+/get_versions.py
+/build.bat
