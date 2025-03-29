@@ -26,7 +26,7 @@ from live2d_module import Live2DWidget
 
 # 在 UIDisplay 类中设置事件过滤器
 class UIDisplay(QMainWindow, MicButton):
-    text_sent_signal = pyqtSignal(tuple)  # 发送对话框信号 (用户名, 文本)
+    text_sent_signal = pyqtSignal(tuple)  # 发送对话框信号 (用户名, 音频序列, 文本)
 
     def _UI_init(self, main_settings):
         # 窗口标题和图标
@@ -303,7 +303,8 @@ class UIDisplay(QMainWindow, MicButton):
                 return True  # 表示事件已处理，不再传播
             elif key_event.key() == Qt.Key_Return:
                 # 其他情况下触发发送文本的功能
-                self.user_name = "Unknown"  # 文本发送, 无法识别用户身份
+                self.user_name = "Somebody"  # 文本发送, 无法识别用户身份
+                self.update_label_text(self.user_name)
                 self.send_text()
                 return True  # 表示事件已处理，不再传播
         return super().eventFilter(obj, event)
@@ -338,7 +339,7 @@ class UIDisplay(QMainWindow, MicButton):
             logger.debug(f"发送的文本: {text}")
             # 发射信号，将用户语音数据与文本发送出去
             copied_frames = copy.deepcopy(self.audio_frames)  # 使用深拷贝传递数据
-            self.text_sent_signal.emit((copied_frames, text))
+            self.text_sent_signal.emit((self.user_name, copied_frames, text))
             self.dialog_text.clear()  # 清空文本框内容
             self.audio_frames.clear()  # 清空音频帧数据
             self.update_label_text("")  # 重置标签显示
@@ -481,8 +482,7 @@ if __name__ == "__main__":
     window.show()
 
     def test_response(tuple_data):
-        _tmp_audio_frames, text = tuple_data
-        user_name = window.recognizer.vpr_manager.match_voiceprint(_tmp_audio_frames)
+        user_name, _tmp_audio_frames, text = tuple_data
         window.display_text(
             f"""测试回复: 用户{user_name}发送了{text}""",
             is_non_user_input=True,

@@ -197,12 +197,9 @@ class MainApp:
         """等待接收模型回复
 
         Args:
-            tuple_data (tuple): 输入给模型的二元对, 内容为(user_name, input_text)
+            tuple_data (tuple): 输入给模型的三元对, 内容为(user_name, audio_frames, input_text)
         """
-        self._tmp_audio_frames, input_text = tuple_data
-        user_name = self.window.recognizer.vpr_manager.match_voiceprint(
-            self._tmp_audio_frames
-        )
+        user_name, self._tmp_audio_frames, input_text = tuple_data
 
         if input_text:
             # 显示动态省略号动画
