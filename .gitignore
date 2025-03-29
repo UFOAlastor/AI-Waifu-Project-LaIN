@@ -53,3 +53,6 @@
 /nuitka.cmd
 /get_versions.py
 /build.bat
+
+# character style files
+/character_style

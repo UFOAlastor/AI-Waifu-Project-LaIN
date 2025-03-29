@@ -63,13 +63,7 @@ pip install -r requirements.txt
 
 ### ⚙️配置说明
 
-1. 安装所需语音识别模型
-
-   ```bash
-   git lfs install
-   git clone https://huggingface.co/FunAudioLLM/SenseVoiceSmall
-   ```
-2. 模型框架部署
+1. 模型框架部署
 
    支持三种模型框架方案: ["letta", "openaiType", "ollama"]
 
@@ -99,14 +93,14 @@ pip install -r requirements.txt
    支持DeepSeek官方API, 请参考[官方指引](https://api-docs.deepseek.com/zh-cn/)创建API KEY, 然后配置环境变量 `DEEPSEEK_API_KEY`
 
    支持第三方接口平台(需要支持openai接口协议), 需要配置 `config.yaml`中 `openai_type_BASEURL`与 `openai_type_API_KEY_NAME`, 详情见下方第4步配置 `config.yaml`.
-3. mem0记忆框架部署 (可选)
+2. mem0记忆框架部署 (可选)
 
    如果选用letta框架方案, 可以无需部署mem0记忆框架, mem0框架方案用于解决ollama与openaiType方案的记忆问题
 
    部署mem0请查看[mem0官方文档](https://github.com/mem0ai/mem0).
 
    同时mem0需要部署[qdrant](https://github.com/qdrant/qdrant)作为数据库 (支持docker部署)
-4. 复制 `config.example.yaml`内容并创建编辑 `config.yaml`
+3. 复制 `config.example.yaml`内容并创建编辑 `config.yaml`
 
    根据以上你所选取的方案, 修改 `model_frame_type`, 例如采用**letta方案**:
 
@@ -167,14 +161,14 @@ pip install -r requirements.txt
    ```
 
    其余配置部分一般默认无需更改, 可以查考 `config.example.yaml`文件注释自行选择配置.
-5. 语音生成服务部署
+4. 语音生成服务部署
 
    下载[vits-simple-api](https://github.com/Artrajz/vits-simple-api/)模型
 
    具体步骤请参考[vits-simple官方指引](https://github.com/Artrajz/vits-simple-api/blob/main/README_zh.md)进行配置 (支持docker部署)
 
    丛雨音色模型: https://github.com/YuzhidaOfficial/yuzhidaofficial.github.io/releases/download/Murasame/Murasame.Vits.zip
-6. 声纹注册:
+5. 声纹注册:
 
    ![1741414891242](image/readme/1741414891242.png)
 
@@ -198,7 +192,7 @@ pip install -r requirements.txt
    ```
 
    然后运行 `vpr_module.py` , 在出现开始录音提示后进行大于三秒的说话, 然后 `Ctrl+C`完成注册即可完成注册.
-7. FunctionCall配置
+6. FunctionCall配置
 
    1. 进入文件夹"./functioncall"路径下, 仿照"internet_search.py"示例文件创建脚本
    2. 编辑你的工具函数文件, 完成"定义函数描述"与"定义函数实现"部分, Waifu启动后会自动加载函数

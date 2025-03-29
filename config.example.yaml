@@ -38,7 +38,7 @@ vits_speaker_id: "4" # 采用的vits模型
 vits_clean_text: true # 是否开启文本清洗 (去除难以发音的部分, 例如网页链接等)
 
 # 语音识别设置
-asr_model_dir: "./SenseVoiceSmall" # SenseVoiceSmall模型权重文件位置
+asr_model_dir: "damo/SenseVoiceSmall" # SenseVoiceSmall模型权重文件位置
 asr_auto_send_silence_time: 1.8 # 持续静音asr_auto_send_silence_time时间后自动发送 (设置为-1则不自动发送)
 
 # 声纹检测
