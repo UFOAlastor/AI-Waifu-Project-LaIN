@@ -130,7 +130,7 @@ class openaiTypeModel:
         except KeyError as e:
             return f"发生错误: {str(e)}"
 
-    def get_response_straming(
+    def get_response_streaming(
         self, user_name: str, user_input: str
     ) -> Generator[str, None, None]:
         """获取ollama模型回复 (流式)
@@ -195,7 +195,7 @@ if __name__ == "__main__":
                 break
 
             print("AI助手: ", end="", flush=True)
-            for chunk in chatbot.get_response_straming("Unknown", user_input):
+            for chunk in chatbot.get_response_streaming("Unknown", user_input):
                 print(chunk, end="", flush=True)
             print()  # 换行
 

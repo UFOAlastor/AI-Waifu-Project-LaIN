@@ -2,7 +2,6 @@
 
 import ollama
 import yaml, json, uuid
-from typing import Generator
 import logging
 from logging_config import gcww
 

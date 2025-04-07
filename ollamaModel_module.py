@@ -81,7 +81,7 @@ class ollamaModel:
         if role != "system":
             self.history.add_record(role, user_name, formatted_content)
 
-    def get_response_straming(
+    def get_response_streaming(
         self, user_name: str, user_input: str
     ) -> Generator[str, None, None]:
         self.add_message("user", user_name, user_input)
@@ -181,7 +181,7 @@ if __name__ == "__main__":
                 break
 
             print("AI助手: ", end="", flush=True)
-            for chunk in chatbot.get_response_straming("Unknown", user_input):
+            for chunk in chatbot.get_response_streaming("Unknown", user_input):
                 print(chunk, end="", flush=True)
             print()  # 换行
 
