@@ -354,27 +354,27 @@
         {
             "Name": "face",
             "Id": "HitArea",
-            "Motion": "温柔wink"
+            "Motion": "Tapface"
         },
         {
             "Name": "hair",
             "Id": "HitArea2",
-            "Motion": "好奇地探身"
+            "Motion": "Taphair"
         },
         {
             "Name": "xiongbu",
             "Id": "HitArea3",
-            "Motion": "自豪地显摆"
+            "Motion": "Tapxiongbu"
         },
         {
             "Name": "qunzi",
             "Id": "HitArea4",
-            "Motion": "严肃地否认或拒绝"
+            "Motion": "Tapqunzi"
         },
         {
             "Name": "leg",
             "Id": "HitArea5",
-            "Motion": "火冒三丈"
+            "Motion": "Tapleg"
         }
     ],
     "Options": {
