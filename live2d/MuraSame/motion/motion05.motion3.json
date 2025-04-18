@@ -2013,11 +2013,6 @@
 				0
 			]
 		},
-        {
-			"Target": "Parameter",
-			"Id": "ParamMouthOpenY",
-			"Segments": []
-		},
 		{
 			"Target": "Parameter",
 			"Id": "ParamCheek",
