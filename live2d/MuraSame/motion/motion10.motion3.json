@@ -1557,17 +1557,6 @@
 		},
 		{
 			"Target": "Parameter",
-			"Id": "ParamMouthOpenY",
-			"Segments": [
-				0,
-				0,
-				2,
-				4,
-				0
-			]
-		},
-		{
-			"Target": "Parameter",
 			"Id": "ParamCheek",
 			"Segments": [
 				0,
