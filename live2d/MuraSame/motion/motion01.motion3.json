@@ -5823,6 +5823,11 @@
 		},
 		{
 			"Target": "Parameter",
+			"Id": "ParamMouthOpenY",
+			"Segments": []
+		},
+		{
+			"Target": "Parameter",
 			"Id": "ParamCheek",
 			"Segments": [
 				0,
